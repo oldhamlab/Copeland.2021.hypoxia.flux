@@ -1,2 +1,4 @@
+^renv$
+^renv\.lock$
 ^Copeland\.2021\.hypoxia\.flux\.Rproj$
 ^\.Rproj\.user$
