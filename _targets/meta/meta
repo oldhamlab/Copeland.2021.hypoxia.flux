@@ -1,0 +1,4 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|iteration|parent|children|seconds|warnings|error
+summ|function|725b50cbf04a3ed2||||||||||||||
+data|stem|38cec7bc5b894d5f|4d28b3ae61066c9f|15669340fa0be499|1588979285|_targets/objects/data|01da65a63175fa6e|91d375b86ccd1383|454|rds|vector|||0.085||
+summary|stem|b4ef9db585285cb5|504e748dde9ca536|a8ac32529d92e83e|760118442|_targets/objects/summary|a09c7ed8cb4192ee|4956b68a23f9e1fc|122|rds|vector|||0.009||
