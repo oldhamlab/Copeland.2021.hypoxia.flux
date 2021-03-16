@@ -3,3 +3,11 @@
 .Rdata
 .httr-oauth
 .DS_Store
+_targets
+*.html
+inst/analysis/figures
+*.pdf
+*.jpg
+*.ai
+*.tif
+*.log
