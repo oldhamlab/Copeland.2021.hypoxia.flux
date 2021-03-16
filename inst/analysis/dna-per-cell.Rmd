@@ -1,0 +1,111 @@
+---
+title: "Cell-DNA Standard Curves"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: tibble
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+params:
+  print_plots: true
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+})
+
+# set global chunk options
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE, 
+  fig.align = "center", 
+  out.width = "49%"
+) 
+
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  std <- tar_read(dna_per_cell_std)
+  sample <- tar_read(dna_per_cell_clean)
+  cells_per_dna <- tar_read(cells_per_dna)
+})
+```
+
+\newpage
+
+# Overview
+
+Cell counts were estimated from total cellular DNA measured by PicoGreen fluorescence (Quant-iT PicoGreen dsDNA Assay Kit, P11496, Thermo). Here, we determine the relationship between total DNA and cell count by quantifying DNA extracted from cells seeded at different densities in basal growth medium. For the lung fibroblasts, cells were extracted with 100 μL or 200 μL of TE buffer with 0.2% Triton X-100. Earlier experiments used the smaller volume of extraction buffer and this is adjusted for during the extracellular flux calculations.
+
+# Analysis
+
+## Standard Curves
+
+```{r}
+std %>% 
+  unnest(c(summary)) %>% 
+  ggplot() +
+  aes(y = reorder(date, desc(date)), x = r.squared) +
+  geom_point() +
+  labs(
+    y = "Date", 
+    x = expression(paste("R"^2))
+  )
+```
+
+## Samples
+
+```{r}
+sample %>% 
+  ggplot() +
+  aes(x = cells, y = conc) +
+  facet_wrap(~ cell_type * volume, labeller = as_labeller(toupper)) +
+  geom_point(alpha = 0.3) +
+  stat_summary(
+    geom = "pointrange", 
+    fun.data = "mean_se"
+  ) +
+  geom_smooth(
+    method = "lm", 
+    formula = y ~ 0 + x, 
+    se = FALSE
+  ) +
+  labs(
+    x = "Cell count", 
+    y = "DNA (ng)"
+  )
+```
+
+These plots suggest that, for the 100 μL extraction buffer, the maximum cell count is ~ 250,000. We will exclude the 300,000 value prior to calculate the slopes of the curves. For the PASMC samples, the 400,000 cell sample is quite high compared to the other samples. Will also remove these values prior to calculation of the slopes.
+
+```{r}
+usethis::use_data(cells_per_dna, overwrite = TRUE)
+
+cells_per_dna  %>% 
+  knitr::kable(
+    digits = 4, 
+    col.names = c("Cell Type", "Volume", "Cell / DNA"), 
+    align = "c", 
+    booktabs = TRUE
+  ) %>% 
+  kableExtra::kable_styling(position = "center") 
+```
