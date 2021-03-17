@@ -6,14 +6,12 @@ output:
     number_sections: true
     toc: true
     toc_depth: 1
-    df_print: tibble
+    df_print: kable
     dev: cairo_pdf
     latex_engine: xelatex
 geometry: margin = 0.5in
 fontsize: 11pt
 mainfont: Calibri
-params:
-  print_plots: true
 ---
 
 ```{r setup, include = FALSE}

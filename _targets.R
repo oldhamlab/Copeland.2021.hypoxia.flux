@@ -8,15 +8,17 @@ source("R/functions.R")
 
 conflicted::conflict_prefer("filter", "dplyr")
 
-options(tidyverse.quiet = TRUE)
-
-ppp <- TRUE
+options(
+  tidyverse.quiet = TRUE,
+  usethis.quiet = TRUE
+)
 
 future::plan(future::multisession(workers = future::availableCores() - 1))
 
 # target-specific options
 tar_option_set(
-  packages = c("tidyverse")
+  packages = c("tidyverse"),
+  format = "qs"
 )
 
 # list of target objects
@@ -29,7 +31,6 @@ list(
   tar_render(
     dna_per_cell_report,
     path = path_to_reports("dna-per-cell.Rmd"),
-    params = list(print_plots = ppp),
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
   )
 )

@@ -22,6 +22,7 @@ read_multi_excel <- function(excel_file) {
     rlang::set_names(sheets)
 }
 
+
 clean_technical_replicates <- function(tbl) {
   tidyr::pivot_longer(
     data = tbl,
@@ -42,6 +43,7 @@ clean_technical_replicates <- function(tbl) {
     dplyr::summarise(value = mean(.data$value, na.rm = TRUE)) %>%
     dplyr::ungroup()
 }
+
 
 make_std_curves <- function(df) {
   df %>%
@@ -71,7 +73,10 @@ make_std_curves <- function(df) {
 
 make_std_plots <- function(df, title = NULL) {
   ggplot2::ggplot(df) +
-    ggplot2::aes(x = .data$conc, y = .data$value) +
+    ggplot2::aes(
+      x = .data$conc,
+      y = .data$value
+    ) +
     ggplot2::geom_smooth(
       method = "lm",
       formula = y ~ x,
@@ -129,25 +134,25 @@ clean_dna_per_cell <- function(filename) {
   filename %>%
     read_multi_excel() %>%
     purrr::map(clean_technical_replicates) %>%
-    bind_rows(.id = "id") %>%
-    separate(id, c("cell_type", "volume"), sep = "_", convert = TRUE) %>%
-    mutate(cells = 1000 * cells)
+    dplyr::bind_rows(.id = "id") %>%
+    tidyr::separate(id, c("cell_type", "volume"), sep = "_", convert = TRUE) %>%
+    dplyr::mutate(cells = 1000 * cells)
 }
 
 
 calculate_cells_per_dna <- function(tbl) {
   tbl %>%
-    filter(!(cell_type == "lf" & volume == "100" & cells == 300000)) %>%
-    filter(!(cell_type == "pasmc" & volume == "200" & cells == 400000)) %>%
-    group_by(cell_type, volume) %>%
-    nest() %>%
-    mutate(
+    dplyr::filter(!(cell_type == "lf" & volume == "100" & cells == 300000)) %>%
+    dplyr::filter(!(cell_type == "pasmc" & volume == "200" & cells == 400000)) %>%
+    dplyr::group_by(cell_type, volume) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
       model = map(data, ~lm(conc ~ 0 + cells, data = .x, na.action = modelr::na.warn)),
       glance = map(model, broom::tidy)
     ) %>%
-    unnest(c(glance)) %>%
-    select(cell_type, volume, slope = estimate) %>%
-    mutate(slope = 1/slope)
+    tidyr::unnest(c(glance)) %>%
+    dplyr::select(cell_type, volume, slope = estimate) %>%
+    dplyr::mutate(slope = 1/slope)
 }
 
 
