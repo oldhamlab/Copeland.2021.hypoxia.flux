@@ -1,0 +1,125 @@
+---
+title: "Q Bias Correction Factors"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: kable
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+  library(mzrtools)
+})
+
+# resolve conflicts
+conflicted::conflict_prefer("filter", "dplyr")
+
+# set global chunk options
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = TRUE, 
+  fig.align = "center", 
+  out.width = "49%"
+) 
+
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  qbias_ratios <- tar_read(qbias_ratios)
+  correction_factors <- tar_read(correction_factors)
+})
+```
+
+\newpage
+
+# Overview
+
+A selected ion monitoring method was utilized to increase sensitivity for isotope detection. Others have noted quadrupole bias on the Q Exactive using this detection method (*i.e.*, the sensitivity for each isotope differs relative to its position within the m/*z* window). To account for this, naturally labeled standards were analyzed using methods where the m/*z* window is shifted -1.003355 units, the ^13^C mass defect. 
+
+# Analysis
+
+The M1/M0 ratio was calculated for each frame shift. The resulting data were fit with a third-degree polynomial function. 
+
+```{r}
+make_plots <- function(data, batch, metabolite) {
+  ggplot(data) +
+    aes(x = window, y = ratio) +
+    geom_smooth(
+      method = MASS::rlm, 
+      formula = y ~ poly(x, 3),
+      color = "blue", 
+      se = FALSE
+    ) +
+    geom_point(
+      size = 2, 
+      alpha = 0.5, 
+      color = "black"
+    ) +
+    geom_point(
+      size = 5, 
+      stat = "summary", 
+      fun.data = "mean_se", 
+      color = "blue"
+    ) +
+    labs(
+      title = str_c(metabolite, batch, sep = " "), 
+      x = "Window", 
+      y = "Ratio"
+    ) 
+}
+```
+
+
+```{r, results = "hide", out.width = "24.9%", fig.show = "hold"}
+qbias_ratios %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(data, batch, metabolite), make_plots)) %>% 
+  pull(plots)
+```
+
+```{r}
+qbias_ratios %>% 
+  select(-ratio) %>% 
+  pivot_longer(c(M0, M1), names_to = "isotope", values_to = "value") %>% 
+  mutate(
+    M = str_extract(isotope, "\\d") %>% as.numeric, 
+    M = M + window, 
+    iso = str_c("M", M)
+  ) %>% 
+  left_join(correction_factors, by = c("metabolite", "batch", "iso" = "M")) %>% 
+  mutate(value = value * cf) %>% 
+  select(-c(cf, iso, M)) %>% 
+  pivot_wider(names_from = isotope, values_from = value) %>% 
+  mutate(ratio = M1 / M0) %>% 
+  group_by(metabolite, batch) %>% 
+  nest() %>% 
+  mutate(plots = pmap(list(data, batch, metabolite), make_plots)) %>% 
+  pull(plots)
+```
+
+```{r}
+usethis::use_data(correction_factors, overwrite = TRUE)
+```
+
+

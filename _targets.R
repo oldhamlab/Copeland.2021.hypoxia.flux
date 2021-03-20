@@ -24,7 +24,8 @@ tar_option_set(
 # list of target objects
 list(
 
-  # dna per cell analysis
+  # dna per cell ------------------------------------------------------------
+
   tar_target(
     dna_per_cell_file,
     path_to_data("dna-per-cell-number.xlsx"),
@@ -52,7 +53,8 @@ list(
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
   ),
 
-  # extracellular fluxes
+  # extracellular fluxes ----------------------------------------------------
+
   tar_target(
     fluxes_meta_files,
     path_to_data("(lf|pasmc)_.*_meta\\.csv"),
@@ -171,6 +173,31 @@ list(
   tar_render(
     extracellular_fluxes_report,
     path = path_to_reports("extracellular-fluxes.Rmd"),
+    output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+
+  # q bias correction -------------------------------------------------------
+
+  tar_target(
+    qbias_files,
+    path_to_data("q-bias-correction"),
+    format = "file"
+  ),
+  tar_target(
+    qbias_ratios,
+    import_qbias(qbias_files)
+  ),
+  tar_target(
+    pred_ratios,
+    calculate_predicted_ratios()
+  ),
+  tar_target(
+    correction_factors,
+    calculate_correction_factors(qbias_ratios, pred_ratios)
+  ),
+  tar_render(
+    qbias_correction_factor_report,
+    path = path_to_reports("qbias-correction-factors.Rmd"),
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
   )
 )
