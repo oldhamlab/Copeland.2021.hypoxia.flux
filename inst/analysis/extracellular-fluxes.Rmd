@@ -1,0 +1,573 @@
+---
+title: "Extracellular Fluxes"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: kable
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+})
+
+# resolve conflicts
+conflicted::conflict_prefer("filter", "dplyr")
+
+# set global chunk options
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = TRUE, 
+  fig.align = "center", 
+  out.width = "49%"
+) 
+
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  data_raw <- tar_read(conc_raw)
+  std <- tar_read(conc_std)
+  std_fld <- tar_read(conc_std_clean_fld)
+  std_clean <- tar_read(conc_std_clean)
+  conc <- tar_read(conc_with_missing)
+  evap <- tar_read(evap_raw)
+  flux_measurements <- tar_read(flux_measurements)
+  growth_curves <- tar_read(growth_curves)
+  growth_rates <- tar_read(growth_rates)
+  degradation_rates <- tar_read(degradation_rates)
+  k <- tar_read(k)
+  fluxes <- tar_read(fluxes)
+})
+```
+
+\newpage
+
+# Overview
+
+Extracellular fluxes are determined from serial measurements of cell count and metabolite mass in conditioned medium accounting for evaporation and metabolite degradation/accumulation. Here, we calculate the extracellular fluxes included in the manuscript. Metabolic flux models assume metabolic steady state associated with exponential cell growth. Pilot experiments yielded the following conditions to monitor this time period:  
+
+*Lung fibroblasts.* Lung fibroblasts (LFs) were seeded at 25,000 cells per well of six-well plates on Day -1. Treatment was initiated on this day by placing plates in hypoxia (0.2% or 0.5% ambient oxygen) or treating with the prolyl hydroxylase inhibitor molidustat (10 μM, BAY, BAY85-3934, Cayman) with 0.1% DMSO as the vehicle control. The medium was changed on Day 0 and samples were collected this day and every 24 h for 72 h. The cell culture medium was MCDB131 (genDepot) supplemented with glucose (8 mM) and glutamine (1 mM), similar to medium used for isotope labeling experiments.
+
+*Pulmonary artery smooth muscle cells.* Pulmonary artery smooth muscle cells (PASMCs) were seeded at 25,000 cells per well of six-well plates on Day -1. Treatment was initiated on this day by placing plates in hypoxia (0.5% ambient oxygen). The medium was changed on Day 0 and samples were collected at this time and every 12 h for 48 h. The cell culture medium was MCDB131 (genDepot) supplemented with glucose (5.551 mM) and glutamine (10 mM), similar to medium used for isotope labeling experiments. 
+
+*Hypoxia plus BAY.* When hypoxia was combined with BAY treatment to measure glucose and lactate fluxes, cells were cultured in complete growth medium (*e.g.*, FGM-2 for LFs).
+
+```{r}
+data_raw %>% 
+  select(cell_type, experiment, date) %>% 
+  distinct() %>% 
+  group_by(cell_type, experiment) %>% 
+  summarise(count = n()) %>% 
+  my_kable(
+    col.names = c("Cell type", "Experiment", "Count"), 
+    caption = "Biological replicates"
+  )
+```
+
+# Data Acquisition
+
+Raw data are indexed to metadata by sample number, which corresponds to a unique combination of measurement type, treatment, time, and well. The sample type, `cells` or `empty`, refers to whether the medium was obtained from wells containing cells for flux measurements (`cells`) or from empty wells for degradation rate measurements (`empty`). The raw data for each experiment are contained in multi-sheet Excel files.
+
+## Cell count
+
+Cell counts were estimated from total cellular DNA measured by PicoGreen fluorescence (Quant-iT PicoGreen dsDNA Assay Kit, P11496, Thermo). The relationship between total DNA and cell count was determined by measuring DNA from cells seeded at different densities in basal growth medium. In the table below, the DNA standards were adjusted to incorporate the conversion from [DNA] to cell count. Lysis buffer volume changed between the two experimental batches, which affected the slope of the [DNA] *v*. cell count standard curve. Here, `conc` refers to cell count. 
+
+## Lactate
+
+Lactate concentration was determined using an enzymatic assay (\textsc{l}-Lactate Assay Kit, 700510, Cayman). For batch `a`, samples were deproteinized with MPA per the manufacturer's protocol (2.1-fold dilution) and then diluted 5-fold prior to analysis (10.5-fold dilution total). Control experiments indicated that, for medium samples, deproteinization is not necessary (*i.e.*, signal intensities for unconditioned and conditioned medium were the same regardless of the deproteinization step). For subsequent batches, samples were diluted 10-fold in PBS prior to analysis. As for cell count, the lactate standard concentrations were adjusted to account for sample dilution. 
+
+## Glucose
+
+Glucose concentration was determined using an enzymatic assay (Glucose Colorimetric Assay Kit, 10009582, Cayman). All samples were diluted 10-fold in water (batch `a`) or PBS (batches `b` and `c`) prior to analysis. Preliminary studies suggested no significant degradation of glucose. Glucose standard concentrations were adjusted to reflect unit conversion from mg/dL to μM and sample dilution prior to analysis.
+
+## Pyruvate
+
+Pyruvate concentration was measured multiple ways. For hypoxia batch `a` samples, it was determined by HPLC analysis of deproteinized OPD-derivatized samples. This analysis utilized ketovalerate (`KV`) as an internal standard (10 μL, 100 μM final concentration), which was added at the same time as the amino acid internal standards. For `bay` batch `a`, pyruvate concentration was determined by LC-MS analysis with `d8-valine` as an internal standard. For all batch `b` and `c` samples, pyruvate concentration was determined by enzymatic assay (Pyruvate Assay Kit, 700470, Cayman). For the enzymatic assay, samples were diluted 20-fold in PBS. 
+
+## Amino acids
+
+Amino acid concentrations were determined by HPLC analysis of FMOC- and OPA-derivatized samples, producing chemicals detectable by fluorescent or UV/visible spectrophotometery, respectively. Prior to HPLC, internal standards (norvaline and sarcosine, 10 μL, 100 μM final concentration) were added to the samples (180 μL for batch `a` samples where pyruvate was measured by chromatography or 190 μL for all other samples) and they were deproteinized using ice-cold acetone (400 μL). Insoluble material was removed by centrifugation and the supernatant was evaporated to < 50% of the initial volume (< 100 μL) prior to HPLC. 
+
+\newpage
+
+# Data Analysis
+
+All measured values are interpolated to concentration in μM for metabolites or cell count for DNA measurements.
+
+## Standard curves
+
+A review of the r^2^ values for the standard curves will identify problematic fits. 
+
+```{r, results = "hide", fig.show = "hold", fig.align = "left"}
+plot_r_squared <- function(df, title) {
+  ggplot(df) +
+    aes(
+      y = reorder(metabolite, desc(metabolite)), 
+      x = r.squared, 
+      color = interaction(date, batch, run)
+    ) +
+    geom_point(
+      aes(shape = detector), 
+      size = 3, 
+      alpha = 0.6
+    ) +
+    labs(
+      title = title, 
+      x = expression(paste("r"^2)), 
+      y = "Metabolite"
+    ) +
+    guides(color = guide_legend(title = NULL, nrow = 10))
+}
+
+std %>% 
+  select(metabolite:run, summary) %>% 
+  unnest(c(summary)) %>% 
+  group_by(cell_type, experiment) %>% 
+  nest() %>% 
+  mutate(
+    title = str_c(cell_type, experiment, sep = " "), 
+    plots = map2(data, title, plot_r_squared)
+  ) %>% 
+  pull(plots)
+```
+
+These data suggest worse fits from fluorescent detection.
+
+```{r, results = "hide", fig.show = "hold", fig.align = "left", out.width = "24.5%"}
+std %>% 
+  filter(detector == "fld", date == "2018-02-12", experiment == "02") %>% 
+  pull(plots)
+```
+
+The fluorescence signal is plateauing between 250 and 1000 μM. The highest standard concentration will be removed from the curves.
+
+In addition, there were a few standard curves that had poor fits:
+
+```{r, fig.show = "hold", fig.align = "left", results = "hide"}
+std_fld %>% 
+  select(metabolite:run, summary) %>% 
+  unnest(c(summary)) %>% 
+  group_by(cell_type, experiment) %>% 
+  nest() %>% 
+  mutate(
+    title = str_c(cell_type, experiment, sep = " "), 
+    plots = map2(data, title, plot_r_squared)
+  ) %>% 
+  pull(plots)
+```
+
+After removing the high fluorescence standard, the remaining poorest fits were:
+
+```{r}
+poor_fits <- 
+  std_fld %>% 
+  ungroup() %>% 
+  select(metabolite:run, summary, plots) %>% 
+  unnest(c(summary)) %>% 
+  slice_min(order_by = r.squared, n = 7)
+
+poor_fits %>% 
+  select(metabolite:r.squared) %>% 
+  my_kable(caption = "Poor standard curve fits")
+```
+
+```{r, fig.show = "hold", fig.align = "left", results = "hide", out.width = "32.9%"}
+poor_fits %>% 
+  pull(plots)
+```
+
+When an apparent outlier was identified, it was removed from the standard curve. 
+
+```{r, fig.show = "hold", fig.align = "left", results = "hide", out.width = "32.9%"}
+std_clean %>% 
+  semi_join(poor_fits, by = c("metabolite", "experiment", "date", "batch", "run", "detector")) %>% 
+  pull(plots)
+```
+
+## Missing data
+
+The sample data frame was expanded to identify missing samples. 
+
+- For the 0.5% oxygen experiments, only three `empty` time 0 samples were collected and analyzed. The measurements from these samples will be used as time 0 to calculate degradation and accumulation rates for both treatments, 21% and 0.5%. 
+
+- For the LF 0.5% oxygen experiment performed 2017-11-06, the 48 h 21% `empty` sample was lost.
+
+- Specific `empty` samples were not collected for the BAY treatment condition, only for the DMSO condition. Thus, the DMSO degradation rates will be duplicated and used for BAY treatment in the flux calculations. 
+
+- For the LF BAY experiment performed 2018-11-02, only one of three time 0 `empty` samples were collected. 
+
+# Analysis
+
+## Pyruvate assays
+
+Pyruvate was ultimately measured by three different methods, HPLC, LC-MS, and enzymatic assay. 
+
+```{r}
+pyruvate <- 
+  conc %>% 
+  filter(metabolite == "pyruvate") %>%
+  mutate(detector = factor(
+    detector, 
+    levels = c("enzyme", "hplc", "lcms"), 
+    labels = c("Enzyme", "HPLC", "LC-MS")
+  ))
+
+pyruvate %>% 
+  filter(conc < 1500) %>% 
+  filter(time == 0) %>% 
+  ggplot() + 
+  aes(x = detector, y = conc, color = detector) +
+  geom_jitter(show.legend = FALSE) +
+  labs(
+    title = "Pyruvate concentrations at time 0", 
+    x = "Detection method", 
+    y = "Concentration (μM)"
+  )
+```
+
+Compared to the enzymatic assay, the HPLC measurements tended to underestimate the pyruvate concentration while the LC-MS measurements tended to overestimate the pyruvate concentration. I suspect the pyruvate determination using the enzymatic assay is more accurate and we will preferentially use these measurements to determine the fluxes. Unfortunately, for the 0.2% oxygen experiments, the only pyruvate measurements available were obtained using the HPLC assay, and so this assay will be used to estimate fluxes from those experiments. 
+
+## Amino acid measurements
+
+Amino acid metabolites were measured using two detectors, fluorescence (`fld`) and multi-wavelength (`mwd`). We need to decide which detector is optimal for which amino acids based on the metabolite and its concentration in medium. Cystine is derivatized poorly by FMOC, and so it not detectable by fluorescence. 
+
+The fluorescence response is linear up to a concentration of ~ 250 μM on the basis of the standard curves. First, we will assess the metabolite concentrations across all of the samples. 
+
+```{r, fig.show = "hold"}
+amino_acids <-
+  conc %>% 
+  filter(detector %in% c("mwd", "fld"))
+
+plot_aa <- function(df) {
+  df %>% 
+    filter(!is.na(conc)) %>% 
+    ggplot() + 
+    aes(y = conc, x = metabolite, color = detector) + 
+    geom_hline(yintercept = 300, linetype = 2, color = "gray") +
+    geom_jitter(alpha = 0.1) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+    labs(
+      x = "Amino acid", 
+      y = "Concentration (μM)"
+    ) + 
+    scale_color_discrete(name = "Detector", labels = c("FLD", "MWD")) +
+    guides(color = guide_legend(override.aes = list(alpha = 1)))
+}
+
+amino_acids %>% 
+  filter(cell_type == "lf") %>% 
+  plot_aa() + ggtitle("LF amino acids")
+
+amino_acids %>% 
+  filter(cell_type == "pasmc") %>% 
+  plot_aa() + ggtitle("PASMC amino acids")
+```
+
+Fluorescence detection appears to be associated with smaller variance when amino acid concentration is low. At higher concentrations, fluorescence detection is likely underestimating the concentration based on the standard curve analysis performed above. Based on these data, we will use concentrations determined by fluorescence detection for metabolites with an average concentration < 300 μM.
+
+```{r}
+amino_acids %>% 
+  group_by(metabolite) %>% 
+  summarise(conc = mean(conc, na.rm = TRUE)) %>% 
+  mutate(detector = case_when(
+    metabolite == "cystine" ~ "mwd", 
+    conc > 300 ~ "mwd", 
+    conc <= 300 ~ "fld"
+  )) %>% 
+  filter(detector == "mwd") %>% 
+  select(metabolite) %>% 
+  my_kable(caption = "MWD detection", col.names = "Metabolite")
+```
+
+## Evaporation
+
+Preliminary experiments suggested that medium evaporation rates would have a significant impact on the interpretation of metabolite concentration measurements and that the evaporation rates differed between the normoxia and hypoxia incubators. To determine evaporation rate, a six-well plate was filled with medium and weighed during each sample collection. For 0.2% oxygen experiments, no evaporation controls were measured and so 0.5% oxygen rates were used instead. For BAY experiments, only one evaporation plate containing medium supplemented with 0.1% DMSO was used and this evaporation rate was applied to both conditions. Predicted well volumes were calculated from experimental measurements of plate weight assuming a starting volume of 2 mL per well.
+
+```{r}
+evap %>% 
+  ggplot() +
+  aes(
+    x = time, 
+    y = volume, 
+    color = interaction(experiment, oxygen, treatment, sep = " | ")
+  ) +
+  geom_point(
+    alpha = 0.3, 
+    size = 2
+  ) +
+  geom_smooth(
+    method = "lm", 
+    formula = y ~ x, 
+    se = FALSE, 
+    show.legend = FALSE
+  ) +
+  stat_summary(
+    geom = "pointrange", 
+    fun.data = "mean_se", 
+    alpha = 1, 
+    fatten = 1, 
+    show.legend = FALSE
+  ) +
+  guides(color = guide_legend(
+    title = "Treatment", 
+    override.aes = list(alpha = 1)
+  )) +
+  labs(
+    tite = "Predicted well volumes", 
+    x = "Time (h)", 
+    y = "Volume (ml)"
+  )
+```
+
+Specific evaporation rates for BAY-treated cells were not obtained, so the DMSO condition was duplicated. Evaporation controls were not obtained for BAY batch `a` or 0.2% oxygen experiments and so the average evaporation rates from BAY batch `b` and 0.5% oxygen experiments were duplicated and substituted, respectively. The predicted well volumes are attached to the interpolated sample concentrations or cell counts and made available as `flux_measurements`.
+
+```{r}
+usethis::use_data(flux_measurements, overwrite = TRUE)
+```
+
+# Flux Calculations
+
+Determination of fluxes is based on the solution of the following differential equations: 
+
+$$ 
+\begin{aligned}
+\frac{dX}{dt} &= \mu X \\[6 pt]
+\frac{dM}{dt} &= -kM+vX 
+\end{aligned}
+$$ 
+
+where $X$ is the cell number, $\mu$ is cell growth rate, $M$ is moles of substrate, $k$ is the metabolite degradation rate, and $v$ is the extracellular flux rate. 
+
+These equations are solved as follows:
+
+$$
+\begin{aligned}
+X &= X_0e^{\mu t} \\[6 pt]
+Me^{k t} &= \frac{v X_0}{\mu + k} (e^{(\mu + k)t}-1) + M_0
+\end{aligned}
+$$
+
+The data can be fit to a linear equation and the slope is used to calculate $v$. 
+
+## Growth rates
+
+```{r, fig.show = "hold", fig.align = "left", results = "hide", out.width = "32.9%"}
+growth_curves %>% 
+  select(cell_type:data) %>% 
+  unnest(c(data)) %>% 
+  group_by(cell_type, experiment, batch, date, oxygen, treatment, time) %>%
+  summarize(conc = mean(conc, na.rm = TRUE)) %>% 
+  filter(!is.na(time)) %>% 
+  group_by(cell_type, experiment) %>% 
+  nest() %>% 
+  mutate(plot = map2(
+    data, 
+    cell_type, 
+    ~ggplot(.x) + 
+      aes(
+        x = time, 
+        y = conc/1000, 
+        color = interaction(oxygen, treatment, sep = " | ")
+      ) +
+      stat_summary(
+        geom = "pointrange", 
+        fun.data = "mean_se"
+      ) +
+      stat_summary(
+        geom = "line", 
+        fun.data = "mean_se", 
+        show.legend = FALSE
+      ) +
+      labs(
+        title = toupper(.y), 
+        x = "Time (h)", 
+        y = expression(paste("Cell count (\U00D7", "10"^3, ")")), 
+        color = "condition"
+      )
+  )) %>% 
+  pull(plot)
+```
+
+Robust linear models were fit to the logarithm of cell count *v*. time to determine growth rate (μ) and initial cell count (X0). The calculated growth rates are available as `growth_rates`. 
+
+```{r}
+usethis::use_data(growth_rates, overwrite = TRUE)
+```
+
+```{r, fig.show = "hold", out.width = "49%"}
+plot_growth_info <- function(df, y){
+  ggplot(df) +
+    aes(
+      x = interaction(oxygen, treatment), 
+      y = .data[[y]], 
+      color = interaction(oxygen, treatment)
+    ) +
+    facet_wrap(
+      ~cell_type, 
+      ncol = 1
+    ) +
+    geom_point(
+      aes(shape = batch), 
+      size = 4, 
+      alpha = 0.5, 
+      show.legend = FALSE
+    ) +
+    stat_summary(
+      fun.data = "mean_se", 
+      geom = "crossbar", 
+      width = 0.3, 
+      show.legend = FALSE
+    ) +
+    labs(
+      x = "Treatment", 
+      y = y
+    )
+}
+
+plot_growth_info(growth_rates, "mu") + ylab(expression(paste("Growth rate (h"^-1, ")")))
+plot_growth_info(growth_rates, "X0") + ylab("Cell count at time 0")
+```
+
+## Degradation rates
+
+Metabolite concentrations from unconditioned medium (`type == empty`) were used to calculate metabolite degradation or accumulation rates. Glutamine, for example, is known to degrade over time. When available, 96 h samples were included in these analyses to improve fits. Metabolite concentration was multiplied by predicted well volume to determine metabolite mass in nanomoles. 
+
+```{r, out.width = "100%"}
+ggplot(degradation_rates) +
+  aes(
+    x = reorder(abbreviation, k), 
+    y = k, 
+    color = interaction(oxygen, treatment, sep = " | ")
+  ) +
+  geom_hline(yintercept = 0) +
+  geom_point(
+    aes(shape = batch), 
+    alpha = 0.3
+  ) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(
+    title = "Degradation and accumulation rates", 
+    x = "Metabolite", 
+    y = expression(paste("Rate constant (h"^"-1", ")")), 
+    color = "condition"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+There appears to be some treatment-dependent effects on degradation rates. Will group rates by treatment, remove outliers, and determine if the mean rates are different from 0. If so, these rates will be included in the metabolic flux calculations. 
+
+```{r}
+usethis::use_data(k, overwrite = TRUE)
+```
+
+
+## Fluxes
+
+```{r}
+usethis::use_data(fluxes, overwrite = TRUE)
+```
+
+```{r, out.width = "75%"}
+plot_fluxes <- function(df, title) {
+  ggplot(df) + 
+    aes(
+      x = reorder(abbreviation, flux),
+      y = flux,
+      color = interaction(oxygen, treatment, sep = " | ")
+    ) +
+    geom_hline(yintercept = 0) +
+    geom_point(
+      aes(group = interaction(oxygen, treatment)),
+      position = position_dodge(width = 0.5),
+      size = 2,
+      alpha = 0.3
+    ) +
+    stat_summary(
+      fun.data = "mean_se",
+      geom = "crossbar",
+      width = 0.3,
+      position = position_dodge(width = 0.5),
+      show.legend = FALSE
+    ) +
+    labs(
+      title = title,
+      x = "Metabolite",
+      y = "Flux (fmol / cell / h)",
+      color = "Condition"
+    ) +
+    guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+fluxes %>%
+  filter(metabolite %in% c("glucose", "lactate")) %>%
+  plot_fluxes("Metabolite flux") + facet_wrap(~cell_type, nrow = 1)
+```
+
+```{r, results = "hide", out.width = "100%"}
+fluxes %>% 
+  filter(!(metabolite %in% c("glucose", "lactate"))) %>% 
+  group_by(cell_type, experiment) %>% 
+  nest() %>% 
+  mutate(plots = map2(data, toupper(cell_type), plot_fluxes)) %>% 
+  pull(plots)
+```
+
+\newpage
+
+```{r}
+fluxes %>%
+  ungroup() %>%
+  group_by(metabolite, cell_type, oxygen, treatment) %>%
+  summarise(
+    v = mean(flux, na.rm = TRUE),
+    sd = sd(flux, na.rm = TRUE),
+    n = n(),
+    se = sd / sqrt(n()),
+    cv = sd / abs(v)
+  ) %>%
+  arrange(cell_type, metabolite, oxygen, treatment) %>%
+  my_kable(
+    caption = "Flux rate summary",
+    col.names = c(
+      "Metabolite", 
+      "Cell type", 
+      "Oxygen", 
+      "Treatment", 
+      "Flux", 
+      "SD", 
+      "n", 
+      "SEM", 
+      "CV"
+    ),
+    align = "lcccccccc",
+    digits = 2,
+    longtable = TRUE,
+  ) %>%
+  kableExtra::kable_styling(
+    latex_options = c("repeat_header"),
+    font_size = 9
+  )
+```
+
+

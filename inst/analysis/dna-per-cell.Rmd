@@ -95,15 +95,17 @@ sample %>%
 
 These plots suggest that, for the 100 μL extraction buffer, the maximum cell count is ~ 250,000. We will exclude the 300,000 value prior to calculate the slopes of the curves. For the PASMC samples, the 400,000 cell sample is quite high compared to the other samples. Will also remove these values prior to calculation of the slopes.
 
+\newpage
+
 ```{r}
 usethis::use_data(cells_per_dna, overwrite = TRUE)
 
 cells_per_dna  %>% 
-  knitr::kable(
-    digits = 4, 
+  my_kable(
+    digits = 0, 
     col.names = c("Cell Type", "Volume", "Cell / DNA"), 
     align = "c", 
-    booktabs = TRUE
+    caption = "Cells per DNA (ng)"
   ) %>% 
   kableExtra::kable_styling(position = "center") 
 ```

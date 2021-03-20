@@ -20,7 +20,7 @@ measurements.
 \code{lf}    = lung fibroblasts \cr
 \code{pasmc} = pulmonary artery smooth muscle cells}
 \item{volume}{volume of lysis buffer used to extract DNA}
-\item{slope}{cells / DNA}
+\item{slope}{cells / ng DNA}
 }
 }
 \keyword{datasets}
