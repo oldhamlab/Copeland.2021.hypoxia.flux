@@ -41,10 +41,16 @@ path_to_data <- function(nm) {
 # path_to_reports ---------------------------------------------------------
 
 path_to_reports <- function(nm) {
-  system.file(
-    stringr::str_c("analysis/", nm),
-    package = "Copeland.2021.hypoxia.flux"
-  )
+  path <-
+    stringr::str_c(
+      system.file(
+        stringr::str_c("analysis"),
+        package = "Copeland.2021.hypoxia.flux"
+      ),
+      "/",
+      nm
+    )
+  path
 }
 
 # path_to_plots -----------------------------------------------------------
@@ -1288,4 +1294,95 @@ clean_biomass <- function(biomass_file) {
       diff = post-pre,
       cell_mass = diff / cell_number * 1E12
     )
+}
+
+
+# calculate_biomass -------------------------------------------------------
+
+calculate_biomass <- function(biomass_clean) {
+  biomass_clean %>%
+    dplyr::group_by(.data$cell_type, .data$date) %>%
+    dplyr::mutate(cell_mass = replace_outliers(.data$cell_mass)) %>%
+    dplyr::summarise(cell_mass = mean(.data$cell_mass, na.rm = TRUE)) %>%
+    dplyr::mutate(cell_mass = replace_outliers(.data$cell_mass)) %>%
+    dplyr::summarise(biomass = mean(.data$cell_mass, na.rm = TRUE))
+}
+
+
+#  calculate_biomass_equations --------------------------------------------
+
+calculate_biomass_equations <- function(biomass) {
+  biomass_coefs <- function(biomass, metabolites) {
+    μmol_per_mass %>%
+      dplyr::mutate(coefficient = .data$μmol_per_gDW * biomass) %>%
+      dplyr::filter(.data$metabolite %in% metabolites) %>%
+      dplyr::select(.data$metabolite, .data$coefficient) %>%
+      dplyr::mutate(
+        metabolite = dplyr::case_when(
+          .data$metabolite %in% c("AcCoA") ~ stringr::str_c(metabolite, ".c"),
+          TRUE ~ metabolite
+        ))
+  }
+
+  biomass_eq <- function(biomass_coefs) {
+    biomass_coefs %>%
+      dplyr::mutate(
+        combined = stringr::str_c(
+          as.character(format(coefficient, digits = 0)),
+          metabolite,
+          sep = " ")
+      ) %>%
+      dplyr::pull(combined) %>%
+      stringr::str_trim() %>%
+      stringr::str_c(collapse = " + ") %>%
+      stringr::str_c(" -> Biomass")
+  }
+
+  metabs <- c(
+    "ALA",
+    "ASP",
+    "GLU",
+    "GLN",
+    "P5P",
+    "AcCoA",
+    # "LEU",
+    # "ILE",
+    # "VAL",
+    "SER",
+    "CYS",
+    "GLY",
+    "MEETHF",
+    "CO2",
+    "DHAP",
+    # "ASN",
+    # "ARG",
+    "G6P"
+  )
+
+  biomass %>%
+    dplyr::mutate(
+      coefs = purrr::map(.data$biomass, biomass_coefs, metabs),
+      eq = purrr::map(.data$coefs, biomass_eq)
+    )
+}
+
+
+# save_biomass_equations --------------------------------------------------
+
+save_biomass_equations <- function(biomass_equations) {
+  path <- path_to_reports("modeling/matlab-input")
+
+  purrr::walk2(
+    biomass_equations$coefs,
+    biomass_equations$cell_type,
+    ~readr::write_csv(
+      .x,
+      file = file.path(path, stringr::str_c(.y, "_biomass.csv"))
+    )
+  )
+
+  purrr::map_chr(
+    biomass_equations$cell_type,
+    ~ file.path(path, stringr::str_c(.x, "_biomass.csv"))
+  )
 }

@@ -245,6 +245,24 @@ list(
   tar_target(
     biomass_clean,
     clean_biomass(biomass_file)
+  ),
+  tar_target(
+    biomass,
+    calculate_biomass(biomass_clean)
+  ),
+  tar_target(
+    biomass_equations,
+    calculate_biomass_equations(biomass)
+  ),
+  tar_target(
+    biomass_equations_out,
+    save_biomass_equations(biomass_equations),
+    format = "file"
+  ),
+  tar_render(
+    biomass_report,
+    path = path_to_reports("biomass.Rmd"),
+    output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
   )
 
 )

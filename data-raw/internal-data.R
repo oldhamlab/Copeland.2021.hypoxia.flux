@@ -102,7 +102,7 @@ metabolite_composition <-
   dplyr::left_join(cell_composition, metabolite_composition, by = "class") %>%
   dplyr::mutate(
     component = dplyr::if_else(is.na(.data$component), .data$metabolite, .data$component),
-    stoichiometry = dplyr::replace_na(stoichiometry, 1),
+    stoichiometry = tidyr::replace_na(stoichiometry, 1),
     μmol_per_g = .data$μmol_per_gDW * .data$stoichiometry
   ) %>%
   dplyr::group_by(.data$component) %>%
