@@ -30,7 +30,7 @@ conflicted::conflict_prefer("filter", "dplyr")
 knitr::opts_chunk$set(
   echo = FALSE, 
   message = FALSE, 
-  warning = TRUE, 
+  warning = FALSE, 
   fig.align = "center", 
   out.width = "49%"
 ) 
@@ -110,7 +110,7 @@ Amino acid concentrations were determined by HPLC analysis of FMOC- and OPA-deri
 
 \newpage
 
-# Data Analysis
+# Data Processing
 
 All measured values are interpolated to concentration in μM for metabolites or cell count for DNA measurements.
 

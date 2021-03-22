@@ -199,5 +199,52 @@ list(
     qbias_correction_factor_report,
     path = path_to_reports("qbias-correction-factors.Rmd"),
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+
+  # mass isotopomer distributions -------------------------------------------
+
+  tar_target(
+    mid_files,
+    path_to_data("(a|b)_(fs|sim)_(lf|pasmc)_.*\\.csv"),
+    format = "file"
+  ),
+  tar_target(
+    mid_clean,
+    clean_mids(mid_files)
+  ),
+  tar_target(
+    mid_correct,
+    correct_mid(mid_clean)
+  ),
+  tar_target(
+    mids,
+    remove_mid_outliers(mid_correct)
+  ),
+  tar_target(
+    mid_curves,
+    plot_mid_curves(mids)
+  ),
+  tar_target(
+    mid_curve_plots,
+    print_plots(mid_curves$plots, mid_curves$title, "mids"),
+    format = "file"
+  ),
+  tar_render(
+    mid_report,
+    path = path_to_reports("mass-isotope-distributions.Rmd"),
+    output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+
+  # biomass -----------------------------------------------------------------
+
+  tar_target(
+    biomass_file,
+    path_to_data("cell-mass.csv"),
+    format = "file"
+  ),
+  tar_target(
+    biomass_clean,
+    clean_biomass(biomass_file)
   )
+
 )

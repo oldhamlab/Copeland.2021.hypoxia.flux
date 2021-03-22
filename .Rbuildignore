@@ -3,3 +3,4 @@
 ^Copeland\.2021\.hypoxia\.flux\.Rproj$
 ^\.Rproj\.user$
 ^inst/analysis/figures
+^data-raw$

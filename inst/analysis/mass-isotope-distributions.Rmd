@@ -1,0 +1,179 @@
+---
+title: "Mass Isotopomer Distributions"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: kable
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+})
+
+# resolve conflicts
+conflicted::conflict_prefer("filter", "dplyr")
+
+# set global chunk options
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.align = "center",
+	message = FALSE,
+	warning = FALSE,
+	out.width = "49%"
+)
+ 
+
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  mids <- tar_read(mids)
+})
+```
+
+\newpage
+
+# Overview
+
+Mass isotopomer distributions (MIDs) were determined for key intracellular metabolites. Cells were seeded on Day -1 in "light" labeling medium. On Day 0, medium was changed to "heavy" labeling medium containing an equimolar concentration of the stable isotope substrate. These experiments utilized the following substrates: [1,2-^13^C~2~] glucose, [U-^13^C~6~] glucose, [U-^13^C~5~] glutamine, and [U-^13^C~3~] lactate. Intracellular metabolites for every time point were extracted in 80% MeOH pre-cooled to -80 °C and analyzed by LC-MS. Each sample was run using two different LC-MS methods. First, selected ion monitoring (SIM) was used to enhance the sensitivity for key metabolites used in modeling. Second, a polarity-switching, full scan (FS) method was used. The full scan method provided labeling insights for metabolites that were not previously targeted.
+
+# Data Processing
+
+Peaks were interpolated using either Thermo Xcalibur or TraceFinder software.
+
+## Quadrupole bias correction
+
+A selected ion monitoring method was utilized to increase sensitivity for isotope detection. Others have noted quadrupole bias on the Q Exactive using this detection method (*i.e.*, the sensitivity for each isotope differs relative to its position within the m/*z* window). To account for this, naturally labeled standards were analyzed using methods where the m/*z* window is shifted -1.003355 units, the ^13^C mass defect. The M1/M0 ratio was calculated for each frame shift and corrected to the theoretical ratio. These correction factors are applied to the raw MID data. 
+
+## Natural abundance correction matrices
+
+Isotope correction matrices are generated from the metabolite's molecular formula using a custom R package (`wmoldham/mzrtools`). 
+
+## Correct for natural isotope abundance
+
+MIDs are calculated from the peak areas corrected for quadrupole bias for each metabolite within each run. The correction matrices are are then used to adjust experiment MIDs for the natural abundance of ^13^C. 
+
+# Analysis
+
+```{r}
+mids_filtered <-
+  mids %>% 
+  group_by(across(-c(date, mid))) %>% 
+  remove_nested_outliers(mid, remove = TRUE)
+```
+
+
+```{r}
+mids_filtered %>% 
+  pivot_wider(names_from = method, values_from = mid) %>% 
+  filter(!is.na(sim)) %>%  
+  ggplot() + 
+  aes(
+    x = sim, 
+    y = fs, 
+    color = isotope
+  ) +
+  facet_wrap(~metabolite) +
+  geom_abline(slope = 1) +
+  geom_point() + 
+  scale_color_manual(values = viridis::viridis(7)) +
+  labs(
+    x = "Selected ion monitoring", 
+    y = "Full scan", 
+    title = "Method comparison"
+  )
+```
+
+There is reasonably good agreement between full scan and SIM methods for several of the metabolites. This observation suggests that those metabolites detected in full scan mode only are reasonable approximations. Certainly, SIM mode is preferred for metabolites detected with it, particularly as the MID correction seems to be better. 
+
+```{r remove-excess-fs}
+fs <-
+  mids_filtered %>% 
+  filter(method == "fs") %>% 
+  pull(metabolite) %>% 
+  unique()
+
+sim <- 
+  mids_filtered %>% 
+  filter(method == "sim") %>% 
+  pull(metabolite) %>% 
+  unique()
+
+fs <- setdiff(fs, sim)
+
+method_filter <-
+  tibble(
+    metabolite = c(fs, sim), 
+    method = c(rep("fs", length(fs)), rep("sim", length(sim)))
+  )
+
+mids_method <-
+  mids_filtered %>% 
+  semi_join(method_filter, by = c("metabolite", "method"))
+```
+
+```{r tracer-label-key}
+tracer_labels <- c(
+  expression(paste("[1,2-"^13, "C"[2], "] glucose")),
+  expression(paste("[U-"^13, "C"[6], "] glucose")), 
+  expression(paste("[U-"^13, "C"[5], "] glutamine")), 
+  expression(paste("[U-"^13, "C"[3], "] lactate"))
+)
+tracer_levels <- c("glc2", "glc6", "q5", "lac3")
+```
+
+```{r, results = "hide", fig.show = "hold", out.width = "49%"}
+mids_method %>% 
+  arrange(metabolite) %>% 
+  filter((cell_type == "lf" & time == 72) | (cell_type == "pasmc" & time == 48)) %>% 
+  group_by(method, cell_type, metabolite) %>% 
+  mutate(tracer = factor(tracer, levels = tracer_levels, labels = tracer_labels)) %>% 
+  nest() %>% 
+  mutate(plots = pmap(
+    list(data, metabolite, method, cell_type),   
+    ~ ggplot(data = ..1) + 
+      aes(
+        x = isotope, 
+        y = mid, 
+        color = interaction(oxygen, treatment, sep = " | ")
+      ) +
+      facet_wrap(
+        ~tracer, 
+        nrow = 2, 
+        ncol = 2, 
+        scales = "free_x", 
+        labeller = label_parsed
+      ) +
+      stat_summary(
+        geom = "pointrange", 
+        position = position_dodge(width = 0.3), 
+        fun.data = "mean_se"
+      ) +
+      labs(
+        x = "Isotope", 
+        y = "Mole fraction", 
+        title = stringr::str_c(toupper(..3), " ", ..2, " ", toupper(..4)), 
+        color = NULL
+      )
+  )) %>% 
+    pull(plots)
+```

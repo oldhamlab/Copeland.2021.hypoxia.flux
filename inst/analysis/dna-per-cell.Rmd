@@ -25,12 +25,13 @@ suppressPackageStartupMessages({
 
 # set global chunk options
 knitr::opts_chunk$set(
-  echo = FALSE, 
-  message = FALSE, 
-  warning = FALSE, 
-  fig.align = "center", 
-  out.width = "49%"
-) 
+	echo = FALSE,
+	fig.align = "center",
+	message = FALSE,
+	warning = FALSE,
+	out.width = "49%"
+)
+ 
 
 options(knitr.table.format = function() {
   if (knitr::is_latex_output()) 
