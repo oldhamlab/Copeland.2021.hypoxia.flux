@@ -1,0 +1,14 @@
+---
+title: "Model Building Notes"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# LF 21%
+
+## 2021-03-24
+
+Generated LF 21% oxygen model (`lf_21_2021-03-24-12-24-31`). Started flux estimation using 50 restarts and 6-log perturbations.
