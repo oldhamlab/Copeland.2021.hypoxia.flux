@@ -256,13 +256,43 @@ list(
   ),
   tar_target(
     biomass_equations_out,
-    save_biomass_equations(biomass_equations),
+    write_matlab_input(biomass_equations, coefs, "_biomass.csv"),
     format = "file"
   ),
   tar_render(
     biomass_report,
     path = path_to_reports("biomass.Rmd"),
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+
+  # matlab input ------------------------------------------------------------
+
+  tar_target(
+    reactions_file,
+    path_to_reports("modeling/matlab-input/reactions.csv"),
+    format = "file"
+  ),
+  tar_target(
+    model_reactions,
+    format_reactions(reactions_file)
+  ),
+  tar_target(
+    model_fluxes,
+    format_fluxes(growth_rates, fluxes)
+  ),
+  tar_target(
+    model_fluxes_out,
+    write_matlab_input(model_fluxes, data, "_fluxes.csv"),
+    format = "file"
+  ),
+  tar_target(
+    model_mids,
+    format_mids(mids)
+  ),
+  tar_target(
+    model_mids_out,
+    write_matlab_input(model_mids, data, "_mids.csv"),
+    format = "file"
   )
 
 )

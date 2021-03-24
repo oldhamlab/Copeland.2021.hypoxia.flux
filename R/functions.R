@@ -1367,22 +1367,211 @@ calculate_biomass_equations <- function(biomass) {
 }
 
 
-# save_biomass_equations --------------------------------------------------
 
-save_biomass_equations <- function(biomass_equations) {
+# write_matlab_input ------------------------------------------------------
+
+write_matlab_input <- function(x, column, suffix) {
   path <- path_to_reports("modeling/matlab-input")
+  column <- ensym(column)
 
   purrr::walk2(
-    biomass_equations$coefs,
-    biomass_equations$cell_type,
+    x[[column]],
+    x[["cell_type"]],
     ~readr::write_csv(
       .x,
-      file = file.path(path, stringr::str_c(.y, "_biomass.csv"))
+      file = file.path(path, stringr::str_c(.y, suffix))
     )
   )
 
   purrr::map_chr(
-    biomass_equations$cell_type,
-    ~ file.path(path, stringr::str_c(.x, "_biomass.csv"))
+    x[["cell_type"]],
+    ~ file.path(path, stringr::str_c(.x, suffix))
   )
+
+}
+
+
+# format_reactions --------------------------------------------------------
+
+format_reactions <- function(reactions_file) {
+  model_reactions <-
+    readr::read_csv(reactions_file) %>%
+    dplyr::filter(!is.na(.data$name)) %>%
+    dplyr::mutate(
+      pathway = factor(pathway, levels = c(
+        "transport",
+        "glycolysis",
+        "pentose phosphate pathway",
+        "anaplerosis",
+        "tricarboxylic acid cycle",
+        "amino acid metabolism",
+        "biomass",
+        "mixing",
+        "dilution"
+      ))
+    )
+
+  usethis::use_data(model_reactions, overwrite = TRUE)
+}
+
+
+# format_fluxes -----------------------------------------------------------
+
+format_fluxes <- function(growth_rates, fluxes) {
+  growth <-
+    growth_rates %>%
+    dplyr::mutate(metabolite = "biomass") %>%
+    dplyr::select(-.data$X0) %>%
+    dplyr::rename(flux = .data$mu)
+
+  fluxes_final <-
+    fluxes %>%
+    dplyr::filter(.data$experiment %in% c("05", "02", "bay")) %>%
+    dplyr::filter(!(.data$experiment == "02" & metabolite == "pyruvate")) %>%
+    dplyr::filter(!(.data$experiment == "02" & oxygen == "0.2%")) %>%
+    dplyr::select(-.data$abbreviation) %>%
+    dplyr::bind_rows(growth) %>%
+    dplyr::group_by(.data$metabolite, .data$cell_type, .data$oxygen, .data$treatment) %>%
+    wmo::remove_nested_outliers(flux, remove = TRUE)
+
+  flux_names <- tribble(
+    ~ metabolite, ~ name,
+    "biomass", "BIOMASS",
+    "alanine", "ALAR",
+    "glucose", "GLUT",
+    "glutamine", "GLNR",
+    "glutamate", "GLUR",
+    "lactate", "MCT",
+    "pyruvate", "PYRR",
+    "serine", "SERR",
+    "cystine", "CYSR",
+    "glycine", "GLYR",
+    "aspartate", "ASPR"
+  )
+
+  model_fluxes <- c(
+    "biomass",
+    "alanine",
+    "glucose",
+    "glutamine",
+    "glutamate",
+    "lactate",
+    "pyruvate",
+    "serine",
+    "cystine",
+    "glycine",
+    "aspartate"
+  )
+
+  fluxes_final %>%
+    dplyr::filter(.data$metabolite %in% model_fluxes) %>%
+    dplyr::group_by(.data$metabolite, .data$cell_type, .data$oxygen, .data$treatment) %>%
+    dplyr::summarise(
+      mean = mean(flux, na.rm = TRUE),
+      se = sd(flux, na.rm = TRUE)/sqrt(n())
+    ) %>%
+    dplyr::filter(!is.nan(.data$mean)) %>%
+    dplyr::left_join(flux_names, by = "metabolite") %>%
+    dplyr::group_by(.data$cell_type) %>%
+    tidyr::nest()
+
+}
+
+
+# format_mids -------------------------------------------------------------
+
+format_mids <- function(mids) {
+  model_metabolites <- c(
+    "pyruvate",
+    "lactate",
+    "alanine",
+    "2OG",
+    "malate",
+    "aspartate",
+    "glutamate",
+    "glutamine",
+    "citrate",
+    "serine",
+    "FBP",
+    "3PG"
+  )
+
+  mids_filtered <-
+    mids %>%
+    dplyr::filter(.data$metabolite %in% model_metabolites) %>%
+    dplyr::filter(.data$time != 96)
+
+  mids_lf_new <-
+    mids_filtered %>%
+    dplyr::filter(
+      .data$cell_type == "lf" &
+        .data$date %in% c(
+          "2018-11-15", "2018-11-20", "2018-11-25", "2018-12-16",
+          "2018-11-11", "2018-11-16",
+          "2019-05-06", "2019-05-10", "2019-05-14"
+        )
+    ) %>%
+    dplyr::filter(
+      .data$method == "sim" |
+        (.data$method == "fs" & .data$metabolite %in% c("FBP", "3PG"))
+    )
+
+  mids_pasmc_05_new <-
+    mids_filtered %>%
+    dplyr::filter(
+      .data$cell_type == "pasmc" &
+        .data$oxygen %in% c("21%", "0.5%") &
+        .data$date %in% c("2019-12-06", "2019-12-11", "2019-12-16")
+    ) %>%
+    dplyr::filter(
+      .data$method == "sim" |
+        (.data$method == "fs" & .data$metabolite %in% c("FBP", "3PG"))
+    )
+
+  mids_pasmc_05_old <-
+    mids_filtered %>%
+    dplyr::filter(
+      .data$cell_type == "pasmc" &
+        .data$oxygen %in% c("21%", "0.5%") &
+        .data$date %in% c("2018-05-25", "2018-05-29", "2018-06-02", "2018-06-08")
+    ) %>%
+    dplyr::filter(!(.data$method == "fs" & .data$metabolite == "2OG"))
+
+  dplyr::bind_rows(mids_lf_new, mids_pasmc_05_new, mids_pasmc_05_old) %>%
+    dplyr::group_by(
+      .data$method,
+      .data$cell_type,
+      .data$tracer,
+      .data$oxygen,
+      .data$treatment,
+      .data$metabolite,
+      .data$time,
+      .data$isotope
+    ) %>%
+    wmo::remove_nested_outliers(mid, remove = TRUE) %>%
+    # tidyr::nest() %>%
+    # dplyr::mutate(data = purrr::map(.data$data, remove_outliers, "mid", remove = TRUE)) %>%
+    # unnest(c(data)) %>%
+    dplyr::summarise(
+      mean = mean(.data$mid, na.rm = TRUE),
+      se = sd(.data$mid, na.rm = TRUE)/sqrt(dplyr::n())
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      metabolite = replace(.data$metabolite, .data$metabolite == "glutamine", "GLN"),
+      metabolite = replace(.data$metabolite, .data$metabolite == "2OG", "AKG"),
+      metabolite = stringr::str_sub(.data$metabolite, 1, 3),
+      metabolite = toupper(.data$metabolite)
+    ) %>%
+    dplyr::select(-.data$method) %>%
+    dplyr::arrange(
+      .data$metabolite,
+      .data$tracer,
+      .data$oxygen,
+      .data$treatment,
+      .data$time,
+      .data$isotope
+    ) %>%
+    dplyr::group_by(cell_type) %>%
+    tidyr::nest()
 }

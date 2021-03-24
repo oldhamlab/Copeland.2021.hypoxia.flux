@@ -1,0 +1,52 @@
+index,name,equation,pathway
+1,GLUT,GLC.x (abcdef) -> GLC (abcdef),transport
+2,PYRR,PYR.x (abc) -> PYR.c (abc),transport
+3,MCT,LAC (abc) <-> LAC.x (abc),transport
+4,ALAR,ALA (abc) -> ALA.x (abc),transport
+5,GLNR,GLN.x (abcde) -> GLN (abcde),transport
+6,GLUR,GLU (abcde) <-> GLU.x (abcde),transport
+7,ASPR,ASP (abcd) -> ASP.x (abcd),transport
+8,HK,GLC (abcdef) -> G6P (abcdef),glycolysis
+9,PGI,G6P (abcdef) <-> F6P (abcdef),glycolysis
+10,PFK,F6P (abcdef) -> FBP (abcdef),glycolysis
+11,ALDO,FBP (abcdef) <-> DHAP (cba) + GAP (def),glycolysis
+12,TPI,DHAP (abc) <-> GAP (abc),glycolysis
+13,GAPDH,GAP (abc) <-> 3PG (abc),glycolysis
+14,ENO,3PG (abc) -> PEP (abc),glycolysis
+15,PK,PEP (abc) -> PYR.c (abc),glycolysis
+16,LDH,PYR.c (abc) <-> LAC (abc),glycolysis
+17,GPT1,PYR.c (abc) <-> ALA (abc),glycolysis
+18,GPT2,PYR.m (abc) <-> ALA (abc),glycolysis
+19,G6PD,G6P (abcdef) -> P5P (bcdef) + CO2 (a),pentose phosphate pathway
+20,TK1,P5P (abcde) + P5P (fghij) <-> S7P (abfghij) + GAP (cde)  ,pentose phosphate pathway
+21,TA,S7P (abcdefg) + GAP (hij) <-> F6P (abchij) + E4P (defg)  ,pentose phosphate pathway
+22,TK2,P5P (abcde) + E4P (fghi) <-> F6P (abfghi) + GAP (cde),pentose phosphate pathway
+23,PYRT,PYR.c (abc) -> PYR.m (abc),anaplerosis
+24,PC,PYR.m (abc) + CO2 (d) -> OAC (abcd),anaplerosis
+25,PEPCK,OAC (abcd) -> PEP (abc) + CO2 (d),anaplerosis
+26,ME2,MAL (abcd) -> PYR.m (abc) + CO2 (d),anaplerosis
+27,ME1,MAL (abcd) -> PYR.c (abc) + CO2 (d),anaplerosis
+28,PDH,PYR.m (abc) -> AcCoA.m (bc) + CO2 (a),tricarboxylic acid cycle
+29,FAO,FAO (ab) -> AcCoA.m (ab),anaplerosis
+30,GLDH,GLU (abcde) <-> AKG (abcde),anaplerosis
+31,GLS,GLN (abcde) <-> GLU (abcde),anaplerosis
+32,CS,AcCoA.m (ab) + OAC (cdef) -> CIT (fedbac),tricarboxylic acid cycle
+33,IDH,CIT (abcdef) <-> AKG (abcde) + CO2 (f),tricarboxylic acid cycle
+34,OGDH,AKG (abcde) -> SUC (bcde) + CO2 (a),tricarboxylic acid cycle
+35,SDH,SUC (abcd) <-> FUM (abcd),tricarboxylic acid cycle
+36,FH,FUM (abcd) <-> MAL (abcd),tricarboxylic acid cycle
+37,MDH,MAL (abcd) <-> OAC (abcd),tricarboxylic acid cycle
+38,GOT,OAC (abcd) <-> ASP (abcd),tricarboxylic acid cycle
+39,ACL,CIT (abcdef) -> AcCoA.c (ed) + MAL (fcba),biomass
+40,LIPS,AcCoA.c (ab) -> lipid,biomass
+41,SERR,SER.x (abc) -> SER (abc),transport
+42,PST,3PG (abc) -> SER (abc),amino acid metabolism
+43,SHT,SER (abc) <-> GLY (ab) + MEETHF (c),amino acid metabolism
+44,CYST,SER (abc) <-> CYS (abc),amino acid metabolism
+45,SD,SER (abc) -> PYR.c (abc),amino acid metabolism
+46,GLYS,CO2 (a) + MEETHF (b) -> GLY (ab),amino acid metabolism
+47,CYSR,CYX.x (abcdef) -> CYS (abc) + CYS (fed),transport
+48,GLYR,GLY (ab) -> GLY.x (ab),transport
+49,cPYR,0*PYR.c (abc) -> PYR.ms (abc),mixing
+50,mPYR,0*PYR.m (abc) -> PYR.ms (abc),mixing
+51,sPYR,PYR.ms (abc) -> PYR.fix (abc),mixing
