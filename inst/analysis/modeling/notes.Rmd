@@ -7,8 +7,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# LF 21%
+# LF 0.5%
 
-## 2021-03-24
+## 2021-03-25
 
-Generated LF 21% oxygen model (`lf_21_2021-03-24-12-24-31`). Started flux estimation using 50 restarts and 6-log perturbations.
+With new analysis, glutamine flux modestly decreased. Inputted new flux to previously fit model and repeated flux estimation procedure with narrower range of perturbations (3-log, 10 restarts). 
