@@ -928,6 +928,7 @@ calculate_fluxes <- function(flux_curves) {
   flux_curves %>%
     dplyr::select(-c(.data$title, .data$plots)) %>%
     tidyr::unnest(c(.data$data)) %>%
+    dplyr::filter(.data$time < 96) %>%
     dplyr::group_by(
       .data$cell_type,
       .data$experiment,
