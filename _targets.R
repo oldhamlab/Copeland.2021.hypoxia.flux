@@ -1,10 +1,12 @@
 # _targets.R
 
-#setup
+# setup -------------------------------------------------------------------
+
 devtools::load_all()
 library(targets)
 library(tarchetypes)
 source("R/functions.R")
+source("R/figures.R")
 
 conflicted::conflict_prefer("filter", "dplyr")
 
@@ -17,11 +19,13 @@ future::plan(future::multisession(workers = future::availableCores() - 1))
 
 # target-specific options
 tar_option_set(
-  packages = c("tidyverse"),
+  packages = c("tidyverse", "patchwork"),
   format = "qs"
 )
 
-# list of target objects
+
+# list of targets ---------------------------------------------------------
+
 list(
 
   # dna per cell ------------------------------------------------------------
@@ -293,6 +297,65 @@ list(
     model_mids_out,
     write_matlab_input(model_mids, data, "_mids.csv"),
     format = "file"
+  ),
+
+  # cell viability ----------------------------------------------------------
+
+  tar_target(
+    viability_file,
+    path_to_data("cell-viability.csv"),
+    format = "file"
+  ),
+  tar_target(
+    viability,
+    clean_viability(viability_file)
+  ),
+
+
+  # immunoblots -------------------------------------------------------------
+
+  tar_target(
+    blot_files,
+    path_to_data("densities"),
+    format = "file"
+  ),
+  tar_target(
+    blot_raw,
+    read_densities(blot_files)
+  ),
+  tar_target(
+    blot_norm,
+    normalize_blots(blot_raw)
   )
+
+
+  # # F1M ---------------------------------------------------------------------
+  #
+  # tar_target(
+  #   blot_image_1M,
+  #   path_to_manuscript("figures/images/lf_05_hif1a-ldha-blots.pdf"),
+  #   format = "file"
+  # ),
+  # tar_target(
+  #   blot_densities_1M,
+  #   path_to_data("lf_05_hif1a_ldha_densities_2018-04-24.csv"),
+  #   format = "file"
+  # ),
+  # tar_target(
+  #   F1MA,
+  #   plot_growth_curve(cell = "lf", exp = "05", clr = "oxygen")
+  # ),
+  # tar_target(
+  #   F1MB,
+  #   plot_growth_rates(cell = "lf", exp = "05", clr = "oxygen")
+  # ),
+  # tar_target(
+  #   F1MC,
+  #   plot_viability(viability)
+  # ),
+  # tar_target(
+  #   F1MD,
+  #   plot_blot(blot_image_1M)
+  # )
 
 )

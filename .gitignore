@@ -8,6 +8,6 @@ _targets
 inst/analysis/figures
 *.pdf
 *.jpg
-*.ai
 *.tif
 *.log
+data-raw/immunoblots
