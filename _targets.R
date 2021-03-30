@@ -6,7 +6,6 @@ devtools::load_all()
 library(targets)
 library(tarchetypes)
 source("R/functions.R")
-source("R/figures.R")
 
 conflicted::conflict_prefer("filter", "dplyr")
 
@@ -22,6 +21,10 @@ tar_option_set(
   packages = c("tidyverse", "patchwork"),
   format = "qs"
 )
+
+# plot setup
+clrs <- c(RColorBrewer::brewer.pal(4, "Set1")[1:4], "#08306b")
+names(clrs) <- c("21%", "0.5%", "DMSO", "BAY", "0.2%")
 
 
 # list of targets ---------------------------------------------------------
@@ -174,6 +177,10 @@ list(
     fluxes,
     calculate_fluxes(flux_curves)
   ),
+  tar_target(
+    fluxes_pairwise_annot,
+    annot_pairwise(fluxes)
+  ),
   tar_render(
     extracellular_fluxes_report,
     path = path_to_reports("extracellular-fluxes.Rmd"),
@@ -311,7 +318,6 @@ list(
     clean_viability(viability_file)
   ),
 
-
   # immunoblots -------------------------------------------------------------
 
   tar_target(
@@ -321,41 +327,303 @@ list(
   ),
   tar_target(
     blot_raw,
-    read_densities(blot_files)
+    read_data(blot_files)
   ),
   tar_target(
     blot_norm,
-    normalize_blots(blot_raw)
+    normalize_densities(blot_raw)
+  ),
+
+  # mrna --------------------------------------------------------------------
+
+  tar_target(
+    mrna_files,
+    path_to_data("mrna"),
+    format = "file"
+  ),
+  tar_target(
+    mrna_raw,
+    read_data(mrna_files)
+  ),
+  tar_target(
+    mrna_norm,
+    normalize_qpcr(mrna_raw)
+  ),
+
+  # M1 ----------------------------------------------------------------------
+
+  tar_target(
+    m1a,
+    plot_growth_curve(cell = "lf", exp = "05", clr = "oxygen") + ggplot2::coord_cartesian(ylim = c(0, 200))
+  ),
+  tar_target(
+    m1b,
+    plot_growth_rates(cell = "lf", exp = "05", clr = "oxygen")
+  ),
+  tar_target(
+    m1c,
+    plot_viability(viability) + ggplot2::coord_cartesian(ylim = c(NA, NA))
+  ),
+  tar_target(
+    m1d_image,
+    path_to_manuscript("figures/images/lf_05_hif1a-ldha-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    m1d,
+    plot_blot(m1d_image)
+  ),
+  tar_target(
+    m1e,
+    plot_densities(blot_norm, "lf_05", "hif1a", "HIF-1α protein\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    m1f,
+    plot_densities(blot_norm, "lf_05", "ldha", "LDHA protein\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    m1g,
+    plot_mrna(mrna_norm, "lf_05", "glut1", "GLUT1 mRNA\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    m1h,
+    plot_mrna(mrna_norm, "lf_05", "ldha", "LDHA mRNA\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    m1i,
+    plot_high_fluxes("lf", "05", "oxygen", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    m1j,
+    plot_low_fluxes("lf", "05", "oxygen", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    m1,
+    arrange_fluxes(m1a, m1b, m1c, m1d, m1e, m1f, m1g, m1h, m1i, m1j)
+  ),
+  tar_target(
+    m1_figure,
+    write_figures(m1, "m1.pdf", width = 5, height = 5),
+    format = "file"
+  ),
+
+  # M2 ----------------------------------------------------------------------
+
+  tar_target(
+    m2a,
+    plot_growth_curve(cell = "lf", exp = "bay", clr = "treatment") + ggplot2::coord_cartesian(ylim = c(0, 200))
+  ),
+  tar_target(
+    m2b,
+    plot_growth_rates(cell = "lf", exp = "bay", clr = "treatment")
+  ),
+  tar_target(
+    m2c,
+    patchwork::plot_spacer()
+  ),
+  tar_target(
+    m2d_image,
+    path_to_manuscript("figures/images/lf_bay_hif1a-ldha-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    m2d,
+    plot_blot(m2d_image)
+  ),
+  tar_target(
+    m2e,
+    plot_densities(blot_norm, "lf_bay", "hif1a", "HIF-1α protein\n(normalized)", "treatment")
+  ),
+  tar_target(
+    m2f,
+    plot_densities(blot_norm, "lf_bay", "ldha", "LDHA protein\n(normalized)", "treatment")
+  ),
+  tar_target(
+    m2g,
+    plot_mrna(mrna_norm, "lf_bay", "glut1", "GLUT1 mRNA\n(normalized)", "treatment")
+  ),
+  tar_target(
+    m2h,
+    plot_mrna(mrna_norm, "lf_bay", "ldha", "LDHA mRNA\n(normalized)", "treatment")
+  ),
+  tar_target(
+    m2i,
+    plot_high_fluxes("lf", "bay", "treatment", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    m2j,
+    plot_low_fluxes("lf", "bay", "treatment", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    m2,
+    arrange_fluxes(m2a, m2b, m2c, m2d, m2e, m2f, m2g, m2h, m2i, m2j)
+  ),
+  tar_target(
+    m2_figure,
+    write_figures(m2, "m2.pdf", width = 5, height = 5),
+    format = "file"
+  ),
+
+  # S1 ----------------------------------------------------------------------
+
+  tar_target(
+    s1a,
+    plot_cells_per_dna(dna_per_cell_clean)
+  ),
+  tar_target(
+    dna_count_hypoxia_file,
+    path_to_data("dna-count-hypoxia.csv"),
+    format = "file"
+  ),
+  tar_target(
+    dna_count_hypoxia,
+    clean_dna_count_hypoxia(dna_count_hypoxia_file)
+  ),
+  tar_target(
+    s1b,
+    plot_dna_count_hypoxia(dna_count_hypoxia)
+  ),
+  tar_target(
+    s1c,
+    plot_evap_data(evap_clean)
+  ),
+  tar_target(
+    s1d,
+    plot_k(degradation_rates, k)
+  ),
+  tar_target(
+    s1,
+    arrange_s1(s1a, s1b, s1c, s1d)
+  ),
+  tar_target(
+    s1_figure,
+    write_figures(s1, "s1.pdf", width = 5, height = 5),
+    format = "file"
+  ),
+
+  # S2 ----------------------------------------------------------------------
+
+  tar_target(
+    s2a,
+    plot_growth_curve(cell = "lf", exp = "02", clr = "oxygen") + ggplot2::coord_cartesian(ylim = c(0, 200))
+  ),
+  tar_target(
+    s2b,
+    plot_growth_rates(cell = "lf", exp = "02", clr = "oxygen")
+  ),
+  tar_target(
+    s2c,
+    patchwork::plot_spacer()
+  ),
+  tar_target(
+    s2d_image,
+    path_to_manuscript("figures/images/lf_02_hif1a-ldha-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    s2d,
+    plot_blot(s2d_image)
+  ),
+  tar_target(
+    s2e,
+    plot_densities(blot_norm, "lf_02", "hif1a", "HIF-1α protein\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s2f,
+    plot_densities(blot_norm, "lf_02", "ldha", "LDHA protein\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s2g,
+    plot_mrna(mrna_norm, "lf_02", "glut1", "GLUT1 mRNA\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s2h,
+    plot_mrna(mrna_norm, "lf_02", "ldha", "LDHA mRNA\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s2i,
+    plot_high_fluxes("lf", "02", "oxygen", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    s2j,
+    plot_low_fluxes("lf", "02", "oxygen", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    s2,
+    arrange_fluxes(s2a, s2b, s2c, s2d, s2e, s2f, s2g, s2h, s2i, s2j)
+  ),
+  tar_target(
+    s2_figure,
+    write_figures(s2, "s2.pdf", width = 5, height = 5),
+    format = "file"
+  ),
+
+  # S3 ----------------------------------------------------------------------
+
+  tar_target(
+    s3a,
+    plot_growth_curve(cell = "pasmc", exp = "05", clr = "oxygen") + ggplot2::coord_cartesian(ylim = c(0, 300))
+  ),
+  tar_target(
+    s3b,
+    plot_growth_rates(cell = "pasmc", exp = "05", clr = "oxygen")
+  ),
+  tar_target(
+    s3c,
+    patchwork::plot_spacer()
+  ),
+  tar_target(
+    s3d,
+    patchwork::plot_spacer()
+  ),
+  tar_target(
+    s3e,
+    patchwork::plot_spacer()
+  ),
+  tar_target(
+    s3f,
+    patchwork::plot_spacer()
+  ),
+  # tar_target(
+  #   s2d_image,
+  #   path_to_manuscript("figures/images/lf_02_hif1a-ldha-blots.png"),
+  #   format = "file"
+  # ),
+  # tar_target(
+  #   s2d,
+  #   plot_blot(s2d_image)
+  # ),
+  # tar_target(
+  #   s2e,
+  #   plot_densities(blot_norm, "lf_02", "hif1a", "HIF-1α protein\n(normalized)", "oxygen")
+  # ),
+  # tar_target(
+  #   s2f,
+  #   plot_densities(blot_norm, "lf_02", "ldha", "LDHA protein\n(normalized)", "oxygen")
+  # ),
+  tar_target(
+    s3g,
+    plot_mrna(mrna_norm, "pasmc_05", "glut1", "GLUT1 mRNA\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s3h,
+    plot_mrna(mrna_norm, "pasmc_05", "ldha", "LDHA mRNA\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s3i,
+    plot_high_fluxes("pasmc", "05", "oxygen", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    s3j,
+    plot_low_fluxes("pasmc", "05", "oxygen", annot = fluxes_pairwise_annot)
+  ),
+  tar_target(
+    s3,
+    arrange_fluxes(s3a, s3b, s3c, s3d, s3e, s3f, s3g, s3h, s3i, s3j)
+  ),
+  tar_target(
+    s3_figure,
+    write_figures(s3, "s3.pdf", width = 5, height = 5),
+    format = "file"
   )
-
-
-  # # F1M ---------------------------------------------------------------------
-  #
-  # tar_target(
-  #   blot_image_1M,
-  #   path_to_manuscript("figures/images/lf_05_hif1a-ldha-blots.pdf"),
-  #   format = "file"
-  # ),
-  # tar_target(
-  #   blot_densities_1M,
-  #   path_to_data("lf_05_hif1a_ldha_densities_2018-04-24.csv"),
-  #   format = "file"
-  # ),
-  # tar_target(
-  #   F1MA,
-  #   plot_growth_curve(cell = "lf", exp = "05", clr = "oxygen")
-  # ),
-  # tar_target(
-  #   F1MB,
-  #   plot_growth_rates(cell = "lf", exp = "05", clr = "oxygen")
-  # ),
-  # tar_target(
-  #   F1MC,
-  #   plot_viability(viability)
-  # ),
-  # tar_target(
-  #   F1MD,
-  #   plot_blot(blot_image_1M)
-  # )
-
 )

@@ -98,7 +98,6 @@ read_multi_excel <- function(excel_file) {
     rlang::set_names(sheets)
 }
 
-
 # clean_technical_replicates ----------------------------------------------
 
 clean_technical_replicates <- function(tbl) {
@@ -803,7 +802,6 @@ calculate_degradation_rates <- function(df) {
     dplyr::rename(k = .data$estimate)
 }
 
-
 # clean_degradation_rates -------------------------------------------------
 
 clean_degradation_rates <- function(degradation_rates) {
@@ -985,7 +983,6 @@ calculate_fluxes <- function(flux_curves) {
     )
 }
 
-
 # calculate_ratios --------------------------------------------------------
 
 calculate_ratios <- function(file_name) {
@@ -1043,7 +1040,6 @@ calculate_predicted_ratios <- function() {
     dplyr::select(.data$metabolite, .data$pred_ratio)
 }
 
-
 # calculate_correction_factors --------------------------------------------
 
 calculate_correction_factors <- function(qbias_ratios, pred_ratios) {
@@ -1081,7 +1077,6 @@ calculate_correction_factors <- function(qbias_ratios, pred_ratios) {
     ) %>%
     dplyr::arrange(.data$batch, .data$metabolite)
 }
-
 
 # clean_mids --------------------------------------------------------------
 
@@ -1136,7 +1131,6 @@ clean_mids <- function(mid_files) {
     dplyr::relocate(.data$oxygen, .before = .data$treatment) %>%
     dplyr::select(-filename)
 }
-
 
 # correct_mid -------------------------------------------------------------
 
@@ -1209,7 +1203,6 @@ correct_mid <- function(mid_clean){
 
 }
 
-
 # remove_mid_outliers -----------------------------------------------------
 
 remove_mid_outliers <- function(mid_correct) {
@@ -1230,7 +1223,6 @@ remove_mid_outliers <- function(mid_correct) {
     )
 }
 
-
 # replace_outliers --------------------------------------------------------
 
 replace_outliers <- function(vec) {
@@ -1241,7 +1233,6 @@ replace_outliers <- function(vec) {
     NA
   )
 }
-
 
 # plot_mid_curves ---------------------------------------------------------
 
@@ -1302,7 +1293,6 @@ plot_mid_curves <- function(mids) {
     )
 }
 
-
 # clean_biomass -----------------------------------------------------------
 
 clean_biomass <- function(biomass_file) {
@@ -1312,7 +1302,6 @@ clean_biomass <- function(biomass_file) {
       cell_mass = diff / cell_number * 1E12
     )
 }
-
 
 # calculate_biomass -------------------------------------------------------
 
@@ -1324,7 +1313,6 @@ calculate_biomass <- function(biomass_clean) {
     dplyr::mutate(cell_mass = replace_outliers(.data$cell_mass)) %>%
     dplyr::summarise(biomass = mean(.data$cell_mass, na.rm = TRUE))
 }
-
 
 #  calculate_biomass_equations --------------------------------------------
 
@@ -1383,8 +1371,6 @@ calculate_biomass_equations <- function(biomass) {
     )
 }
 
-
-
 # write_matlab_input ------------------------------------------------------
 
 write_matlab_input <- function(x, column, suffix) {
@@ -1406,7 +1392,6 @@ write_matlab_input <- function(x, column, suffix) {
   )
 
 }
-
 
 # format_reactions --------------------------------------------------------
 
@@ -1430,7 +1415,6 @@ format_reactions <- function(reactions_file) {
 
   usethis::use_data(model_reactions, overwrite = TRUE)
 }
-
 
 # format_fluxes -----------------------------------------------------------
 
@@ -1493,7 +1477,6 @@ format_fluxes <- function(growth_rates, fluxes) {
     tidyr::nest()
 
 }
-
 
 # format_mids -------------------------------------------------------------
 
@@ -1593,31 +1576,6 @@ format_mids <- function(mids) {
     tidyr::nest()
 }
 
-
-# setup_plots -------------------------------------------------------------
-
-setup_plots <- function() {
-  ggplot2::theme_set(
-    wmo::theme_wmo(
-      base_family = "Calibri",
-      base_size = 8
-    ) +
-      ggplot2::theme(
-        plot.margin = ggplot2::margin(5, 5, 5, 5),
-        plot.tag = ggplot2::element_text(face = "bold"),
-        axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 1))
-      )
-  )
-
-  assign(
-    "clrs",
-    c(RColorBrewer::brewer.pal(4, "Set1")[1:4], "#08306b") %>%
-      rlang::set_names(c("21%", "0.5%", "DMSO", "BAY", "0.2%")),
-    envir = parent.env(environment())
-  )
-}
-
-
 # plot_growth_curve -------------------------------------------------------
 
 plot_growth_curve <- function(
@@ -1625,8 +1583,6 @@ plot_growth_curve <- function(
   exp = c("02", "05", "bay"),
   clr = c("oxygen", "treatment")
 ) {
-
-  setup_plots()
 
   flux_measurements %>%
     dplyr::filter(
@@ -1642,49 +1598,12 @@ plot_growth_curve <- function(
       time
     ) %>%
     dplyr::summarize(count = mean(conc, na.rm = TRUE)) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = time,
-      y = count / 1000,
-      color = .data[[clr]],
-      fill = .data[[clr]]
-    ) +
-    # ggplot2::geom_line(
-    #   ggplot2::aes(group = interaction(date, .data[[clr]])),
-    #   size = 0.25,
-    #   alpha = 0.4,
-    #   show.legend = FALSE
-    # ) +
-    ggplot2::stat_summary(
-      geom = "linerange",
-      fun.data = "mean_se",
-      size = 0.5,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "line",
-      fun.data = "mean_se",
-      size = 0.5,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "point",
-      fun = "mean",
-      pch = 21,
-      color = "white",
-      size = 1,
-      show.legend = FALSE
-    ) +
-    ggplot2::labs(
-      x = "Time (h)",
-      y = expression(paste("Cell count (x", 10^3, ")"))
-    ) +
-    ggplot2::scale_x_continuous(breaks = seq(0, 72, by = 24)) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::scale_fill_manual(values = clrs) +
-    ggplot2::coord_cartesian(ylim = c(0, 200))
+    plot_time_lines(
+      y = count/1000,
+      ylab = expression(paste("Cell count (x", 10^3, ")")),
+      clr = clr
+    )
 }
-
 
 # plot_growth_rates -------------------------------------------------------
 
@@ -1695,8 +1614,6 @@ plot_growth_rates <- function(
   xaxis = clr,
   annot
 ) {
-
-  setup_plots()
 
   if(missing(annot)) {
     annot <-
@@ -1724,12 +1641,14 @@ plot_growth_rates <- function(
       ggplot2::aes(fill = .data[[clr]]),
       geom = "col",
       fun = "mean",
+      width = 0.6,
       show.legend = FALSE
     ) +
     ggplot2::stat_summary(
       geom = "errorbar",
       fun.data = "mean_se",
       width = 0.2,
+      size = 0.25,
       show.legend = FALSE
     ) +
     # ggbeeswarm::geom_beeswarm(
@@ -1765,14 +1684,13 @@ plot_growth_rates <- function(
       y = "Growth rate (/h)"
     ) +
     ggplot2::scale_fill_manual(values = clrs) +
-    ggplot2::coord_cartesian(ylim = c(0, 0.035))
+    ggplot2::coord_cartesian(ylim = c(0, 0.03)) +
+    theme_plots()
 }
-
 
 # annot_p -----------------------------------------------------------------
 
 annot_p <- function(num) dplyr::if_else(num < 0.05, "*", NA_character_)
-
 
 # clean_viability ---------------------------------------------------------
 
@@ -1786,21 +1704,19 @@ clean_viability <- function(viability_file) {
     wmo::remove_nested_outliers(viability, remove = TRUE)
 }
 
-
 # plot_blot ---------------------------------------------------------------
 
 plot_blot <- function(blot_image) {
 
-  setup_plots()
-
-  blot_image <- magick::image_read_pdf(blot_image)
+  # blot_image <- magick::image_read_pdf(blot_image)
+  blot_image <- magick::image_read(blot_image)
 
   cowplot::ggdraw() +
     cowplot::draw_image(
       blot_image,
       scale = 1.3,
       hjust = 0.15,
-      vjust = 0
+      vjust = 0.1
     ) +
     wmo::theme_wmo(
       base_family = "Calibri",
@@ -1818,48 +1734,17 @@ plot_blot <- function(blot_image) {
 
 plot_densities <- function(
   densities,
+  exp,
   prot = c("ldha", "hif1a"),
   ylab = prot,
   clr = c("oxygen", "treatment")
 ) {
 
-  setup_plots()
-
   densities %>%
+    dplyr::filter(experiment == exp) %>%
     dplyr::filter(protein == prot) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = time,
-      y = fold_change,
-      color = .data[[clr]]
-    ) +
-    ggplot2::geom_line(
-      ggplot2::aes(group = interaction(gel, .data[[clr]])),
-      alpha = 0.4,
-      size = 0.25,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "pointrange",
-      fun.data = "mean_se",
-      fatten = 1,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "line",
-      fun = "mean",
-      size = 0.5,
-      show.legend = FALSE
-    ) +
-    ggplot2::labs(
-      x = "Time (h)",
-      y = ylab
-    ) +
-    ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::coord_cartesian(ylim = c(0, NA))
+    plot_time_lines(y = fold_change, ylab = ylab, clr = clr)
 }
-
 
 # normalize_qpcr ----------------------------------------------------------
 
@@ -1867,81 +1752,56 @@ normalize_qpcr <- function(raw_mrna, control, type) {
   rna_norm <-
     raw_mrna %>%
     dplyr::mutate(gene = tolower(gene)) %>%
-    dplyr::group_by(plate, date, .data[[type]], time, gene) %>%
+    dplyr::group_by(dplyr::across(c(experiment:gene))) %>%
     dplyr::summarize(ct = mean(ct, na.rm = TRUE)) %>%
     tidyr::pivot_wider(names_from = gene, values_from = ct) %>%
+    dplyr::ungroup() %>%
     dplyr::mutate(
-      dplyr::across(-c(plate, date, .data[[type]], time, actin), ~ . - actin)
+      dplyr::across(-c(experiment:time, actin), ~ . - actin)
     ) %>%
     dplyr::select(-actin) %>%
     tidyr::pivot_longer(
-      -c(plate, date, .data[[type]], time),
+      -c(experiment:time),
       names_to = "rna",
       values_to = "dct"
     ) %>%
     dplyr::filter(!is.na(dct))
 
-  rna_t0_means <-
+  rna_baseline <-
     rna_norm %>%
-    dplyr::filter(.data[[type]] == control & time == 0) %>%
-    dplyr::group_by(rna) %>%
+    dplyr::filter(
+      .data$oxygen == min(oxygen) &
+        .data$treatment %in% c("None", "DMSO") &
+        time == 0
+    ) %>%
+    dplyr::group_by(experiment, rna) %>%
     dplyr::summarize(dct_norm = mean(dct, na.rm = TRUE))
 
-  dplyr::left_join(rna_norm, rna_t0_means, by = "rna") %>%
+  dplyr::left_join(rna_norm, rna_baseline, by = c("experiment", "rna")) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
       ddct = dct - dct_norm,
       log2fc = 2 ^ -ddct
-    )
+    ) %>%
+    dplyr::group_by(experiment, oxygen, treatment, time, rna) %>%
+    wmo::remove_nested_outliers(log2fc, remove = TRUE)
 }
-
 
 # plot_mrna ---------------------------------------------------------------
 
 plot_mrna <- function(
   mrna,
+  exp,
   gene = c("ldha", "hif1a"),
   ylab = prot,
   clr = c("oxygen", "treatment")
 ) {
 
-  setup_plots()
-
   mrna %>%
     dplyr::filter(rna == gene) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = time,
-      y = log2fc,
-      color = .data[[clr]]
-    ) +
-    ggplot2::geom_line(
-      aes(group = interaction(date, .data[[clr]])),
-      alpha = 0.4,
-      size = 0.25,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "pointrange",
-      fun.data = "mean_se",
-      fatten = 1,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "line",
-      fun = "mean",
-      size = 0.5,
-      show.legend = FALSE
-    ) +
-    ggplot2::labs(
-      x = "Time (h)",
-      y = ylab
-    ) +
-    ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::coord_cartesian(ylim = c(0, NA))
+    dplyr::filter(experiment == exp) %>%
+    plot_time_lines(y = log2fc, ylab = ylab, clr = clr)
 }
-
 
 # plot_high_fluxes --------------------------------------------------------
 
@@ -1953,81 +1813,13 @@ plot_high_fluxes <- function(
   annot
 ) {
 
-  setup_plots()
-
   fluxes %>%
     dplyr::filter(
       cell_type %in% cell &
         experiment %in% exp &
         metabolite %in% c("lactate", "glucose")
     ) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = toupper(abbreviation),
-      y = flux
-    ) +
-    ggplot2::geom_hline(
-      yintercept = 0,
-      color = "black",
-      lwd = 0.25
-    ) +
-    ggbeeswarm::geom_beeswarm(
-      ggplot2::aes(
-        color = .data[[clr]]),
-      dodge.width = 0.9,
-      priority = "random",
-      alpha = 0.4,
-      size = 1,
-      cex = 4,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      color = "black",
-      aes(group = .data[[clr]]),
-      geom = "crossbar",
-      fun = "mean",
-      fun.min = "mean",
-      fun.max = "mean",
-      fatten = 1,
-      width = 0.7,
-      position = position_dodge(width = 0.9),
-      show.legend = FALSE
-    ) +
-    ggplot2::geom_text(
-      data = dplyr::filter(annot, abbreviation %in% c("glc", "lac")),
-      ggplot2::aes(
-        x = toupper(abbreviation),
-        y = y_pos,
-        vjust = vjustvar,
-        label = pval
-      )
-    ) +
-    ggplot2::labs(
-      x = "Metabolite",
-      y = "Flux (fmol/cell/h)"
-    ) +
-    ggplot2::scale_color_manual(values = clrs)
-}
-
-
-# plot_low_fluxes ---------------------------------------------------------
-
-plot_low_fluxes <- function(
-  cell = c("lf", "pasmc"),
-  exp = c("02", "05", "bay"),
-  clr = c("oxygen", "treatment"),
-  xaxis = clr,
-  annot
-) {
-
-  setup_plots()
-
-  fluxes %>%
-    dplyr::filter(
-      cell_type %in% cell &
-        experiment %in% exp &
-        !(metabolite %in% c("lactate", "glucose"))
-    ) %>%
+    dplyr::left_join(annot, by = c("metabolite", "abbreviation", "cell_type", "experiment")) %>%
     ggplot2::ggplot() +
     ggplot2::aes(
       x = reorder(toupper(abbreviation), flux),
@@ -2039,76 +1831,160 @@ plot_low_fluxes <- function(
       lwd = 0.25
     ) +
     ggplot2::stat_summary(
-      ggplot2::aes(color = .data[[clr]]),
-      geom = "pointrange",
+      ggplot2::aes(fill = .data[[clr]]),
+      geom = "col",
+      fun = "mean",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.6,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(group = .data[[clr]]),
+      geom = "errorbar",
       fun.data = "mean_se",
-      fatten = 1,
-      position = position_dodge(width = 0.5),
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.2,
+      size = 0.25,
+      show.legend = FALSE
+    ) +
+    # ggbeeswarm::geom_beeswarm(
+    #   ggplot2::aes(
+    #     color = .data[[clr]]),
+    #   dodge.width = 0.9,
+    #   priority = "random",
+    #   alpha = 0.4,
+    #   size = 1,
+    #   cex = 4,
+    #   show.legend = FALSE
+    # ) +
+    # ggplot2::stat_summary(
+  #   color = "black",
+  #   aes(group = .data[[clr]]),
+  #   geom = "crossbar",
+  #   fun = "mean",
+  #   fun.min = "mean",
+  #   fun.max = "mean",
+  #   fatten = 1,
+  #   width = 0.7,
+  #   position = position_dodge(width = 0.9),
+  #   show.legend = FALSE
+  # ) +
+  ggplot2::geom_text(
+    ggplot2::aes(
+      y = y_pos,
+      vjust = vjust,
+      label = pval
+    )
+  ) +
+    ggplot2::labs(
+      x = "Metabolite",
+      y = "Flux (fmol/cell/h)"
+    ) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.2)) +
+    # ggplot2::coord_cartesian(ylim = c(-750, 1250)) +
+    theme_plots()
+}
+
+# plot_low_fluxes ---------------------------------------------------------
+
+plot_low_fluxes <- function(
+  cell = c("lf", "pasmc"),
+  exp = c("02", "05", "bay"),
+  clr = c("oxygen", "treatment"),
+  xaxis = clr,
+  annot
+) {
+
+  fluxes %>%
+    dplyr::filter(
+      cell_type %in% cell &
+        experiment %in% exp &
+        !(metabolite %in% c("lactate", "glucose"))
+    ) %>%
+    dplyr::left_join(annot, by = c("metabolite", "abbreviation", "cell_type", "experiment")) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = reorder(toupper(abbreviation), flux),
+      y = flux
+    ) +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      color = "black",
+      lwd = 0.25
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(fill = .data[[clr]]),
+      geom = "col",
+      fun = "mean",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.6,
       show.legend = TRUE
     ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(group = .data[[clr]]),
+      geom = "errorbar",
+      fun.data = "mean_se",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.2,
+      size = 0.25,
+      show.legend = FALSE
+    ) +
+    # ggplot2::stat_summary(
+    #   ggplot2::aes(color = .data[[clr]]),
+    #   geom = "pointrange",
+    #   fun.data = "mean_se",
+    #   fatten = 1,
+    #   position = position_dodge(width = 0.5),
+    #   show.legend = TRUE
+    # ) +
     ggplot2::geom_text(
-      data = dplyr::filter(annot, !(abbreviation %in% c("glc", "lac"))),
       ggplot2::aes(
-        x = toupper(abbreviation),
         y = y_pos,
-        vjust = vjustvar,
+        vjust = vjust,
         label = pval
       )
     ) +
     ggplot2::labs(
       x = "Metabolite",
       y = "Flux (fmol/cell/h)",
-      color = NULL
+      fill = NULL
     ) +
     ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::coord_cartesian(ylim = c(-125, 50)) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    # ggplot2::coord_cartesian(ylim = c(-125, 50)) +
+    ggplot2::scale_y_continuous(
+      trans = ggallin::pseudolog10_trans,
+      breaks = c(-100, -10, 0, 10, 100),
+      limits = c(-250, 250)
+    ) +
+    theme_plots() +
     ggplot2::theme(
       panel.grid.major.x = ggplot2::element_line(color = "gray90"),
       legend.key.width = ggplot2::unit(0.5, "lines"),
       legend.key.height = ggplot2::unit(0.5, "lines"),
       legend.position = "bottom",
-      legend.box.margin = ggplot2::margin(t = -10)) +
-    ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linetype = 0, size = 0.1)))
+      legend.box.margin = ggplot2::margin(t = -10)
+    )
 }
-
 
 # plot_viability ----------------------------------------------------------
 
 plot_viability <- function(viability) {
 
-  setup_plots()
-
-  ggplot2::ggplot(viability) +
-    ggplot2::aes(
-      x = time,
-      y = viability,
-      color = oxygen
-    ) +
-    ggplot2::stat_summary(
-      geom = "pointrange",
-      fun.data = "mean_se",
-      fatten = 1,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "line",
-      fun.data = "mean_se",
-      size = 0.5,
-      show.legend = FALSE
-    ) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::labs(
-      x = "Time (h)",
-      y = "Cell viability (%)"
-    ) +
-    ggplot2::scale_x_continuous(breaks = seq(0, 72, by = 24))
+  plot_time_lines(
+    viability,
+    y = viability,
+    ylab = "Cell viability (%)",
+    clr = "oxygen"
+  )
 }
 
+# read_data ---------------------------------------------------------------
 
-# read_densities ----------------------------------------------------------
-
-read_densities <- function(density_files) {
-  density_files %>%
+read_data <- function(data_files) {
+  data_files %>%
     rlang::set_names(stringr::str_extract(., "(lf|pasmc)_(02|05|bay)")) %>%
     purrr::map_dfr(read_csv, .id = "experiment") %>%
     dplyr::mutate(
@@ -2117,14 +1993,14 @@ read_densities <- function(density_files) {
     )
 }
 
-
 # normalize_densities -----------------------------------------------------
 
-normalize_densities <- function(raw_densities, oxygen_ctl, treatment_ctl) {
-  blot_norm <-
-    raw_densities %>%
+normalize_densities <- function(blot_raw) {
+
+  df <-
+    blot_raw %>%
     dplyr::filter(.data$time < 96) %>%
-    dplyr::group_by(gel) %>%
+    dplyr::group_by(.data$experiment, .data$gel) %>%
     dplyr::mutate(
       blot_norm = blot / mean(blot, na.rm = TRUE),
       hif1a_norm = hif1a / mean(hif1a, na.rm = TRUE),
@@ -2132,45 +2008,387 @@ normalize_densities <- function(raw_densities, oxygen_ctl, treatment_ctl) {
       hif1a_ratio = hif1a_norm / blot_norm,
       ldha_ratio = ldha_norm / blot_norm
     ) %>%
-    dplyr::select(gel:time, hif1a_ratio, ldha_ratio) %>%
-    tidyr::gather(protein, density, hif1a_ratio, ldha_ratio) %>%
+    dplyr::select(experiment:time, hif1a_ratio, ldha_ratio) %>%
+    tidyr::pivot_longer(
+      contains("ratio"),
+      names_to = "protein",
+      values_to = "density"
+    ) %>%
     tidyr::separate(protein, into = c("protein", NA), sep = "_") %>%
     dplyr::group_by(protein)
 
-  blot_t0_means <-
-    blot_norm %>%
+  df_baseline <-
+    df %>%
     dplyr::filter(
-      .data$oxygen == oxygen_ctl &
-        .data$treatment == treatment_ctl &
+      .data$oxygen == min(oxygen) &
+        .data$treatment %in% c("None", "DMSO") &
         time == 0
     ) %>%
+    dplyr::group_by(experiment, protein) %>%
     dplyr::summarize(density_norm = mean(density, na.rm = TRUE))
 
-  dplyr::left_join(blot_norm, blot_t0_means, by = "protein") %>%
-    dplyr::mutate(fold_change = density / density_norm)
+  dplyr::left_join(df, df_baseline, by = c("experiment", "protein")) %>%
+    dplyr::mutate(fold_change = density / density_norm) %>%
+    dplyr::group_by(experiment, oxygen, treatment, time, protein) %>%
+    wmo::remove_nested_outliers(fold_change, remove = TRUE)
+}
+
+# theme_plots -------------------------------------------------------------
+
+theme_plots <- function() {
+  wmo::theme_wmo(
+    base_family = "Calibri",
+    base_size = 8
+  ) +
+    ggplot2::theme(
+      plot.margin = ggplot2::margin(5, 5, 5, 5),
+      plot.tag = ggplot2::element_text(face = "bold"),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 1))
+    )
+}
+
+# plot_time_lines ---------------------------------------------------------
+
+plot_time_lines <- function(
+  df,
+  y,
+  ylab = prot,
+  clr = c("oxygen", "treatment")
+) {
+
+  ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = time,
+      y = {{y}},
+      color = .data[[clr]],
+      fill = .data[[clr]]
+    ) +
+    ggplot2::stat_summary(
+      geom = "linerange",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "line",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "point",
+      fun = "mean",
+      pch = 21,
+      color = "white",
+      size = 2,
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Time (h)",
+      y = ylab
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::coord_cartesian(ylim = c(0, NA)) +
+    theme_plots()
+}
+
+# annot_fluxes ------------------------------------------------------------
+
+annot_pairwise <- function(fluxes) {
+  fluxes %>%
+    dplyr::filter(experiment %in% c("02", "05", "bay")) %>%
+    dplyr::group_by(experiment, cell_type, metabolite, abbreviation) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      ttest = purrr::map_dbl(data, ~t.test(
+        flux ~ interaction(oxygen, treatment),
+        data = .x,
+        paired = TRUE
+      )$p.value),
+      pval = annot_p(ttest),
+      y_pos = Inf,
+      vjust = 1.5
+    )
+}
+
+# arrange_fluxes ----------------------------------------------------------
+
+arrange_fluxes <- function(a, b, c, d, e, f, g, h, i, j) {
+  layout <- "
+  abc
+  def
+  ghi
+  jjj
+"
+
+  a + b + c + d + e + f + g + h + i + j +
+    patchwork::plot_layout(design = layout) +
+    patchwork::plot_annotation(
+      tag_levels = "A",
+      theme = theme(plot.margin = margin(-3, -3, -3, -3))
+    )
+}
+
+# write_figures -----------------------------------------------------------
+
+write_figures <- function(plot, filename, width, height) {
+  path <- system.file("manuscript/figures", package = "Copeland.2021.hypoxia.flux")
+
+  ggplot2::ggsave(
+    plot,
+    filename = filename,
+    path = path,
+    width = width,
+    height = height,
+    units = "in",
+    device = cairo_pdf
+  )
+
+  stringr::str_c(path, "/", filename)
+
+}
+
+# plot_cells_per_dna ------------------------------------------------------
+
+plot_cells_per_dna <- function(dna_per_cell_clean) {
+  dna_per_cell_clean %>%
+    dplyr::filter(.data$volume == 200 & cells < 400000) %>%
+    ggplot2::ggplot() +
+    ggplot2::facet_wrap(~cell_type, labeller = ggplot2::as_labeller(toupper)) +
+    ggplot2::aes(
+      x = cells/1000,
+      y = conc
+    ) +
+    ggplot2::geom_smooth(
+      formula = y ~ 0 + x,
+      method = "lm",
+      color = clrs[[2]],
+      size = 0.5,
+      se = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "linerange",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "point",
+      fun = "mean",
+      pch = 21,
+      color = "white",
+      fill = "black",
+      size = 2,
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = expression(paste("Cell count (x", 10^3, ")")),
+      y = "DNA (ng)"
+    ) +
+    ggplot2::coord_cartesian(xlim = c(0, NA)) +
+    theme_plots()
+}
+
+# clean_dna_count_hypoxia -------------------------------------------------
+
+clean_dna_count_hypoxia <- function(dna_count_hypoxia_file) {
+  df <-
+    readr::read_csv(dna_count_hypoxia_file) %>%
+    dplyr::mutate(oxygen = factor(oxygen, levels = c("21%", "0.5%"))) %>%
+    clean_technical_replicates()
+
+  std <-
+    df %>%
+    dplyr::filter(!is.na(conc)) %>%
+    lm(value ~ conc, data = .)
+
+  df %>%
+    dplyr::filter(is.na(conc)) %>%
+    dplyr::mutate(conc = interpolate(., std)) %>%
+    dplyr::select(-value)
+}
+
+# plot_dna_count_hypoxia --------------------------------------------------
+
+plot_dna_count_hypoxia <- function(dna_count_hypoxia) {
+
+  ggplot2::ggplot(dna_count_hypoxia) +
+    ggplot2::aes(
+      x = count / 1000,
+      y = conc,
+      color = oxygen,
+      fill = oxygen
+    ) +
+    ggplot2::geom_smooth(
+      method = "lm",
+      size = 0.5,
+      formula = y ~ x,
+      se = FALSE,
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_point(
+      pch = 21,
+      color = "white",
+      # alpha = 0.3,
+      size = 2,
+      show.legend = FALSE) +
+    ggplot2::labs(
+      x = expression(paste("Cell count (×", 10^3, ")")),
+      y = "DNA (ng)"
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq(0, 300, 100)) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::coord_cartesian(ylim = c(0, NA), xlim = c(0, 300)) +
+    theme_plots()
+}
+
+# plot_evap_data ----------------------------------------------------------
+
+plot_evap_data <- function(evap_clean) {
+  evap_clean %>%
+    dplyr::filter(experiment == "05" & cell_type == "lf") %>%
+    dplyr::mutate(
+      oxygen = factor(oxygen, levels = c("21%", "0.5%"))
+    ) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = time,
+      y = volume,
+      color = oxygen,
+      fill = oxygen
+    ) +
+    ggplot2::geom_smooth(
+      method = "lm",
+      formula = y ~ x,
+      se = FALSE,
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "linerange",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "point",
+      fun = "mean",
+      pch = 21,
+      color = "white",
+      size = 2,
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Time (h)",
+      y = "Volume (mL)"
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    theme_plots()
 }
 
 
-# normalize_blots ---------------------------------------------------------
+# plot_k ------------------------------------------------------------------
 
-normalize_blots <- function(blot_raw) {
+plot_k <- function(degradation_rates, k) {
 
-  blot_raw %>%
+  annot <-
+    k %>%
+    dplyr::select(-k) %>%
     dplyr::mutate(
-      oxygen_ctl = min(oxygen),
-      treatment_ctl = min(treatment),
-      experiment = case_when(
-        experiment == 1 ~ "02",
-        experiment == 2 ~ "05",
-        experiment == 3 ~ "bay"
-      )
+      label = "*",
+      ypos = Inf,
+      vjust = 1.5
+    )
+
+  degradation_rates %>%
+    dplyr::mutate(
+      group = dplyr::case_when(
+        oxygen == "21%" & treatment == "None" ~ "21%",
+        oxygen == "0.5%" ~ "0.5%",
+        treatment == "DMSO" ~ "DMSO"
+      ),
+      group = factor(group, levels = c("21%", "0.5%", "DMSO"))
     ) %>%
-    dplyr::group_by(experiment, oxygen_ctl, treatment_ctl) %>%
-    tidyr::nest() %>%
-    dplyr::mutate(data = purrr::pmap(list(data, oxygen_ctl, treatment_ctl), normalize_densities)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(experiment, data) %>%
-    tidyr::unnest(c(data))
+    dplyr::left_join(annot, by = c("metabolite", "oxygen", "treatment")) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = reorder(toupper(abbreviation), k),
+      y = k
+    ) +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      color = "black",
+      lwd = 0.25
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(fill = group),
+      geom = "col",
+      fun = "mean",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.6,
+      show.legend = TRUE
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(group = group),
+      geom = "errorbar",
+      fun.data = "mean_se",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.2,
+      size = 0.25,
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_text(
+      ggplot2::aes(
+        color = group,
+        label = label,
+        y = ypos,
+        vjust = vjust
+      ),
+      position = ggplot2::position_dodge(width = 0.6),
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Metabolite",
+      y = "Rate constant (/h)",
+      fill = NULL,
+      color = NULL
+    ) +
+    ggplot2::scale_color_manual(
+      values = clrs
+    ) +
+    ggplot2::scale_fill_manual(
+      values = clrs
+    ) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.2)) +
+    theme_plots() +
+    ggplot2::theme(
+      panel.grid.major.x = ggplot2::element_line(color = "gray90"),
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    )
+}
 
 
+# arrange_s1 --------------------------------------------------------------
+
+arrange_s1 <- function(a, b, c, d) {
+  layout <- "
+  aa#
+  bc#
+  ddd
+  "
+
+  a + b + c + d +
+    patchwork::plot_layout(design = layout) +
+    patchwork::plot_annotation(
+      tag_levels = "A",
+      theme = theme(plot.margin = margin(-3, -3, -3, -3))
+    )
 }
