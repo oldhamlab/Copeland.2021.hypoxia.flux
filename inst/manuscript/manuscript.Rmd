@@ -1,0 +1,132 @@
+---
+title: "Hypoxia uncouples HIF gene transcription and metabolic flux in proliferating primary cells"
+
+author:
+- Courtney A. Copeland: 
+    institute: 1
+- Benjamin A. Olenchock: 
+    institute: 1, 2
+- David R. Ziehr:
+    institute: 1, 4
+- Sarah McGarrity: 
+    institute: 1, 5
+- Jamey D. Young: 
+    institute: 3
+- Joseph Loscalzo: 
+    institute: 1
+- William M. Oldham: 
+    institute: 1
+    email: woldham@bwh.harvard.edu
+    correspondence: true
+institute:
+- 1: Department of Medicine, Brigham and Women's Hospital and Harvard Medical School, Boston, MA
+- 2: Regeneron Pharmaceuticals, Tarrytown, NY
+- 3: Departments of Chemical & Biomolecular Engineering and Molecular Physiology & Biophysics, Vanderbilt University, Nashville, TN
+- 4: Department of Medicine, Massachusetts General Hospital and Harvard Medical School, Boston, MA
+- 5: Center for Systems Biology, School of Health Sciences, University of Iceland, Reykjavik, Iceland
+
+bibliography_main: library.bib
+bibliography_software: packages.bib
+csl: cell-metabolism.csl
+link-citations: yes
+  
+output: 
+  bookdown::pdf_document2:
+    template: template.tex
+    keep_tex: false
+    df_print: kable
+    toc: false
+    number_sections: false
+    latex_engine: xelatex
+    pandoc_args:
+      - '--lua-filter=scholarly-metadata.lua'
+      - '--lua-filter=author-info-blocks.lua'
+      - '--lua-filter=pagebreak.lua'
+      - '--lua-filter=multiple-bibliographies.lua'
+compact-title: true
+geometry: margin = 0.75in
+fontsize: 11pt
+mainfont: Calibri
+graphics: yes
+header-includes:
+- \usepackage{lineno}
+- \linenumbers
+- \setlength\linenumbersep{1cm}
+- \usepackage{setspace}
+- \doublespacing
+- \makeatletter\renewcommand*{\fps@figure}{htbp}\makeatother
+- \setlength{\parskip}{0.75\baselineskip plus 2pt minus 2pt}
+- \usepackage{float}
+---
+
+```{r setup, include = FALSE}
+# library(Copeland.2021.hypoxia.flux)
+devtools::load_all()
+
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  message = FALSE, 
+  out.width = "100%", 
+  fig.align = "center", 
+  fig.pos = "H", 
+  out.extra = ""
+)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+knitr::opts_knit$set(kable.force.latex = FALSE)
+
+options(tinytex.verbose = TRUE)
+
+# kable function
+my_kable <- function(data, ...) {
+  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>% 
+    kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 11)
+}
+```
+
+# Summary 
+(150 words)
+
+# Keywords
+
+hypoxia, metabolic flux analysis, hypoxia-inducible factor, prolyl hydroxylase, metabolism
+
+\newpage
+
+# Introduction
+
+Metazoan cells depend on aerobic respiration to meet cellular energy demands. With an inadequate oxygen supply, or hypoxia, cells must reduce energy consumption and shift energy production away from oxidative phosphorylation. Cells accomplish this goal through stabilization of the hypoxia-inducible transcription factor 1α (HIF-1α), which activates the transcription of glucose transporters, glycolytic enzymes, lactate dehydrogenase, and pyruvate dehydrogenase kinase, while decreasing the expression of proteins in the tricarboxylic acid (TCA) cycle and electron transport chain [@RN1980, @RN1198]. Overall, these changes in gene transcription should increase glycolytic capacity and divert glucose-derived pyruvate from oxidative phosphorylation toward lactate fermentation to maintain energy production and minimize the formation of reactive oxygen species [@RN2525]. 
+
+While this "glycolytic shift" of primary carbon metabolism is well-described, the effects of hypoxia on other metabolic pathways are an area of active investigation [@RN953, @RN1603, @RN1198]. Since hypoxia is a prominent feature of cancer biology as tumor growth outstrips blood supply, most detailed metabolic studies of cell metabolism in hypoxia have used tumor cell models [@RN2395, @RN1447, @RN1438, @RN634, @RN1200, @RN975]. For example, stable isotope tracing and metabolic flux analyses identified a critical role for reductive carboxylation of glutamine-derived 2-oxoglutarate for lipid biosynthesis in tumor growth [@RN1447; @RN628; @RN1966; @RN2395], and metabolomic studies identified aspartate as a limiting metabolite for cancer cell proliferation under hypoxia [@RN634]. By contrast, comparatively little is known about metabolic adaptations of primary cells to hypoxia and the importance of the metabolic pathways described above remain to be elucidated. This information would provide important context for understanding the extent to which cancer cell metabolism responds differently to hypoxic stress. Given the metabolic adaptations required for rapid proliferation in cancer cells, we hypothesized that hypoxia would elicit different metabolic responses in primary cells than has been observed previously in studies of cancer cell metabolism. 
+
+To test this hypothesis, we developed models of bioenergetic carbon flux in human primary cells cultured under 21% or 0.5% oxygen conditions. We found that hypoxia fails to increase glycolysis in primary cells despite robust up-regulation of the HIF-1α transcriptional program. In normoxia, HIF-1α activation by the prolyl hydroxylase inhibitor molidustat (BAY-85-3934, "BAY") [@RN580] did increase glycolysis and lactate efflux; however, hypoxia abrogated this response. These findings suggest the existence of hypoxia-dependent metabolic regulatory mechanisms that override the effects of HIF-1α-dependent up-regulation of glycolytic gene expression. 
+
+# Results
+
+The goal of this study was to identify the metabolic changes associated with hypoxia in proliferating primary cells. Cells were seeded and placed into hypoxia for 24 h prior to sample collection to provide adequate time for activation of the hypoxia-dependent transcriptional program. From this starting point, we identified the optimal cell seeding density and time course to capture exponential cell growth (Figure \ref{fig:f1}A), thought to be an indicator of metabolic steady state. Lung fibroblasts cultured in 0.5% oxygen grew more slowly (Figure \ref{fig:f1}B), but slower growth was not associated with decreased cell viability (Figure \ref{fig:f1}C). These cells demonstrated robust stabilization of HIF-1α protein associated with up-regulation of downstream targets, such as glucose transporter 1, (GLUT1), and lactate dehydrogenase A (LDHA) (Figure \ref{fig:f1}D-H). These changes persisted for the duration of the experimental time course.
+
+## Extracellular flux analysis reveals little effect of hypoxia on glycolysis
+
+Having established a model system, we next determined the extracellular fluxes of glucose (GLC), lactate (LAC), pyruvate (PYR), and amino acids (Figure \ref{fig:f1}I-J and Supplementary Figure 1). Flux calculations incorporated the changes in cell number, extracellular metabolite concentrations, and medium evaporation over time [@RN1523] (Supplementary Figure 1). Surprisingly, while glucose uptake was modestly increased in hypoxia, lactate efflux was decreased (Figure \ref{fig:f1}I) despite activation of the HIF-1 transcriptional program. Similar findings were observed in pulmonary artery smooth muscle cells (Supplementary Figure 2) and when the ambient oxygen level was decreased further to 0.2% (Supplementary Figure 3). In addition to glucose and lactate, extracellular fluxes of pyruvate and amino acids were generally decreased in hypoxia, including a marked decrease in glutamine uptake. Notably, hypoxia was previously shown to increase glutamine uptake in studies of cancer cell metabolism [@RN1447; @RN2395; @RN628].
+
+Given that hypoxia did not increase glucose and lactate fluxes as expected from the associated changes in glycolytic gene expression, we next assessed the capacity of HIF-1α to augment glycolysis in lung fibroblasts. Cells were treated with BAY to stabilize HIF-1α under 21% oxygen conditions (Figure \ref{fig:f2}). Similar to hypoxia, BAY decreased cell growth rate (Figure \ref{fig:f2}A-B) and activated the HIF-1 transcriptional program (Figure \ref{fig:f2}C-G). Compared to hypoxia, BAY treatment resulted in a similar activation of HIF-1 target gene transcription and protein expression. In normoxia, this transcriptional program was associated with increased glucose uptake and lactate efflux (Figure \ref{fig:f2}H). Relatively modest effects on amino acid fluxes were observed as compared to 0.5% oxygen culture conditions (Figure \ref{fig:f2}J).
+
+# Discussion
+
+# Acknowledgements
+
+# Author Contributions
+
+# Declaration of Interests
+
+# Figure Legends
+
+# Tables
+
+# STAR Methods
+

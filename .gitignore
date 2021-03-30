@@ -11,3 +11,4 @@ inst/analysis/figures
 *.tif
 *.log
 data-raw/immunoblots
+*.png
