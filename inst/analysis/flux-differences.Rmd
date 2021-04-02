@@ -1,0 +1,66 @@
+---
+title: "Model Analysis"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: kable
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+})
+
+# resolve conflicts
+conflicted::conflict_prefer("filter", "dplyr")
+
+# set global chunk options
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.align = "center",
+	message = FALSE,
+	warning = FALSE,
+	out.width = "49%"
+)
+ 
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  model_fluxes <- tar_read(model_fluxes)
+})
+```
+
+\newpage
+
+# Overview
+
+In this document, we will analyze the output from the metabolic flux maps.
+
+```{r}
+usethis::use_data(model_fluxes, overwrite = TRUE)
+```
+
+# Analysis
+
+## Significant Differences
+
+Identify reactions that are significantly different based on whether the confidence intervals overlap. This is more conservative than p < 0.05. 

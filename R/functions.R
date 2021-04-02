@@ -1414,6 +1414,8 @@ format_reactions <- function(reactions_file) {
     )
 
   usethis::use_data(model_reactions, overwrite = TRUE)
+
+  model_reactions
 }
 
 # format_fluxes -----------------------------------------------------------
@@ -1516,28 +1518,18 @@ format_mids <- function(mids) {
         (.data$method == "fs" & .data$metabolite %in% c("FBP", "3PG"))
     )
 
-  mids_pasmc_05_new <-
+  mids_pasmc_05 <-
     mids_filtered %>%
     dplyr::filter(
       .data$cell_type == "pasmc" &
-        .data$oxygen %in% c("21%", "0.5%") &
-        .data$date %in% c("2019-12-06", "2019-12-11", "2019-12-16")
+        .data$oxygen %in% c("21%", "0.5%")
     ) %>%
     dplyr::filter(
       .data$method == "sim" |
         (.data$method == "fs" & .data$metabolite %in% c("FBP", "3PG"))
     )
 
-  mids_pasmc_05_old <-
-    mids_filtered %>%
-    dplyr::filter(
-      .data$cell_type == "pasmc" &
-        .data$oxygen %in% c("21%", "0.5%") &
-        .data$date %in% c("2018-05-25", "2018-05-29", "2018-06-02", "2018-06-08")
-    ) %>%
-    dplyr::filter(!(.data$method == "fs" & .data$metabolite == "2OG"))
-
-  dplyr::bind_rows(mids_lf_new, mids_pasmc_05_new, mids_pasmc_05_old) %>%
+  dplyr::bind_rows(mids_lf_new, mids_pasmc_05) %>%
     dplyr::group_by(
       .data$method,
       .data$cell_type,
@@ -2392,3 +2384,190 @@ arrange_s1 <- function(a, b, c, d) {
       theme = theme(plot.margin = margin(-3, -3, -3, -3))
     )
 }
+
+# plot_mids ---------------------------------------------------------------
+
+plot_mids <- function(df) {
+
+  tracer_labels <-
+    c(expression(paste("[1,2-"^13, "C"[2], "] glucose")),
+      expression(paste("[U-"^13, "C"[6], "] glucose")),
+      expression(paste("[U-"^13, "C"[5], "] glutamine")),
+      expression(paste("[U-"^13, "C"[3], "] lactate")))
+
+  tracer_levels <-
+    c("glc2", "glc6", "q5", "lac3")
+
+  df %>%
+    dplyr::mutate(
+      tracer = factor(tracer, levels = tracer_levels, labels = tracer_labels),
+      group = dplyr::case_when(
+        oxygen == "21%" & treatment == "None" ~ "21%",
+        oxygen == "0.5%" & treatment == "None" ~ "0.5%",
+        oxygen == "21%" & treatment == "DMSO" ~ "DMSO",
+        oxygen == "21%" & treatment == "BAY" ~ "BAY"
+      ),
+      group = factor(group, levels = c("21%", "0.5%", "DMSO", "BAY"))
+    ) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(x = isotope, y = mean, fill = group) +
+    ggplot2::facet_grid(
+      tracer ~ metabolite,
+      labeller = ggplot2::label_parsed,
+      # switch = "y",
+      scales = "free_x",
+      space = "free_x"
+    ) +
+    ggplot2::geom_col(
+      position = ggplot2::position_dodge()
+    ) +
+    ggplot2::geom_linerange(
+      ggplot2::aes(
+        ymin = mean - se,
+        ymax = mean + se
+      ),
+      position = ggplot2::position_dodge(width = 0.9)
+    ) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::theme(
+      strip.placement = "outside",
+      legend.title = ggplot2::element_blank()
+    ) +
+    ggplot2::labs(
+      x = "Isotope",
+      y = "Mole fraction",
+      fill = NULL
+    ) +
+    theme_plots() +
+    ggplot2::theme(
+      panel.grid.major.y = ggplot2::element_line(color = "gray90"),
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    )
+}
+
+
+# plot_manuscript_mids ----------------------------------------------------
+
+plot_manuscript_mids <- function(model_mids) {
+  model_mids %>%
+    dplyr::filter(cell_type == "lf") %>%
+    tidyr::unnest(c(data)) %>%
+    dplyr::mutate(
+      metabolite = factor(
+        metabolite,
+        levels = c("FBP", "3PG", "PYR", "CIT", "AKG", "MAL"),
+        labels = c("FBP", "`3PG`", "PYR", "CIT", "AKG", "MAL")
+      )
+    ) %>%
+    dplyr::filter(tracer != "lac3" & time == 72 & !is.na(metabolite)) %>%
+    plot_mids()
+}
+
+# plot_lf_mids ------------------------------------------------------------
+
+plot_lf_mids <- function(model_mids) {
+  model_mids %>%
+    dplyr::filter(cell_type == "lf") %>%
+    tidyr::unnest(c(data)) %>%
+    dplyr::mutate(
+      metabolite = factor(
+        metabolite,
+        levels = c("ALA", "ASP", "GLU", "GLN", "LAC", "SER")
+      )
+    ) %>%
+    dplyr::filter(tracer != "lac3" & time == 72 & !is.na(metabolite)) %>%
+    plot_mids()
+}
+
+
+# plot_pasmc_mids ---------------------------------------------------------
+
+plot_pasmc_mids <- function(model_mids) {
+  model_mids %>%
+    dplyr::filter(cell_type == "pasmc") %>%
+    tidyr::unnest(c(data)) %>%
+    dplyr::mutate(
+      metabolite = factor(
+        metabolite,
+        levels = c(
+          "FBP",
+          "3PG",
+          "PYR",
+          "ALA",
+          "SER",
+          "LAC",
+          "CIT",
+          "AKG",
+          "GLN",
+          "GLU",
+          "MAL",
+          "ASP"
+        )
+      ),
+      metabolite = forcats::fct_recode(metabolite, "`3PG`" = "3PG")
+    ) %>%
+    dplyr::filter(tracer != "lac3" & time == 48 & !is.na(metabolite)) %>%
+    plot_mids() +
+    ggplot2::facet_grid(
+      metabolite ~ tracer,
+      labeller = ggplot2::label_parsed
+    )
+}
+
+# clean_model_fluxes ------------------------------------------------------
+
+clean_model_fluxes <- function(map_flux_files, model_reactions) {
+  pathways <-
+    model_reactions %>%
+    dplyr::select(-equation) %>%
+    dplyr::add_row(name = "BIOMASS", pathway = factor("biomass"), index = 0)
+
+  map_flux_files %>%
+    rlang::set_names(stringr::str_extract(basename(.), pattern = ".*(?=\\.csv)")) %>%
+    purrr::map_dfr(readr::read_csv, .id = "experiment") %>%
+    tidyr::separate(
+      experiment,
+      c("cell_type", "treatment"),
+      sep = "_"
+    ) %>%
+    dplyr::mutate(
+      treatment = dplyr::case_when(
+        treatment == "21" ~ "21%",
+        treatment == "05" ~ "0.5%",
+        treatment == "dmso" ~ "DMSO",
+        treatment == "bay" ~ "BAY"
+      ),
+      treatment = factor(treatment, levels = c("21%", "0.5%", "DMSO", "BAY"))
+    ) %>%
+
+    # identify net and exchange fluxes
+    tidyr::separate(id, c("id", "type"), sep = " ", fill = "right") %>%
+    dplyr::mutate(type = replace(type, is.na(type), "net")) %>%
+    dplyr::select(-se) %>%
+
+    # add pathway info
+    dplyr::left_join(pathways, by = c("id" = "name")) %>%
+    dplyr::select(
+      cell_type,
+      treatment,
+      pathway,
+      index,
+      id,
+      type,
+      equation,
+      flux = value,
+      lb,
+      ub
+    ) %>%
+    dplyr::group_by(cell_type, treatment) %>%
+    dplyr::arrange(treatment, pathway)
+}
+
+# calculate_flux_differences ----------------------------------------------
+
+# calculate_flux_differences <- function(model_fluxes) {
+#
+# }

@@ -625,5 +625,56 @@ list(
     s3_figure,
     write_figures(s3, "s3.pdf", width = 5, height = 5),
     format = "file"
+  ),
+
+  # M3 ----------------------------------------------------------------------
+
+  tar_target(
+    m3,
+    plot_manuscript_mids(model_mids)
+  ),
+  tar_target(
+    m3_figure,
+    write_figures(m3, "m3.pdf", width = 7, height = 5),
+    format = "file"
+  ),
+
+  # S4 ----------------------------------------------------------------------
+
+  tar_target(
+    s4,
+    plot_lf_mids(model_mids)
+  ),
+  tar_target(
+    s4_figure,
+    write_figures(s4, "s4.pdf", width = 7, height = 5)
+  ),
+
+  # S5 ----------------------------------------------------------------------
+
+  tar_target(
+    s5,
+    plot_pasmc_mids(model_mids)
+  ),
+  tar_target(
+    s5_figure,
+    write_figures(s5, "s5.pdf", width = 5, height = 9.5)
+  ),
+
+  # model fluxes ------------------------------------------------------------
+
+  tar_target(
+    map_flux_files,
+    path_to_data("(lf|pasmc)_(21|05|dmso|bay)\\.csv"),
+    format = "file"
+  ),
+  tar_target(
+    map_fluxes,
+    clean_model_fluxes(map_flux_files, model_reactions)
   )
+  # tar_target(
+  #   flux_differences,
+  #   calculate_flux_differences(map_fluxes)
+  # )
+
 )
