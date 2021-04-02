@@ -1,10 +1,10 @@
 function m = normoxia()
-
+ 
 % setup
 oxygen = '21%';
 treatment = 'None';
-in_path = '/Users/will/Documents/data_working/data_packages/Copeland.2021.hypoxia.flux/inst/analysis/modeling/matlab-input/';
-out_path = '/Users/will/Documents/data_working/data_packages/Copeland.2021.hypoxia.flux/inst/analysis/modeling/';
+in_path = '/Users/will/Dropbox (Partners HealthCare)/Copeland.2021.hypoxia.flux/inst/analysis/modeling/matlab-input/';
+out_path = '/Users/will/Dropbox (Partners HealthCare)/Copeland.2021.hypoxia.flux/inst/analysis/modeling/';
 cell_type = 'pasmc';
 addpath(genpath(in_path));
 output = [out_path cell_type '_21/' cell_type '_21_' datestr(now,'yyyy-mm-dd-HH-MM-SS') '.mat'];
@@ -66,7 +66,7 @@ end
 clear frags fragments;
 
 % import mid data
-mids = readtable('lf_mids.csv', 'TreatAsEmpty', {'NA'});
+mids = readtable([cell_type '_mids.csv'], 'TreatAsEmpty', {'NA'});
 mids.se(isnan(mids.se)) = 0.01;
 mids = mids(strcmp(mids.treatment, treatment), :);
 mids = mids(strcmp(mids.oxygen, oxygen), :);
@@ -186,7 +186,7 @@ m.options.fit_starts = 10;
 m.options.fit_reltol = 0.001;
 m.options.fit_tau = 1e-6;
 m.options.fit_nudge = 6;
-m.options.int_tspan = [0 24 48 72];
+m.options.int_tspan = [0 12 24 36 48];
 m.options.int_maxstep = Inf;
 m.options.hpc_on = 1;
 
