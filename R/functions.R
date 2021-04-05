@@ -1740,9 +1740,8 @@ plot_densities <- function(
 
 # normalize_qpcr ----------------------------------------------------------
 
-normalize_qpcr <- function(raw_mrna, control, type) {
-  rna_norm <-
-    raw_mrna %>%
+normalize_qpcr <- function(raw_mrna) {
+  raw_mrna %>%
     dplyr::mutate(gene = tolower(gene)) %>%
     dplyr::group_by(dplyr::across(c(experiment:gene))) %>%
     dplyr::summarize(ct = mean(ct, na.rm = TRUE)) %>%
@@ -1757,22 +1756,12 @@ normalize_qpcr <- function(raw_mrna, control, type) {
       names_to = "rna",
       values_to = "dct"
     ) %>%
-    dplyr::filter(!is.na(dct))
-
-  rna_baseline <-
-    rna_norm %>%
-    dplyr::filter(
-      .data$oxygen == min(oxygen) &
-        .data$treatment %in% c("None", "DMSO") &
-        time == 0
-    ) %>%
-    dplyr::group_by(experiment, rna) %>%
-    dplyr::summarize(dct_norm = mean(dct, na.rm = TRUE))
-
-  dplyr::left_join(rna_norm, rna_baseline, by = c("experiment", "rna")) %>%
-    dplyr::ungroup() %>%
+    dplyr::filter(!is.na(dct)) %>%
+    dplyr::group_by(.data$experiment, .data$rna) %>%
     dplyr::mutate(
-      ddct = dct - dct_norm,
+      ddct = dct - mean(
+        dct[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == 0]
+      ),
       log2fc = 2 ^ -ddct
     ) %>%
     dplyr::group_by(experiment, oxygen, treatment, time, rna) %>%
