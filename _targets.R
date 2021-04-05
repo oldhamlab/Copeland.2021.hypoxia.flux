@@ -573,18 +573,14 @@ list(
     patchwork::plot_spacer()
   ),
   tar_target(
-    s3d,
-    patchwork::plot_spacer()
+    s3d_image,
+    path_to_manuscript("figures/images/pasmc_05_hif1a-ldha-blots.png"),
+    format = "file"
   ),
-  # tar_target(
-  #   s2d_image,
-  #   path_to_manuscript("figures/images/lf_02_hif1a-ldha-blots.png"),
-  #   format = "file"
-  # ),
-  # tar_target(
-  #   s3d,
-  #   plot_blot(s3d_image)
-  # ),
+  tar_target(
+    s3d,
+    plot_blot(s3d_image)
+  ),
   tar_target(
     s3e,
     plot_densities(blot_norm, "pasmc_05", "hif1a", "HIF-1α protein\n(normalized)", "oxygen")
@@ -622,12 +618,20 @@ list(
   # M3 ----------------------------------------------------------------------
 
   tar_target(
-    m3,
+    m3ab,
+    plot_labeling_rate(mids)
+  ),
+  tar_target(
+    m3c,
     plot_manuscript_mids(model_mids)
   ),
   tar_target(
+    m3,
+    arrange_m3(m3ab, m3c)
+  ),
+  tar_target(
     m3_figure,
-    write_figures(m3, "m3.pdf", width = 7, height = 5),
+    write_figures(m3, "m3.pdf", width = 7, height = 7),
     format = "file"
   ),
 

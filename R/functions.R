@@ -2546,6 +2546,191 @@ clean_model_fluxes <- function(map_flux_files, model_reactions) {
     dplyr::arrange(treatment, pathway)
 }
 
+
+# plot_labeling_rate ------------------------------------------------------
+
+plot_labeling_rate <- function(mids) {
+  df <-
+    mids %>%
+    dplyr::filter(
+      .data$method == "sim" &
+        .data$cell_type == "lf" &
+        .data$tracer == "glc6" &
+        .data$metabolite %in% c("pyruvate") &
+        .data$isotope == "M0"
+    ) %>%
+    dplyr::mutate(
+      labeled = 1 - mid,
+      group = dplyr::case_when(
+        oxygen == "21%" & treatment == "None" ~ "21%",
+        oxygen == "0.5%" ~ "0.5%",
+        treatment == "DMSO" ~ "DMSO",
+        treatment == "BAY" ~ "BAY"
+      ),
+      group = factor(group, levels = c("21%", "0.5%", "DMSO", "BAY")),
+      idx = dplyr::case_when(
+        group %in% c("21%", "DMSO") ~ 1,
+        group %in% c("0.5%", "BAY") ~ 2
+      )
+    ) %>%
+    dplyr::group_by(.data$time, .data$group) %>%
+    wmo::remove_nested_outliers(labeled, remove = TRUE)
+
+  # are rates significantly different? --------------------------------------
+
+  fo <- labeled ~ SSasympOrig(time, asym, lrc)
+  fun <- function(x, asym, lrc) asym * (1 - exp(-exp(lrc) * x))
+
+  m_21 <- nls(fo, df, subset = group == "21%")
+  m_05 <- nls(fo, df, subset = group == "0.5%")
+
+  m_hyp <- nls(
+    labeled ~ fun(time, asym[idx], lrc[idx]),
+    df,
+    subset = group %in% c("21%", "0.5%"),
+    start = as.data.frame(rbind(coef(m_21), coef(m_05)))
+  )
+
+  k_hyp <- nls(
+    labeled ~ fun(time, asym[idx], lrc),
+    df,
+    subset = group %in% c("21%", "0.5%"),
+    start = c(lrc = (coef(m_21)[[2]] + coef(m_05)[[2]])/2,
+              as.data.frame(rbind(coef(m_21)[-2], coef(m_05)[-2])))
+  )
+
+  hyp <- anova(k_hyp, m_hyp)[["Pr(>F)"]][[2]]
+
+  m_dmso <- nls(fo, df, subset = group == "DMSO")
+  m_bay <- nls(fo, df, subset = group == "BAY")
+
+  m_phd <- nls(
+    labeled ~ fun(time, asym[idx], lrc[idx]),
+    df,
+    subset = group %in% c("DMSO", "BAY"),
+    start = as.data.frame(rbind(coef(m_dmso), coef(m_bay)))
+  )
+
+  k_phd <- nls(
+    labeled ~ fun(time, asym[idx], lrc),
+    df,
+    subset = group %in% c("DMSO", "BAY"),
+    start = c(lrc = (coef(m_dmso)[[2]] + coef(m_bay)[[2]])/2,
+              as.data.frame(rbind(coef(m_dmso)[-2], coef(m_bay)[-2])))
+  )
+
+  phd <- anova(k_phd, m_phd)[["Pr(>F)"]][[2]]
+
+  # make plots --------------------------------------------------------------
+
+  a <-
+    ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = time,
+      y = labeled,
+      color = group,
+      fill = group
+    ) +
+    ggplot2::geom_smooth(
+      method = "nls",
+      formula = y ~ SSasympOrig(x, asym, lrc),
+      fullrange = TRUE,
+      se = FALSE,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "linerange",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "point",
+      fun = "mean",
+      pch = 21,
+      color = "white",
+      size = 2,
+      show.legend = FALSE
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = seq(0, 72, 24),
+      limits = c(0, 72)
+    ) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::labs(
+      x = "Time (h)",
+      y = "Fraction labeled",
+      color = NULL,
+      fill = NULL
+    ) +
+    theme_plots()
+
+  b <-
+    purrr::map_dfr(
+      list(`21%` = m_21, `0.5%` = m_05, "DMSO" = m_dmso, "BAY" = m_bay),
+      broom::tidy,
+      .id = "group"
+    ) %>%
+    dplyr::filter(term == "lrc") %>%
+    dplyr::mutate(
+      rate = exp(estimate),
+      se = abs(std.error / estimate) * rate,
+      group = factor(group, levels = c("21%", "0.5%", "DMSO", "BAY"))
+    ) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = group,
+      y = rate,
+      fill = group
+    ) +
+    ggplot2::geom_col(
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(
+        ymax = rate + se,
+        ymin = rate - se
+      ),
+      width = 0.2,
+      size = 0.25,
+      show.legend = FALSE
+    ) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::labs(
+      x = NULL,
+      y = "Rate",
+      color = NULL,
+      fill = NULL
+    ) +
+    theme_plots()
+
+  list(curve = a, rate = b)
+}
+
+
+# arrange_m3 --------------------------------------------------------------
+
+arrange_m3 <- function(m3ab, m3c) {
+
+  a <- m3ab$curve
+  b <- m3ab$rate
+  c <- m3c
+
+  layout <- "
+  aab
+  ccc
+  ccc
+"
+
+  a + b + c +
+    patchwork::plot_layout(design = layout) +
+    patchwork::plot_annotation(
+      tag_levels = "A",
+      theme = theme(plot.margin = margin(-3, -3, -3, -3))
+    )
+}
+
 # calculate_flux_differences ----------------------------------------------
 
 # calculate_flux_differences <- function(model_fluxes) {
