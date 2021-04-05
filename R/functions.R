@@ -1977,9 +1977,7 @@ read_data <- function(data_files) {
 # normalize_densities -----------------------------------------------------
 
 normalize_densities <- function(blot_raw) {
-
-  df <-
-    blot_raw %>%
+  blot_raw %>%
     dplyr::filter(.data$time < 96) %>%
     dplyr::group_by(.data$experiment, .data$gel) %>%
     dplyr::mutate(
@@ -1996,20 +1994,11 @@ normalize_densities <- function(blot_raw) {
       values_to = "density"
     ) %>%
     tidyr::separate(protein, into = c("protein", NA), sep = "_") %>%
-    dplyr::group_by(protein)
-
-  df_baseline <-
-    df %>%
-    dplyr::filter(
-      .data$oxygen == min(oxygen) &
-        .data$treatment %in% c("None", "DMSO") &
-        time == 0
-    ) %>%
     dplyr::group_by(experiment, protein) %>%
-    dplyr::summarize(density_norm = mean(density, na.rm = TRUE))
-
-  dplyr::left_join(df, df_baseline, by = c("experiment", "protein")) %>%
-    dplyr::mutate(fold_change = density / density_norm) %>%
+    dplyr::mutate(
+      fold_change = density /
+        mean(density[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == 0])
+    ) %>%
     dplyr::group_by(experiment, oxygen, treatment, time, protein) %>%
     wmo::remove_nested_outliers(fold_change, remove = TRUE)
 }
