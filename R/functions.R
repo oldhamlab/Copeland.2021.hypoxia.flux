@@ -27,14 +27,16 @@ my_kable <- function(data, ...) {
 # path_to_data ------------------------------------------------------------
 
 path_to_data <- function(nm) {
-  list.files(
+  dir(
     system.file(
       "extdata/",
       package = "Copeland.2021.hypoxia.flux"
     ),
     pattern = nm,
+    all.files = TRUE,
     full.names = TRUE,
-    recursive = TRUE
+    recursive = TRUE,
+    include.dirs = TRUE
   )
 }
 
@@ -1016,7 +1018,7 @@ calculate_ratios <- function(file_name) {
 # import_qbias ------------------------------------------------------------
 
 import_qbias <- function(file_list) {
-  file_list %>%
+  file_list[stringr::str_detect(file_list, "\\.csv$")] %>%
     rlang::set_names(
       stringr::str_extract(basename(.), pattern = "(?<=_)\\w(?=\\.csv)")
     ) %>%
@@ -1965,7 +1967,7 @@ plot_viability <- function(viability) {
 # read_data ---------------------------------------------------------------
 
 read_data <- function(data_files) {
-  data_files %>%
+  data_files[stringr::str_detect(data_files, "\\.csv$")] %>%
     rlang::set_names(stringr::str_extract(., "(lf|pasmc)_(02|05|bay)")) %>%
     purrr::map_dfr(read_csv, .id = "experiment") %>%
     dplyr::mutate(

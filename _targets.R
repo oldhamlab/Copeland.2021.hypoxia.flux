@@ -322,7 +322,7 @@ list(
 
   tar_target(
     blot_files,
-    path_to_data("densities"),
+    path_to_data("immunoblots"),
     format = "file"
   ),
   tar_target(
@@ -576,31 +576,23 @@ list(
     s3d,
     patchwork::plot_spacer()
   ),
-  tar_target(
-    s3e,
-    patchwork::plot_spacer()
-  ),
-  tar_target(
-    s3f,
-    patchwork::plot_spacer()
-  ),
   # tar_target(
   #   s2d_image,
   #   path_to_manuscript("figures/images/lf_02_hif1a-ldha-blots.png"),
   #   format = "file"
   # ),
   # tar_target(
-  #   s2d,
-  #   plot_blot(s2d_image)
+  #   s3d,
+  #   plot_blot(s3d_image)
   # ),
-  # tar_target(
-  #   s2e,
-  #   plot_densities(blot_norm, "lf_02", "hif1a", "HIF-1α protein\n(normalized)", "oxygen")
-  # ),
-  # tar_target(
-  #   s2f,
-  #   plot_densities(blot_norm, "lf_02", "ldha", "LDHA protein\n(normalized)", "oxygen")
-  # ),
+  tar_target(
+    s3e,
+    plot_densities(blot_norm, "pasmc_05", "hif1a", "HIF-1α protein\n(normalized)", "oxygen")
+  ),
+  tar_target(
+    s3f,
+    plot_densities(blot_norm, "pasmc_05", "ldha", "LDHA protein\n(normalized)", "oxygen")
+  ),
   tar_target(
     s3g,
     plot_mrna(mrna_norm, "pasmc_05", "glut1", "GLUT1 mRNA\n(normalized)", "oxygen")
