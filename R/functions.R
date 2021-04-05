@@ -2572,59 +2572,13 @@ plot_labeling_rate <- function(mids) {
         group %in% c("21%", "DMSO") ~ 1,
         group %in% c("0.5%", "BAY") ~ 2
       )
-    ) %>%
-    dplyr::group_by(.data$time, .data$group) %>%
-    wmo::remove_nested_outliers(labeled, remove = TRUE)
-
-  # are rates significantly different? --------------------------------------
-
-  fo <- labeled ~ SSasympOrig(time, asym, lrc)
-  fun <- function(x, asym, lrc) asym * (1 - exp(-exp(lrc) * x))
-
-  m_21 <- nls(fo, df, subset = group == "21%")
-  m_05 <- nls(fo, df, subset = group == "0.5%")
-
-  m_hyp <- nls(
-    labeled ~ fun(time, asym[idx], lrc[idx]),
-    df,
-    subset = group %in% c("21%", "0.5%"),
-    start = as.data.frame(rbind(coef(m_21), coef(m_05)))
-  )
-
-  k_hyp <- nls(
-    labeled ~ fun(time, asym[idx], lrc),
-    df,
-    subset = group %in% c("21%", "0.5%"),
-    start = c(lrc = (coef(m_21)[[2]] + coef(m_05)[[2]])/2,
-              as.data.frame(rbind(coef(m_21)[-2], coef(m_05)[-2])))
-  )
-
-  hyp <- anova(k_hyp, m_hyp)[["Pr(>F)"]][[2]]
-
-  m_dmso <- nls(fo, df, subset = group == "DMSO")
-  m_bay <- nls(fo, df, subset = group == "BAY")
-
-  m_phd <- nls(
-    labeled ~ fun(time, asym[idx], lrc[idx]),
-    df,
-    subset = group %in% c("DMSO", "BAY"),
-    start = as.data.frame(rbind(coef(m_dmso), coef(m_bay)))
-  )
-
-  k_phd <- nls(
-    labeled ~ fun(time, asym[idx], lrc),
-    df,
-    subset = group %in% c("DMSO", "BAY"),
-    start = c(lrc = (coef(m_dmso)[[2]] + coef(m_bay)[[2]])/2,
-              as.data.frame(rbind(coef(m_dmso)[-2], coef(m_bay)[-2])))
-  )
-
-  phd <- anova(k_phd, m_phd)[["Pr(>F)"]][[2]]
-
-  # make plots --------------------------------------------------------------
+    )
 
   a <-
-    ggplot2::ggplot(df) +
+    df %>%
+    dplyr::group_by(.data$time, .data$group) %>%
+    wmo::remove_nested_outliers(labeled, remove = TRUE) %>%
+    ggplot2::ggplot() +
     ggplot2::aes(
       x = time,
       y = labeled,
@@ -2666,32 +2620,50 @@ plot_labeling_rate <- function(mids) {
     ) +
     theme_plots()
 
-  b <-
-    purrr::map_dfr(
-      list(`21%` = m_21, `0.5%` = m_05, "DMSO" = m_dmso, "BAY" = m_bay),
-      broom::tidy,
-      .id = "group"
+  k <-
+    df %>%
+    dplyr::group_by(.data$group, .data$date) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      m = purrr::map(data, ~nls(labeled ~ SSasympOrig(time, asym, lrc), data = .x)),
+      s = purrr::map(m, broom::tidy)
     ) %>%
+    tidyr::unnest(c(s)) %>%
     dplyr::filter(term == "lrc") %>%
     dplyr::mutate(
-      rate = exp(estimate),
-      se = abs(std.error / estimate) * rate,
-      group = factor(group, levels = c("21%", "0.5%", "DMSO", "BAY"))
-    ) %>%
+      k = exp(estimate),
+      experiment = dplyr::case_when(
+        group %in% c("21%", "0.5%") ~ "hypoxia",
+        group %in% c("DMSO", "BAY") ~ "bay"
+      )
+    )
+
+  k %>%
+    dplyr::group_by(experiment) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      pval = purrr::map_dbl(
+        data,
+        ~ t.test(k ~ group, data = .x, paired = FALSE)$p.value
+      )
+    )
+
+  b <-
+    k %>%
     ggplot2::ggplot() +
     ggplot2::aes(
       x = group,
-      y = rate,
+      y = k,
       fill = group
     ) +
-    ggplot2::geom_col(
+    ggplot2::stat_summary(
+      geom = "col",
+      fun = "mean",
       show.legend = FALSE
     ) +
-    ggplot2::geom_errorbar(
-      ggplot2::aes(
-        ymax = rate + se,
-        ymin = rate - se
-      ),
+    ggplot2::stat_summary(
+      geom = "errorbar",
+      fun.data = "mean_se",
       width = 0.2,
       size = 0.25,
       show.legend = FALSE
