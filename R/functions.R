@@ -135,11 +135,8 @@ make_std_curves <- function(df, fo = NULL) {
     ) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
-      model = furrr::future_map(
-        .data$data,
-        fo
-      ),
-      summary = furrr::future_map(.data$model, broom::glance),
+      model = furrr::future_map(.data$data, fo),
+      summary = furrr::future_map(.data$model, ~broom::glance(.x)),
       plots = furrr::future_map2(.data$data, .data$title, make_std_plots)
     ) %>%
     dplyr::group_by(
@@ -187,7 +184,7 @@ make_std_plots <- function(df, title = NULL) {
 interp_data <- function(tbl, std) {
   tbl %>%
     dplyr::filter(is.na(.data$conc)) %>%
-    dplyr::select(where(~all(!is.na(.)))) %>%
+    dplyr::select(-.data$conc) %>%
     dplyr::group_by(dplyr::across(dplyr::group_vars(std))) %>%
     tidyr::nest() %>%
     dplyr::left_join(dplyr::select(std, .data$model)) %>%
@@ -3290,4 +3287,31 @@ clean_nad <- function(nad_data) {
     tidyr::separate(.data$experiment, c(NA, "date"), "_")
 }
 
+# finalize_nad ------------------------------------------------------------
 
+finalize_nad <- function(nad_interp, cells_per_dna) {
+
+  x <-
+    dplyr::filter(cells_per_dna, cell_type == "lf" & volume == 200) %>%
+    dplyr::pull(slope)
+
+  nad_interp %>%
+    dplyr::group_by(metabolite, date, oxygen, treatment, nucleotide) %>%
+    dplyr::summarise(conc = mean(conc)) %>%
+    dplyr::mutate(
+      conc = dplyr::case_when(
+        metabolite == "dna" ~ conc * x,
+        metabolite == "nad" ~ conc * 720
+      ),
+      nucleotide = replace(nucleotide, is.na(nucleotide), "Count")
+    ) %>%
+    tidyr::pivot_wider(-c(metabolite), names_from = nucleotide, values_from = conc) %>%
+    dplyr::mutate(
+      oxygen = factor(oxygen, levels = c("21%", "0.5%")),
+      treatment = factor(treatment, levels = c("none", "DMSO", "BAY")),
+      treatment = forcats::fct_recode(treatment, "None" = "none"),
+      Ratio = NADH/NAD
+    ) %>%
+    dplyr::arrange(oxygen, treatment)
+
+}
