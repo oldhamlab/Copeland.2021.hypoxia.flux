@@ -350,6 +350,52 @@ list(
     normalize_qpcr(mrna_raw)
   ),
 
+  # model fluxes ------------------------------------------------------------
+
+  tar_target(
+    map_flux_files,
+    path_to_data("model"),
+    format = "file"
+  ),
+  tar_target(
+    map_fluxes,
+    clean_model_fluxes(map_flux_files, model_reactions)
+  ),
+  tar_target(
+    map_flux_differences,
+    assemble_flux_differences(map_fluxes)
+  ),
+  tar_render(
+    map_flux_difference_report,
+    path = path_to_reports("flux-differences.Rmd"),
+    output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+
+  # NAD assay ---------------------------------------------------------------
+
+  tar_target(
+    nad_files,
+    path_to_data("nad-assay_.*\\.xlsx"),
+    format = "file"
+  ),
+  tar_target(
+    nad_data,
+    assemble_flux_data(nad_files)
+  ),
+  tar_target(
+    nad_raw,
+    clean_nad(nad_data)
+  ),
+  tar_target(
+    nad_conc_std,
+    make_std_curves(nad_raw)
+  ),
+  tar_target(
+    nad_conc_std_plots,
+    print_plots(nad_conc_std$plots, nad_conc_std$title, "nad/01_standard_curves"),
+    format = "file"
+  ),
+
   # M1 ----------------------------------------------------------------------
 
   tar_target(
@@ -657,20 +703,100 @@ list(
     write_figures(s5, "s5.pdf", width = 5, height = 9.5)
   ),
 
-  # model fluxes ------------------------------------------------------------
+  # M4 ----------------------------------------------------------------------
 
   tar_target(
-    map_flux_files,
-    path_to_data("(lf|pasmc)_(21|05|dmso|bay)\\.csv"),
+    node_file,
+    path_to_data("nodes\\.csv"),
     format = "file"
   ),
   tar_target(
-    map_fluxes,
-    clean_model_fluxes(map_flux_files, model_reactions)
+    nodes,
+    readr::read_csv(node_file)
+  ),
+  tar_target(
+    hypoxia_graph,
+    make_graph(map_flux_differences, nodes, treat = "21%", normalizer = "none")
+  ),
+  tar_target(
+    hypoxia_graph_ratio_plot,
+    plot_ratio_network(hypoxia_graph, "Hypoxia/Normoxia")
+  ),
+  tar_target(
+    bay_graph,
+    make_graph(map_flux_differences, nodes, treat = "DMSO", normalizer = "none")
+  ),
+  tar_target(
+    bay_graph_ratio_plot,
+    plot_ratio_network(bay_graph, "BAY/DMSO")
+  ),
+  tar_target(
+    m4c,
+    plot_lactate_mids(model_mids, "lf")
+  ),
+  tar_target(
+    m4,
+    arrange_m4(hypoxia_graph_ratio_plot, bay_graph_ratio_plot, m4c)
+  ),
+  tar_target(
+    m4_figure,
+    write_figures(m4, "m4.pdf", width = 7, height = 7)
+  ),
+
+  # S6 ----------------------------------------------------------------------
+
+  tar_target(
+    time_course_mids,
+    format_time_course_mids(model_mids)
+  ),
+  tar_target(
+    s6a,
+    plot_mid_time_course(time_course_mids, "lf", "21%", "None", "plasma")
+  ),
+  tar_target(
+    s6b,
+    plot_mid_time_course(time_course_mids, "lf", "0.5%", "None", "viridis")
+  ),
+  tar_target(
+    s6c,
+    plot_normoxia_network(hypoxia_graph)
+  ),
+  tar_target(
+    hypoxia_growth_graph,
+    make_graph(map_flux_differences, nodes, treat = "0.5%", normalizer = "growth")
+  ),
+  tar_target(
+    s6d,
+    plot_ratio_network(hypoxia_growth_graph, "Hypoxia/Normoxia\nGrowth Rate Normalized")
+  ),
+  tar_target(
+    s6,
+    arrange_s6(s6a, s6b, s6c, s6d)
+  ),
+  tar_target(
+    s6_figure,
+    write_figures(s6, "s6.pdf", width = 7, height = 7)
+  ),
+
+  # M5 ----------------------------------------------------------------------
+
+  tar_target(
+    twoby_fluxes,
+    analyze_twoby_fluxes(growth_rates, fluxes)
+  ),
+  tar_target(
+    m5a,
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "growth", "Growth Rate (/h)")
+  ),
+  tar_target(
+    m5b,
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "glucose", "Glucose\n(fmol/cell/h)")
+  ),
+  tar_target(
+    m5c,
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "lactate", "Lactate\n(fmol/cell/h)")
   )
-  # tar_target(
-  #   flux_differences,
-  #   calculate_flux_differences(map_fluxes)
-  # )
+
 
 )
+
