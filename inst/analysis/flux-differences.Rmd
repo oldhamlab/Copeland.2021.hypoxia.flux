@@ -28,13 +28,13 @@ conflicted::conflict_prefer("filter", "dplyr")
 
 # set global chunk options
 knitr::opts_chunk$set(
-	echo = FALSE,
-	fig.align = "center",
-	message = FALSE,
-	warning = FALSE,
-	out.width = "49%"
+  echo = FALSE,
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  out.width = "49%"
 )
- 
+
 options(knitr.table.format = function() {
   if (knitr::is_latex_output()) 
     "latex" else "html"
@@ -46,6 +46,7 @@ theme_set(theme_wmo(base_family = "Calibri"))
 ```{r}
 withr::with_dir(here::here(), {
   model_fluxes <- tar_read(model_fluxes)
+  flux_differences <- tar_read(flux_differences)
 })
 ```
 
@@ -57,6 +58,7 @@ In this document, we will analyze the output from the metabolic flux maps.
 
 ```{r}
 usethis::use_data(model_fluxes, overwrite = TRUE)
+usethis::use_data(flux_differences, overwrite = TRUE)
 ```
 
 # Analysis
@@ -64,3 +66,58 @@ usethis::use_data(model_fluxes, overwrite = TRUE)
 ## Significant Differences
 
 Identify reactions that are significantly different based on whether the confidence intervals overlap. This is more conservative than p < 0.05. 
+
+```{r}
+calculate_ratio <- function(norm) {
+  flux_differences %>% 
+    filter(normalization == norm) %>% 
+    # filter(!is.na(ratio)) %>% 
+    select(-c(normalization, equation, ctl, contains(c("flux", "lb", "ub")))) %>% 
+    pivot_wider(names_from = exp, values_from = ratio)
+}
+
+print_flux_table <- function(df, caption) {
+  df %>% 
+    mutate(across(c(`0.5%`, BAY), ~as.character(signif(., 3)))) %>% 
+    kableExtra::kable(
+      caption = caption, 
+      col.names = c("Cell type", "Pathway", "Index", "ID", "Type", "0.5%", "BAY"), 
+      align = "clccccc", 
+      escape = TRUE, 
+      digits = 2, 
+      booktabs = TRUE, 
+      longtable = TRUE, 
+      linesep = ""
+    ) %>% 
+    kableExtra::kable_styling(font_size = 9)
+}
+```
+
+```{r}
+calculate_ratio("none") %>% print_flux_table("Significant Flux Differences")
+```
+
+Do any of these differences have a negative ratio?
+
+```{r}
+calculate_ratio("none") %>% 
+  filter(`0.5%` < 0 | BAY < 0) %>% 
+  print_flux_table("Reversed fluxes")
+```
+
+For both of these models, some of the PPP fluxes reverse. 
+
+
+## Normalized differences
+
+It doesn't look like there is any dramatic reprogramming of the intracellular metabolic pathways secondary to hypoxia or BAY treatment. In other words, most of the differences are related to absolute rates rather than differential usage. Another way to look at this might be to normalize the fluxes to glucose uptake or biomass fluxes. This would show all fluxes in terms of total glucose use or growth rate, for example.
+
+```{r}
+calculate_ratio("growth") %>% print_flux_table("Significant differences in growth-normalized fluxes")
+```
+
+```{r}
+calculate_ratio("glucose") %>% print_flux_table("Significant differences in glucose-normalized fluxes")
+```
+
+

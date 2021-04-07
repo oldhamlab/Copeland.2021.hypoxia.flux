@@ -50,6 +50,11 @@ withr::with_dir(here::here(), {
 })
 ```
 
+```{r}
+usethis::use_data(mids, overwrite = TRUE)
+```
+
+
 \newpage
 
 # Overview
