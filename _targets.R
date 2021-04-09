@@ -5,7 +5,9 @@
 devtools::load_all()
 library(targets)
 library(tarchetypes)
-source("R/functions.R")
+
+src <- list.files("R", pattern = "^0_.*\\.R", full.names = TRUE)
+invisible(lapply(src, source))
 
 conflicted::conflict_prefer("filter", "dplyr")
 
@@ -19,6 +21,7 @@ future::plan(future::multisession(workers = future::availableCores() - 1))
 # target-specific options
 tar_option_set(
   packages = c("tidyverse", "patchwork"),
+  imports = c("lf.hypoxia.molidustat.rnaseq"),
   format = "qs"
 )
 
@@ -127,7 +130,7 @@ list(
   ),
   tar_target(
     growth_curves,
-    plot_masses(dplyr::filter(flux_measurements, metabolite == "cells"), plot_growth_curves)
+    plot_growth_curves(flux_measurements)
   ),
   tar_target(
     growth_curve_plots,
@@ -140,7 +143,7 @@ list(
   ),
   tar_target(
     degradation_curves,
-    plot_masses(dplyr::filter(flux_measurements, type == "empty"), plot_degradation_curves)
+    plot_degradation_curves(flux_measurement)
   ),
   tar_target(
     degradation_curve_plots,
@@ -157,7 +160,7 @@ list(
   ),
   tar_target(
     mass_curves,
-    plot_masses(dplyr::filter(flux_measurements, type == "cells" & metabolite != "cells"), plot_mass_curves)
+    plot_mass_curves(flux_measurements)
   ),
   tar_target(
     mass_curve_plots,
@@ -404,6 +407,29 @@ list(
     finalize_nad(nad_interp, cells_per_dna)
   ),
 
+  # RNA-seq -----------------------------------------------------------------
+
+  tar_target(
+    dds,
+    count_rnaseq()
+  ),
+  tar_target(
+    pca_data,
+    vst_rnaseq(dds)
+  ),
+  tar_target(
+    rnaseq_pca,
+    plot_rnaseq_pca(pca_data)
+  ),
+  tar_target(
+    rnaseq_volcano,
+    plot_rnaseq_volcano(dds)
+  ),
+  tar_target(
+    rnaseq_venn,
+    plot_rnaseq_venn(dds)
+  ),
+
   # M1 ----------------------------------------------------------------------
 
   tar_target(
@@ -457,7 +483,7 @@ list(
   ),
   tar_target(
     m1_figure,
-    write_figures(m1, "m1.pdf", width = 5, height = 5),
+    write_figures(m1, "m1.pdf"),
     format = "file"
   ),
 
@@ -514,7 +540,7 @@ list(
   ),
   tar_target(
     m2_figure,
-    write_figures(m2, "m2.pdf", width = 5, height = 5),
+    write_figures(m2, "m2.pdf"),
     format = "file"
   ),
 
@@ -551,7 +577,7 @@ list(
   ),
   tar_target(
     s1_figure,
-    write_figures(s1, "s1.pdf", width = 5, height = 5),
+    write_figures(s1, "s1.pdf"),
     format = "file"
   ),
 
@@ -608,7 +634,7 @@ list(
   ),
   tar_target(
     s2_figure,
-    write_figures(s2, "s2.pdf", width = 5, height = 5),
+    write_figures(s2, "s2.pdf"),
     format = "file"
   ),
 
@@ -665,7 +691,7 @@ list(
   ),
   tar_target(
     s3_figure,
-    write_figures(s3, "s3.pdf", width = 5, height = 5),
+    write_figures(s3, "s3.pdf"),
     format = "file"
   ),
 
@@ -685,7 +711,7 @@ list(
   ),
   tar_target(
     m3_figure,
-    write_figures(m3, "m3.pdf", width = 7, height = 7),
+    write_figures(m3, "m3.pdf"),
     format = "file"
   ),
 
@@ -697,7 +723,7 @@ list(
   ),
   tar_target(
     s4_figure,
-    write_figures(s4, "s4.pdf", width = 7, height = 5)
+    write_figures(s4, "s4.pdf")
   ),
 
   # S5 ----------------------------------------------------------------------
@@ -708,7 +734,7 @@ list(
   ),
   tar_target(
     s5_figure,
-    write_figures(s5, "s5.pdf", width = 5, height = 9.5)
+    write_figures(s5, "s5.pdf")
   ),
 
   # M4 ----------------------------------------------------------------------
@@ -748,7 +774,7 @@ list(
   ),
   tar_target(
     m4_figure,
-    write_figures(m4, "m4.pdf", width = 7, height = 7)
+    write_figures(m4, "m4.pdf")
   ),
 
   # S6 ----------------------------------------------------------------------
@@ -783,7 +809,7 @@ list(
   ),
   tar_target(
     s6_figure,
-    write_figures(s6, "s6.pdf", width = 7, height = 7)
+    write_figures(s6, "s6.pdf")
   ),
 
   # M5 ----------------------------------------------------------------------
@@ -798,15 +824,23 @@ list(
   ),
   tar_target(
     m5b,
-    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "glucose", "Glucose\n(fmol/cell/h)")
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "glucose", "Glucose\n(fmol/cell/h)") + ggplot2::scale_y_reverse()
   ),
   tar_target(
     m5c,
     plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "lactate", "Lactate\n(fmol/cell/h)")
   ),
+  # tar_target(
+  #   m5d,
+  #   plot_nad(nad_final)
+  # ),
   tar_target(
-    m5d,
-    plot_nad(nad_final)
+    m5,
+    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano)
+  ),
+  tar_target(
+    m5_figure,
+    write_figures(m5, "m5.pdf")
   )
 
 )
