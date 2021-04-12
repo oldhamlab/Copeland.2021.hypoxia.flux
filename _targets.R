@@ -6,7 +6,7 @@ devtools::load_all()
 library(targets)
 library(tarchetypes)
 
-src <- list.files("R", pattern = "^0_.*\\.R", full.names = TRUE)
+src <- list.files("R", pattern = "^_.*\\.R", full.names = TRUE)
 invisible(lapply(src, source))
 
 conflicted::conflict_prefer("filter", "dplyr")
