@@ -1,0 +1,76 @@
+---
+title: "RNA-seq Analysis"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: kable
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+})
+
+# resolve conflicts
+conflicted::conflict_prefer("filter", "dplyr")
+
+# set global chunk options
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE, 
+  fig.align = "center", 
+  out.width = "49%"
+) 
+
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  rnaseq_pca <- tar_read(rnaseq_pca)
+  rnaseq_different_differences <- tar_read(rnaseq_different_differences)
+})
+```
+
+\newpage
+
+# Overview
+
+We observed that proliferating primary cells exposed to hypoxia do not increase glucose uptake and lactate efflux despite up-regulation of glucose transporters and glycolytic genes. When these cells are treated with the prolyl hydroxylase inhibitor molidustat in normoxia, the expected increases in glycolytic flux are observed. Interestingly, when molidustat-treated cells are cultured in hypoxia, hypoxia blocks molidustat-mediated increases in glycolysis. In an effort to identify the mechanism mediating this effect, we performed RNA-seq on lung fibroblasts treated for three days with 0.5% oxygen or molidustat (10 μM) with 21% and DMSO (0.1%) controls. RNA was collected and purified and sent for RNA-seq analysis.
+
+# Analysis
+
+We will use the `DESeq2` package to identify differentially expresssed genes. We will use the model `~ experiment + oxygen * treatment`. 
+
+## PCA
+
+```{r}
+rnaseq_pca
+```
+
+## Differential Expression
+
+In this analysis, will identify those genes where the effects of hypoxia and molidustat are different, which will hopefully point to mechanisms by which hypoxia may regulate cell metabolism differently than PHD2 inhibition.
+
+```{r}
+head(rnaseq_different_differences, 20)
+```
+

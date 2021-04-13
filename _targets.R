@@ -6,7 +6,7 @@ devtools::load_all()
 library(targets)
 library(tarchetypes)
 
-src <- list.files("R", pattern = "^_.*\\.R", full.names = TRUE)
+src <- list.files("R", pattern = "^0_.*\\.R", full.names = TRUE)
 invisible(lapply(src, source))
 
 conflicted::conflict_prefer("filter", "dplyr")
@@ -21,7 +21,7 @@ future::plan(future::multisession(workers = future::availableCores() - 1))
 # target-specific options
 tar_option_set(
   packages = c("tidyverse", "patchwork"),
-  imports = c("lf.hypoxia.molidustat.rnaseq"),
+  imports = c("rnaseq.lf.hypoxia.molidustat"),
   format = "qs"
 )
 
@@ -422,12 +422,24 @@ list(
     plot_rnaseq_pca(pca_data)
   ),
   tar_target(
+    rnaseq_different_differences,
+    identify_deg(dds, expr((h.dmso - n.dmso) - (n.bay - n.dmso)))
+  ),
+  tar_target(
     rnaseq_volcano,
-    plot_rnaseq_volcano(dds)
+    plot_rnaseq_volcano(rnaseq_different_differences)
   ),
   tar_target(
     rnaseq_venn,
     plot_rnaseq_venn(dds)
+  ),
+  tar_target(
+    rnaseq_gsea,
+    run_gsea(rnaseq_different_differences)
+  ),
+  tar_target(
+    rnaseq_gsea_plot,
+    plot_gsea(rnaseq_gsea, "HALLMARK")
   ),
 
   # M1 ----------------------------------------------------------------------
@@ -836,7 +848,7 @@ list(
   # ),
   tar_target(
     m5,
-    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano)
+    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano, rnaseq_gsea_plot)
   ),
   tar_target(
     m5_figure,
