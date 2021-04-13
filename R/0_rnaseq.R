@@ -4,23 +4,25 @@
 
 count_rnaseq <- function() {
 
-  count_data <- lf.hypoxia.molidustat.rnaseq::count_data
+  dds <- rnaseq.lf.hypoxia.molidustat::lf_hyp_bay_se
 
-  pheno_data <-
-    lf.hypoxia.molidustat.rnaseq::pheno_data %>%
+  SummarizedExperiment::colData(dds) <-
+    SummarizedExperiment::colData(dds) %>%
+    tibble::as_tibble() %>%
     dplyr::mutate(
+      experiment = factor(experiment),
       oxygen = factor(oxygen, levels = c("21%", "0.5%"), labels = c("N", "H")),
       treatment = factor(treatment, labels = c("DMSO", "BAY")),
       group = stringr::str_c(oxygen, treatment, sep = "."),
       group = factor(group, levels = c("N.DMSO", "H.DMSO", "N.BAY", "H.BAY"))
-    )
+    ) %>%
+    as("DataFrame")
 
   design <- ~ experiment + group
 
   dds <-
-    DESeq2::DESeqDataSetFromMatrix(
-      countData = count_data,
-      colData = pheno_data,
+    DESeq2::DESeqDataSet(
+      dds,
       design = design
     )
 
@@ -144,7 +146,11 @@ identify_deg <- function(dds, expr) {
     tidy = TRUE,
     parallel = TRUE
   ) %>%
-    dplyr::rename(symbol = row) %>%
+    dplyr::left_join(
+      tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "row"),
+      by = "row"
+    ) %>%
+    dplyr::rename(symbol = hgnc_symbol) %>%
     dplyr::arrange(padj)
 
 }
@@ -182,20 +188,18 @@ plot_rnaseq_venn <- function(dds) {
 
 # plot_rnaseq_volcano -----------------------------------------------------
 
-plot_rnaseq_volcano <- function(dds) {
+plot_rnaseq_volcano <- function(results) {
 
   df <-
-    identify_deg(dds, expr((h.dmso - n.dmso) - (n.bay - n.dmso))) %>%
-    dplyr::arrange(desc(abs(stat))) %>%
-    dplyr::mutate(fc = 2 ^ log2FoldChange)
+    tibble::as_tibble(results)
 
   ggplot2::ggplot(df) +
     ggplot2::aes(
-      x = fc,
+      x = 2 ^ log2FoldChange,
       y = padj
     ) +
     ggplot2::geom_hex(
-      bins = 100,
+      bins = c(250, 15),
       show.legend = FALSE
     ) +
     ggrepel::geom_text_repel(
@@ -222,24 +226,29 @@ plot_rnaseq_volcano <- function(dds) {
 # plot_rnaseq_goi ---------------------------------------------------------
 
 plot_rnaseq_goi <- function(dds, goi) {
+
   df <-
-    tibble::as_tibble(
-      SummarizedExperiment::assay(dds),
-      rownames = "symbol"
+    dds[
+      !is.na(SummarizedExperiment::rowData(dds)$hgnc_symbol) &
+        SummarizedExperiment::rowData(dds)$hgnc_symbol %in% goi,
+    ] %>%
+    SummarizedExperiment::assay() %>%
+    tibble::as_tibble(rownames = "entrez_id") %>%
+    dplyr::left_join(
+      tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "entrez_id"),
+      by = "entrez_id"
     ) %>%
+    dplyr::select(symbol = hgnc_symbol, tidyselect::matches("^V\\d+")) %>%
     tidyr::pivot_longer(
       -symbol,
-      names_to = "sample",
-      values_to = "count"
+      names_to = "id",
+      values_to = "count",
+      names_prefix = "V",
+      names_transform = list(id = ~sprintf("%02s", .x))
     ) %>%
-    dplyr::left_join(
-      tibble::as_tibble(SummarizedExperiment::colData(dds)),
-      by = c("sample" = "id")
-    )
+    dplyr::left_join(SummarizedExperiment::colData(dds), by = "id", copy = TRUE)
 
-  df %>%
-    dplyr::filter(symbol %in% goi) %>%
-    ggplot2::ggplot() +
+  ggplot2::ggplot(df) +
     ggplot2::facet_wrap(~ symbol, scales = "free_y") +
     ggplot2::aes(
       x = treatment,
@@ -266,5 +275,74 @@ plot_rnaseq_goi <- function(dds, goi) {
       color = "Oxygen"
     ) +
     ggplot2::ylim(c(0, NA)) +
+    NULL
+}
+
+
+# run_gsea ----------------------------------------------------------------
+
+run_gsea <- function(results) {
+
+  pathways <-
+    fgsea::gmtPathways("~/Dropbox (Partners HealthCare)/msigdb_v7.2/msigdb_v7.2_GMTs/msigdb.v7.2.entrez.gmt")
+
+  rnks <-
+    results %>%
+    dplyr::select(row, stat) %>%
+    dplyr::arrange(stat) %>%
+    tibble::deframe()
+
+  fgsea::fgsea(
+    pathways = pathways,
+    stats = rnks,
+    nPermSimple = 10000,
+    eps = 0,
+    BPPARAM = BiocParallel::bpparam()
+  ) %>%
+    tibble::as_tibble() %>%
+    dplyr::arrange(desc(NES)) %>%
+    tidyr::separate(pathway, c("source", "pathway"), "_", extra = "merge") %>%
+    dplyr::filter(padj < 0.05)
+
+}
+
+
+# plot_gsea ---------------------------------------------------------------
+
+plot_gsea <- function(rnaseq_gsea, sources) {
+  rnaseq_gsea %>%
+    dplyr::filter(padj < 0.05) %>%
+    dplyr::filter(source %in% sources) %>%
+    dplyr::select(source, pathway, NES) %>%
+    dplyr::mutate(
+      pathway = stringr::str_replace_all(pathway, "_", " "),
+      pathway = tolower(pathway)
+    ) %>%
+    dplyr::distinct() %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = NES,
+      y = reorder(pathway, NES)
+    ) +
+    ggplot2::geom_col(
+      ggplot2::aes(fill = NES > 0)
+    ) +
+    ggplot2::labs(
+      x = "Normalized Enrichment Score",
+      y = NULL
+    ) +
+    ggplot2::scale_y_discrete(position = "right") +
+    ggplot2::scale_fill_manual(
+      name = NULL,
+      labels = c("Up in BAY", "Up in Hypoxia"),
+      values = unname(clrs[c(4, 2)])
+    ) +
+    theme_plots() +
+    ggplot2::theme(
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    ) +
     NULL
 }

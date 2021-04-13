@@ -10,7 +10,7 @@ theme_plots <- function() {
     ggplot2::theme(
       plot.margin = ggplot2::margin(5, 5, 5, 5),
       plot.tag = ggplot2::element_text(face = "bold"),
-      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 3))
+      axis.title.y.left = ggplot2::element_text(margin = ggplot2::margin(r = 3))
     )
 }
 
@@ -58,12 +58,14 @@ write_figures <- function(plot, filename) {
   ggplot2::ggsave(
     filename = filename,
     plot = plot,
+    device = cairo_pdf,
     path = path,
     width = overall_width,
     height = overall_height,
-    units = "in",
-    device = cairo_pdf
+    units = "in"
   )
+
+  if (file.exists("Rplots.pdf")) unlink("Rplots.pdf")
 
   stringr::str_c(path, "/", filename)
 
@@ -160,12 +162,13 @@ arrange_s6 <- function(a, b, c, d) {
 
 # arrange_m5 --------------------------------------------------------------
 
-arrange_m5 <- function(a, b, c, d, e) {
+arrange_m5 <- function(a, b, c, d, e, f) {
   layout <- "
   abc
-  de#
+  def
+  ##f
   "
-  a + b + c + d + e +
+  a + b + c + d + e + f +
     theme_patchwork(
       design = layout,
       widths = unit(1.25, "in"),
