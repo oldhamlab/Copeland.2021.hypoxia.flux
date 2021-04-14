@@ -438,8 +438,20 @@ list(
     run_gsea(rnaseq_different_differences)
   ),
   tar_target(
+    rnaseq_goi,
+    plot_rnaseq_goi(dds, c("EPAS1", "P4HA2", "RBM3"))
+  ),
+  tar_target(
     rnaseq_gsea_plot,
     plot_gsea(rnaseq_gsea, "HALLMARK")
+  ),
+  tar_target(
+    rnaseq_tfea,
+    run_tfea(rnaseq_different_differences)
+  ),
+  tar_target(
+    rnaseq_tfea_plot,
+    plot_tfea(rnaseq_tfea)
   ),
 
   # M1 ----------------------------------------------------------------------
@@ -848,7 +860,7 @@ list(
   # ),
   tar_target(
     m5,
-    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano, rnaseq_gsea_plot)
+    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot)
   ),
   tar_target(
     m5_figure,

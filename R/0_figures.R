@@ -162,13 +162,14 @@ arrange_s6 <- function(a, b, c, d) {
 
 # arrange_m5 --------------------------------------------------------------
 
-arrange_m5 <- function(a, b, c, d, e, f) {
+arrange_m5 <- function(a, b, c, d, e, f, g, h) {
   layout <- "
   abc
-  def
-  ##f
+  deg
+  ffg
+  hh#
   "
-  a + b + c + d + e + f +
+  a + b + c + d + e + f + g + h +
     theme_patchwork(
       design = layout,
       widths = unit(1.25, "in"),

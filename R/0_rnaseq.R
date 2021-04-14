@@ -138,6 +138,10 @@ identify_deg <- function(dds, expr) {
   con <- eval(expr)
   # con <- (h.dmso - n.dmso) - (n.bay - n.dmso)
 
+  annots <-
+    tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "row") %>%
+    dplyr::select(row, hgnc_symbol, description)
+
   DESeq2::results(
     dds,
     contrast = con,
@@ -146,11 +150,9 @@ identify_deg <- function(dds, expr) {
     tidy = TRUE,
     parallel = TRUE
   ) %>%
-    dplyr::left_join(
-      tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "row"),
-      by = "row"
-    ) %>%
+    dplyr::left_join(annots, by = "row") %>%
     dplyr::rename(symbol = hgnc_symbol) %>%
+    dplyr::relocate(symbol, description, .after = "row") %>%
     dplyr::arrange(padj)
 
 }
@@ -193,28 +195,63 @@ plot_rnaseq_volcano <- function(results) {
   df <-
     tibble::as_tibble(results)
 
+  left <-
+    df %>%
+    dplyr::filter(log2FoldChange < 0) %>%
+    dplyr::slice_min(stat, n = 10)
+
+  right <-
+    df %>%
+    dplyr::filter(log2FoldChange > 0) %>%
+    dplyr::slice_max(stat, n = 10)
+
   ggplot2::ggplot(df) +
     ggplot2::aes(
-      x = 2 ^ log2FoldChange,
+      # x = 2 ^ log2FoldChange,
+      x = log2FoldChange,
       y = padj
+    ) +
+    # ggrepel::geom_text_repel(
+    #   data = head(df, 40),
+    #   ggplot2::aes(label = symbol),
+    #   size = 4/ggplot2::.pt,
+    #   max.overlaps = 20,
+    #   segment.size = 0.1,
+    # ) +
+    ggrepel::geom_text_repel(
+      data = left,
+      ggplot2::aes(label = symbol),
+      size = 4/ggplot2::.pt,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_x = -4,
+      direction = "y"
+    ) +
+    ggrepel::geom_text_repel(
+      data = right,
+      ggplot2::aes(label = symbol),
+      size = 4/ggplot2::.pt,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_x = 4.5,
+      direction = "y"
     ) +
     ggplot2::geom_hex(
       bins = c(250, 15),
       show.legend = FALSE
     ) +
-    ggrepel::geom_text_repel(
-      data = head(df, 40),
-      ggplot2::aes(label = symbol),
-      size = 4/ggplot2::.pt,
-      max.overlaps = 20
-    ) +
     ggplot2::scale_fill_viridis_c(trans = "log10") +
     ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
     ggplot2::scale_x_continuous(
-      trans = "log2",
-      breaks = 2 ^ seq(-4, 4, 2),
-      labels = scales::trans_format("log2", scales::math_format(2^.x))
+      breaks = seq(-4, 4, 2),
+      labels = scales::math_format(2^.x),
+      expand = ggplot2::expansion(mult = 0.25)
     ) +
+    # ggplot2::scale_x_continuous(
+    #   trans = "log2",
+    #   breaks = 2 ^ seq(-4, 4, 2),
+    #   labels = scales::trans_format("log2", scales::math_format(2^.x))
+    # ) +
     ggplot2::labs(
       x = "ΔHypoxia/ΔBAY",
       y = "Adjusted P value"
@@ -246,35 +283,46 @@ plot_rnaseq_goi <- function(dds, goi) {
       names_prefix = "V",
       names_transform = list(id = ~sprintf("%02s", .x))
     ) %>%
-    dplyr::left_join(SummarizedExperiment::colData(dds), by = "id", copy = TRUE)
+    dplyr::left_join(SummarizedExperiment::colData(dds), by = "id", copy = TRUE) %>%
+    dplyr::mutate(oxygen = factor(oxygen, levels = c("N", "H"), labels = c("21%", "0.5%")))
 
   ggplot2::ggplot(df) +
     ggplot2::facet_wrap(~ symbol, scales = "free_y") +
     ggplot2::aes(
       x = treatment,
-      y = count,
-      color = oxygen
-    ) +
-    ggplot2::geom_point(
-      alpha = 0.4,
-      position =  ggplot2::position_dodge(width = 0.4),
-      show.legend = FALSE
+      y = count/1000,
+      fill = oxygen
     ) +
     ggplot2::stat_summary(
-      geom = "crossbar",
+      geom = "col",
       fun = "mean",
-      width = 0.3,
-      position =  ggplot2::position_dodge(width = 0.4),
-      fatten = 2,
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.6,
+      show.legend = TRUE
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(group = oxygen),
+      geom = "errorbar",
+      fun.data = "mean_se",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.2,
+      size = 0.25,
       show.legend = FALSE
     ) +
-    ggplot2::scale_color_brewer(palette = "Set1") +
+    ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::labs(
       x = "Treatment",
-      y = "Count",
-      color = "Oxygen"
+      y = expression(paste("Cell count (x", 10^3, ")")),
+      fill = NULL
     ) +
     ggplot2::ylim(c(0, NA)) +
+    theme_plots() +
+    ggplot2::theme(
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    ) +
     NULL
 }
 
@@ -345,4 +393,92 @@ plot_gsea <- function(rnaseq_gsea, sources) {
       legend.box.margin = ggplot2::margin(t = -10)
     ) +
     NULL
+}
+
+# run_tfea ----------------------------------------------------------------
+
+run_tfea <- function(df) {
+
+  df <- dplyr::rename(df, Genes = row)
+
+  de_genes <-
+    TFEA.ChIP::Select_genes(
+      df,
+      min_LFC = 0.5
+    )
+
+  ctl_genes <-
+    TFEA.ChIP::Select_genes(
+      df,
+      min_pval = 0.5,
+      max_pval = 1,
+      min_LFC = -0.25,
+      max_LFC = 0.25
+    )
+
+  TFEA.ChIP::contingency_matrix(de_genes, ctl_genes) %>%
+    TFEA.ChIP::getCMstats() %>%
+    TFEA.ChIP::rankTFs(rankMethod = "gsea")
+
+}
+
+# plot_tfea ---------------------------------------------------------------
+
+plot_tfea <- function(rnaseq_tfea) {
+
+  df <-
+    rnaseq_tfea %>%
+    dplyr::filter(pVal < 0.05)
+
+  ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = arg.ES,
+      y = ES,
+      fill = ES < 0
+    ) +
+    ggrepel::geom_text_repel(
+      data = dplyr::filter(df, ES < 0),
+      ggplot2::aes(label = TF),
+      size = 6/ggplot2::.pt,
+      force = 5,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_y = -1,
+      angle = 90,
+      direction = "x"
+    ) +
+    ggrepel::geom_text_repel(
+      data = dplyr::filter(df, ES > 0),
+      ggplot2::aes(label = TF),
+      size = 6/ggplot2::.pt,
+      force = 5,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_y = 1,
+      angle = 90,
+      direction = "x"
+    ) +
+    ggplot2::geom_point(
+      pch = 21,
+      color = "white"
+    ) +
+    ggplot2::geom_hline(yintercept = 0, size = 0.25) +
+    ggplot2::labs(
+      x = "Rank",
+      y = "Enrichment score"
+    ) +
+    ggplot2::ylim(c(-2, 2)) +
+    ggplot2::scale_fill_manual(
+      name = NULL,
+      labels = c("Hypoxia", "BAY"),
+      values = unname(clrs[c(2, 4)])
+    ) +
+    theme_plots() +
+    ggplot2::theme(
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    )
+
 }
