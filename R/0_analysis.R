@@ -380,7 +380,7 @@ plot_viability <- function(viability) {
 
 read_data <- function(data_files) {
   data_files[stringr::str_detect(data_files, "\\.csv$")] %>%
-    rlang::set_names(stringr::str_extract(., "(lf|pasmc)_(02|05|bay)")) %>%
+    rlang::set_names(stringr::str_extract(., "(lf|pasmc)_(02|05-bay|05|bay|)")) %>%
     purrr::map_dfr(read_csv, .id = "experiment") %>%
     dplyr::mutate(
       oxygen = factor(oxygen, levels = c("21%", "0.5%", "0.2%"), ordered = TRUE),
@@ -393,25 +393,21 @@ read_data <- function(data_files) {
 normalize_densities <- function(blot_raw) {
   blot_raw %>%
     dplyr::filter(.data$time < 96) %>%
-    dplyr::group_by(.data$experiment, .data$gel) %>%
-    dplyr::mutate(
-      blot_norm = blot / mean(blot, na.rm = TRUE),
-      hif1a_norm = hif1a / mean(hif1a, na.rm = TRUE),
-      ldha_norm = ldha / mean(ldha, na.rm = TRUE),
-      hif1a_ratio = hif1a_norm / blot_norm,
-      ldha_ratio = ldha_norm / blot_norm
-    ) %>%
-    dplyr::select(experiment:time, hif1a_ratio, ldha_ratio) %>%
     tidyr::pivot_longer(
-      contains("ratio"),
+      blot:tidyselect::last_col(),
       names_to = "protein",
-      values_to = "density"
+      values_to = "value",
+      values_drop_na = TRUE
     ) %>%
-    tidyr::separate(protein, into = c("protein", NA), sep = "_") %>%
-    dplyr::group_by(experiment, protein) %>%
+    dplyr::group_by(.data$experiment, .data$gel, .data$protein) %>%
+    dplyr::mutate(norm = value / mean(value, na.rm = TRUE)) %>%
+    dplyr::group_by(dplyr::across(.data$experiment:.data$time)) %>%
+    dplyr::mutate(density = norm / norm[protein == "blot"]) %>%
+    dplyr::filter(protein != "blot") %>%
+    dplyr::group_by(.data$experiment, .data$protein) %>%
     dplyr::mutate(
       fold_change = density /
-        mean(density[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == 0])
+        mean(density[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == min(time)])
     ) %>%
     dplyr::group_by(experiment, oxygen, treatment, time, protein) %>%
     wmo::remove_nested_outliers(fold_change, remove = TRUE)

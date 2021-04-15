@@ -453,6 +453,11 @@ list(
     rnaseq_tfea_plot,
     plot_tfea(rnaseq_tfea)
   ),
+  tar_render(
+    rnaseq_report,
+    path = path_to_reports("rnaseq.Rmd"),
+    output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
 
   # M1 ----------------------------------------------------------------------
 
