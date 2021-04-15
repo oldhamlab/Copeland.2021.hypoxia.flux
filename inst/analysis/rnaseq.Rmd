@@ -45,9 +45,10 @@ theme_set(theme_wmo(base_family = "Calibri"))
 
 ```{r}
 withr::with_dir(here::here(), {
-  rnaseq_pca <- tar_read(rnaseq_pca)
-  rnaseq_different_differences <- tar_read(rnaseq_different_differences)
-  rnaseq_gsea_plot <- tar_read(rnaseq_gsea_plot)
+  pca <- tar_read(rnaseq_pca)
+  deg <- tar_read(rnaseq_different_differences)
+  gsea_p <- tar_read(rnaseq_gsea_plot)
+  tfea_p <- tar_read(rnaseq_tfea_plot)
 })
 ```
 
@@ -64,7 +65,7 @@ We will use the `DESeq2` package to identify differentially expresssed genes. We
 ## PCA
 
 ```{r}
-rnaseq_pca
+pca
 ```
 
 ## Differential Expression
@@ -72,29 +73,20 @@ rnaseq_pca
 In this analysis, will identify those genes where the effects of hypoxia and molidustat are different, which will hopefully point to mechanisms by which hypoxia may regulate cell metabolism differently than PHD2 inhibition.
 
 ```{r}
-head(rnaseq_different_differences, 20) %>% 
+deg %>% 
+  dplyr::select(row, symbol, description, lg2fc = log2FoldChange, padj) %>% 
+  head(20) %>% 
   my_kable()
 ```
 
 ## Gene Set Enrichment Analysis
 
 ```{r}
-rnaseq_gsea_plot
+gsea_p
 ```
 
 ## Transcription Factor Analysis
 
 ```{r}
-
+tfea_p
 ```
-
-```{r}
-
-```
-
-
-```{r}
-tf_rnk$TFranking_plot
-```
-
-
