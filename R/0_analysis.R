@@ -393,6 +393,7 @@ read_data <- function(data_files) {
 normalize_densities <- function(blot_raw) {
   blot_raw %>%
     dplyr::filter(.data$time < 96) %>%
+    dplyr::filter(!(experiment == "lf_05-bay" & gel == "b")) %>%
     tidyr::pivot_longer(
       blot:tidyselect::last_col(),
       names_to = "protein",
@@ -1724,5 +1725,111 @@ plot_nad <- function(nad_final) {
       legend.position = "bottom",
       legend.box.margin = ggplot2::margin(t = -10)
     )
+
+}
+
+
+# annot_twoby_densities ---------------------------------------------------
+
+annot_twoby_densities <- function(blot_norm) {
+  blot_norm %>%
+    dplyr::filter(experiment == "lf_05-bay") %>%
+    dplyr::group_by(protein) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      m = purrr::map(data, ~lmerTest::lmer(fold_change ~ oxygen * treatment + (1|gel), data = .x)),
+      res = purrr::map(m, ~emmeans::emmeans(
+        .x,
+        "pairwise" ~ oxygen * treatment,
+        simple = "each",
+        adjust = "Tukey",
+        combine = TRUE
+      )[["contrasts"]]
+      ),
+      out = purrr::map(res, broom::tidy)
+    ) %>%
+    tidyr::unnest(c(out)) %>%
+    # dplyr::filter(treatment != ".") %>%
+    dplyr::select(protein, oxygen, treatment, adj.p.value) %>%
+    dplyr::mutate(
+      oxygen = replace(oxygen, oxygen == ".", "0.5%"),
+      oxygen = factor(oxygen, levels = c("21%", "0.5%")),
+      treatment = factor(treatment, levels = c("DMSO", "BAY")),
+      y_pos = Inf,
+      vjust = 1.5,
+      lab = annot_p(adj.p.value)
+    )
+}
+
+
+# plot_twoby_densities ----------------------------------------------------
+
+plot_twoby_densities <- function(df, prot, annot, ylab) {
+
+
+  df %>%
+    dplyr::filter(experiment == "lf_05-bay") %>%
+    dplyr::filter(protein == prot) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = oxygen,
+      y = fold_change
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(
+        fill = treatment
+      ),
+      geom = "col",
+      fun = "mean",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.6,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(
+        group = treatment,
+        color = treatment
+      ),
+      geom = "errorbar",
+      fun.data = "mean_se",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.2,
+      size = 0.25,
+      show.legend = FALSE,
+      color = "black"
+    ) +
+    ggplot2::geom_text(
+      data = dplyr::filter(annot, protein == prot & is.na(treatment)),
+      ggplot2::aes(
+        x = oxygen,
+        y = y_pos,
+        color = treatment,
+        vjust = vjust,
+        label = lab,
+      ),
+      color = "black",
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_text(
+      data = dplyr::filter(annot, protein == prot & !is.na(treatment)),
+      ggplot2::aes(
+        x = oxygen,
+        y = y_pos,
+        color = treatment,
+        vjust = vjust,
+        label = lab,
+      ),
+      position = ggplot2::position_dodge(width = 0.6),
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Oxygen",
+      y = ylab,
+      color = "Treatment"
+    ) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.1))) +
+    theme_plots()
 
 }

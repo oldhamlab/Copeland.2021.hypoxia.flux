@@ -864,8 +864,16 @@ list(
   #   plot_nad(nad_final)
   # ),
   tar_target(
+    twoby_densities_annot,
+    annot_twoby_densities(blot_norm)
+  ),
+  tar_target(
+    m5i,
+    plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)")
+  ),
+  tar_target(
     m5,
-    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot)
+    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m5i)
   ),
   tar_target(
     m5_figure,

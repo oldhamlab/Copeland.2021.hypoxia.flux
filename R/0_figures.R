@@ -3,10 +3,10 @@
 # theme_plots -------------------------------------------------------------
 
 theme_plots <- function() {
-  wmo::theme_wmo(
-    base_family = "Calibri",
-    base_size = 8
-  ) +
+    wmo::theme_wmo(
+      base_family = "Calibri",
+      base_size = 8
+    ) +
     ggplot2::theme(
       plot.margin = ggplot2::margin(5, 5, 5, 5),
       plot.tag = ggplot2::element_text(face = "bold"),
@@ -162,14 +162,14 @@ arrange_s6 <- function(a, b, c, d) {
 
 # arrange_m5 --------------------------------------------------------------
 
-arrange_m5 <- function(a, b, c, d, e, f, g, h) {
+arrange_m5 <- function(a, b, c, d, e, f, g, h, i) {
   layout <- "
   abc
   deg
   ffg
-  hh#
+  hhi
   "
-  a + b + c + d + e + f + g + h +
+  a + b + c + d + e + f + g + h + i +
     theme_patchwork(
       design = layout,
       widths = unit(1.25, "in"),
