@@ -4,7 +4,7 @@
 
 count_rnaseq <- function() {
 
-  dds <- rnaseq.lf.hypoxia.molidustat::lf_hyp_bay_se
+  dds <- rnaseq.lf.hypoxia.molidustat::lf_hyp_bay_rnaseq
 
   SummarizedExperiment::colData(dds) <-
     SummarizedExperiment::colData(dds) %>%
@@ -17,6 +17,8 @@ count_rnaseq <- function() {
       group = factor(group, levels = c("N.DMSO", "H.DMSO", "N.BAY", "H.BAY"))
     ) %>%
     as("DataFrame")
+
+  rownames(SummarizedExperiment::colData(dds)) <- SummarizedExperiment::colData(dds)$id
 
   design <- ~ experiment + group
 
@@ -109,8 +111,8 @@ plot_rnaseq_pca <- function(pca_data) {
       values = pair_clrs,
       labels = c("21% | DMSO", "0.5% | DMSO", "21% | BAY", "0.5% | BAY")
     ) +
-    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = 0.05)) +
-    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.05)) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(add = c(3, 3))) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(2, 2))) +
     theme_plots() +
     ggplot2::theme(
       legend.position = "bottom",
@@ -211,13 +213,6 @@ plot_rnaseq_volcano <- function(results) {
       x = log2FoldChange,
       y = padj
     ) +
-    # ggrepel::geom_text_repel(
-    #   data = head(df, 40),
-    #   ggplot2::aes(label = symbol),
-    #   size = 4/ggplot2::.pt,
-    #   max.overlaps = 20,
-    #   segment.size = 0.1,
-    # ) +
     ggrepel::geom_text_repel(
       data = left,
       ggplot2::aes(label = symbol),
@@ -247,11 +242,6 @@ plot_rnaseq_volcano <- function(results) {
       labels = scales::math_format(2^.x),
       expand = ggplot2::expansion(mult = 0.25)
     ) +
-    # ggplot2::scale_x_continuous(
-    #   trans = "log2",
-    #   breaks = 2 ^ seq(-4, 4, 2),
-    #   labels = scales::trans_format("log2", scales::math_format(2^.x))
-    # ) +
     ggplot2::labs(
       x = "ΔHypoxia/ΔBAY",
       y = "Adjusted P value"
@@ -260,34 +250,46 @@ plot_rnaseq_volcano <- function(results) {
 
 }
 
+# get_unique_symbol_ids ---------------------------------------------------
+
+get_unique_symbol_ids <- function(dds) {
+  tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "entrezid") %>%
+    dplyr::filter(hgnc_symbol != "" & !is.na(hgnc_symbol)) %>%
+    dplyr::group_by(hgnc_symbol) %>%
+    dplyr::filter(baseMean == max(baseMean)) %>%
+    dplyr::pull(entrezid)
+}
+
+# dds_to_symbols ----------------------------------------------------------
+
+dds_to_symbols <- function(dds, unique_symbol_ids) {
+  df <- dds[rownames(dds) %in% unique_symbol_ids, ]
+  rownames(df) <- SummarizedExperiment::rowData(df)$hgnc_symbol
+  df
+}
+
 # plot_rnaseq_goi ---------------------------------------------------------
 
 plot_rnaseq_goi <- function(dds, goi) {
 
   df <-
-    dds[
-      !is.na(SummarizedExperiment::rowData(dds)$hgnc_symbol) &
-        SummarizedExperiment::rowData(dds)$hgnc_symbol %in% goi,
-    ] %>%
+    dds[rownames(dds) %in% goi] %>%
     SummarizedExperiment::assay() %>%
-    tibble::as_tibble(rownames = "entrez_id") %>%
-    dplyr::left_join(
-      tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "entrez_id"),
-      by = "entrez_id"
-    ) %>%
-    dplyr::select(symbol = hgnc_symbol, tidyselect::matches("^V\\d+")) %>%
+    tibble::as_tibble(rownames = "symbol") %>%
     tidyr::pivot_longer(
       -symbol,
       names_to = "id",
-      values_to = "count",
-      names_prefix = "V",
-      names_transform = list(id = ~sprintf("%02s", .x))
+      values_to = "count"
     ) %>%
-    dplyr::left_join(SummarizedExperiment::colData(dds), by = "id", copy = TRUE) %>%
+    dplyr::left_join(
+      dplyr::select(tibble::as_tibble(SummarizedExperiment::colData(dds)), id:group),
+      by = "id",
+      copy = TRUE
+    ) %>%
     dplyr::mutate(oxygen = factor(oxygen, levels = c("N", "H"), labels = c("21%", "0.5%")))
 
   ggplot2::ggplot(df) +
-    ggplot2::facet_wrap(~ symbol, scales = "free_y") +
+    ggplot2::facet_wrap(~ symbol, scales = "free_y", nrow = 1) +
     ggplot2::aes(
       x = treatment,
       y = count/1000,
@@ -312,7 +314,7 @@ plot_rnaseq_goi <- function(dds, goi) {
     ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::labs(
       x = "Treatment",
-      y = expression(paste("Cell count (x", 10^3, ")")),
+      y = expression(paste("Count (x", 10^3, ")")),
       fill = NULL
     ) +
     ggplot2::ylim(c(0, NA)) +
@@ -401,6 +403,9 @@ run_tfea <- function(df) {
 
   df <- dplyr::rename(df, Genes = row)
 
+  load("~/Dropbox (Partners HealthCare)/RM2020_GH_doubleElite.rdata")
+  TFEA.ChIP::set_user_data(MetaData, Mat01)
+
   de_genes <-
     TFEA.ChIP::Select_genes(
       df,
@@ -428,57 +433,38 @@ plot_tfea <- function(rnaseq_tfea) {
 
   df <-
     rnaseq_tfea %>%
-    dplyr::filter(pVal < 0.05)
+    dplyr::mutate(padj = p.adjust(pVal, method = "fdr")) %>%
+    dplyr::filter(padj < 0.05)
 
   ggplot2::ggplot(df) +
     ggplot2::aes(
-      x = arg.ES,
+      x = reorder(TF, arg.ES),
       y = ES,
       fill = ES < 0
     ) +
-    ggrepel::geom_text_repel(
-      data = dplyr::filter(df, ES < 0),
-      ggplot2::aes(label = TF),
-      size = 6/ggplot2::.pt,
-      force = 5,
-      max.overlaps = 20,
-      segment.size = 0.1,
-      nudge_y = -1,
-      angle = 90,
-      direction = "x"
-    ) +
-    ggrepel::geom_text_repel(
-      data = dplyr::filter(df, ES > 0),
-      ggplot2::aes(label = TF),
-      size = 6/ggplot2::.pt,
-      force = 5,
-      max.overlaps = 20,
-      segment.size = 0.1,
-      nudge_y = 1,
-      angle = 90,
-      direction = "x"
-    ) +
-    ggplot2::geom_point(
-      pch = 21,
-      color = "white"
-    ) +
+    ggplot2::geom_col() +
     ggplot2::geom_hline(yintercept = 0, size = 0.25) +
     ggplot2::labs(
-      x = "Rank",
+      x = NULL,
       y = "Enrichment score"
     ) +
-    ggplot2::ylim(c(-2, 2)) +
     ggplot2::scale_fill_manual(
       name = NULL,
-      labels = c("Hypoxia", "BAY"),
+      labels = c("Up in Hypoxia", "Up in BAY"),
       values = unname(clrs[c(2, 4)])
     ) +
     theme_plots() +
     ggplot2::theme(
       legend.key.width = ggplot2::unit(0.5, "lines"),
       legend.key.height = ggplot2::unit(0.5, "lines"),
-      legend.position = "bottom",
-      legend.box.margin = ggplot2::margin(t = -10)
+      legend.position = c(0.15, 0.1),
+      legend.box.margin = ggplot2::margin(t = -10),
+      axis.text.x = ggplot2::element_text(
+        size = 5,
+        angle = 45,
+        hjust = 1,
+        vjust = 1
+      )
     )
 
 }

@@ -1766,7 +1766,6 @@ annot_twoby_densities <- function(blot_norm) {
 
 plot_twoby_densities <- function(df, prot, annot, ylab) {
 
-
   df %>%
     dplyr::filter(experiment == "lf_05-bay") %>%
     dplyr::filter(protein == prot) %>%
@@ -1831,5 +1830,4 @@ plot_twoby_densities <- function(df, prot, annot, ylab) {
     ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.1))) +
     theme_plots()
-
 }
