@@ -6,8 +6,7 @@ devtools::load_all()
 library(targets)
 library(tarchetypes)
 
-src <- list.files("R", pattern = "^0_.*\\.R", full.names = TRUE)
-invisible(lapply(src, source))
+src()
 
 conflicted::conflict_prefer("filter", "dplyr")
 
@@ -336,6 +335,15 @@ list(
     blot_norm,
     normalize_densities(blot_raw)
   ),
+  tar_target(
+    myc_image_file,
+    path_to_manuscript("figures/images/lf_05-bay_myc-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    myc_image,
+    magick::image_read(myc_image_file) %>% grid::rasterGrob()
+  ),
 
   # mrna --------------------------------------------------------------------
 
@@ -439,11 +447,19 @@ list(
   ),
   tar_target(
     rnaseq_goi,
-    plot_rnaseq_goi(dds, c("EPAS1", "P4HA2", "RBM3"))
+    plot_rnaseq_goi(dds_symbols, c("EPAS1", "P4HA2", "RBM3", "HDAC9"))
   ),
   tar_target(
     rnaseq_gsea_plot,
     plot_gsea(rnaseq_gsea, "HALLMARK")
+  ),
+  tar_target(
+    unique_symbol_ids,
+    get_unique_symbol_ids(dds)
+  ),
+  tar_target(
+    dds_symbols,
+    dds_to_symbols(dds, unique_symbol_ids)
   ),
   tar_target(
     rnaseq_tfea,
@@ -869,7 +885,8 @@ list(
   ),
   tar_target(
     m5i,
-    plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)")
+    plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)") +
+      ggplot2::annotation_custom(myc_image, xmin = 2.75, xmax = 2.75 + 2.5)
   ),
   tar_target(
     m5,
