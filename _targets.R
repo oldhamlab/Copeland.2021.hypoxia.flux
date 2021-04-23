@@ -475,6 +475,31 @@ list(
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
   ),
 
+  # metabolomics ------------------------------------------------------------
+
+  tar_target(
+    metab_targeted_files,
+    path_to_data("lf_05-bay_metabolomics-targeted.xlsx"),
+    format = "file"
+  ),
+  tar_target(
+    metab_targeted_raw,
+    format_metab_targeted(metab_targeted_files)
+  ),
+  tar_target(
+    metab_targeted_clean,
+    remove_missing_metab(metab_targeted_raw) %>%
+      correct_drift() %>%
+      quality_control() %>%
+      impute_missing() %>%
+      normalize()
+  ),
+  tar_render(
+    metabolomics_report,
+    path = path_to_reports("metabolomics.Rmd"),
+    output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+
   # M1 ----------------------------------------------------------------------
 
   tar_target(

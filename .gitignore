@@ -12,3 +12,4 @@ inst/analysis/figures
 *.log
 data-raw/immunoblots
 *.png
+*.mzML

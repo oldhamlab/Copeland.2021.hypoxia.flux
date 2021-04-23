@@ -1,0 +1,102 @@
+---
+title: "Metabolomics"
+subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 1
+    df_print: kable
+    dev: cairo_pdf
+    latex_engine: xelatex
+geometry: margin = 0.5in
+fontsize: 11pt
+mainfont: Calibri
+---
+
+```{r setup, include = FALSE}
+# load libraries
+suppressPackageStartupMessages({
+  devtools::load_all()
+  library(tidyverse)
+  library(wmo)
+  library(targets)
+})
+
+# resolve conflicts
+conflicted::conflict_prefer("filter", "dplyr")
+
+# set global chunk options
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  message = FALSE, 
+  warning = FALSE, 
+  fig.align = "center", 
+  out.width = "49%"
+) 
+
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) 
+    "latex" else "html"
+})
+
+theme_set(theme_wmo(base_family = "Calibri"))
+```
+
+```{r}
+withr::with_dir(here::here(), {
+  raw <- tar_read(metab_targeted_raw)
+  clean <- tar_read(metab_targeted_clean)
+})
+```
+
+\newpage
+
+# Overview
+
+We observed that proliferating primary cells exposed to hypoxia do not increase glucose uptake and lactate efflux despite up-regulation of glucose transporters and glycolytic genes. When these cells are treated with the prolyl hydroxylase inhibitor molidustat in normoxia, the expected increases in glycolytic flux are observed. Interestingly, when molidustat-treated cells are cultured in hypoxia, hypoxia blocks molidustat-mediated increases in glycolysis. In an effort to identify the mechanism mediating this effect, we performed metabolomics on lung fibroblasts treated for three days with 0.5% oxygen or molidustat (10 μM) with 21% and DMSO (0.1%) controls. 
+
+# Data Processing
+
+## PCA
+
+```{r}
+pcaMethods::pca(t(SummarizedExperiment::assay(raw)), scale = "uv", center = TRUE) %>% 
+  pcaMethods::scores() %>% 
+  merge(SummarizedExperiment::colData(raw), by = 0) %>% 
+  filter(type %nin% c("qc", "blank")) %>% 
+  ggplot() +
+  aes(
+    x = PC1, 
+    y = PC2, 
+    shape = interaction(type, treatment, oxygen, sep = "|"),
+    color = replicate
+  ) + 
+  geom_point()
+```
+## Cleaning
+
+1. drift correction
+1. remove low quality features (QC RSD > 0.2, dispersion ratio > 0.4)
+1. impute missing values with random forest
+1. probabilistic quotient normalization
+
+```{r}
+pcaMethods::pca(t(SummarizedExperiment::assay(clean)), scale = "uv", center = TRUE) %>% 
+  pcaMethods::scores() %>% 
+  merge(SummarizedExperiment::colData(clean), by = 0) %>% 
+  ggplot() +
+  aes(
+    x = PC1, 
+    y = PC2, 
+    color = interaction(oxygen, treatment, sep = "|")
+  ) + 
+  geom_point() +
+  labs(
+    color = "Group"
+  )
+```
+
+
+
+
