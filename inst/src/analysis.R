@@ -101,7 +101,9 @@ plot_growth_rates <- function(
       x = x_pos,
       y = y_pos,
       vjust = vjustvar
-    )
+    ),
+    family = "Calibri",
+    size = 6/ggplot2::.pt
   ) +
     ggplot2::labs(
       x = "Treatment",
@@ -270,7 +272,9 @@ plot_high_fluxes <- function(
         y = y_pos,
         vjust = vjust,
         label = pval
-      )
+      ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt
     ) +
     ggplot2::labs(
       x = "Metabolite",
@@ -340,7 +344,9 @@ plot_low_fluxes <- function(
         y = y_pos,
         vjust = vjust,
         label = pval
-      )
+      ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt
     ) +
     ggplot2::labs(
       x = "Metabolite",
@@ -683,6 +689,8 @@ plot_k <- function(degradation_rates, k) {
         y = ypos,
         vjust = vjust
       ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt,
       position = ggplot2::position_dodge(width = 0.6),
       show.legend = FALSE
     ) +
@@ -1505,7 +1513,9 @@ plot_twoby_fluxes <- function(df, annot, metab, ylab) {
         vjust = vjust,
         label = lab,
       ),
+      family = "Calibri",
       color = "black",
+      size = 6/ggplot2::.pt,
       show.legend = FALSE
     ) +
     ggplot2::labs(
@@ -1694,6 +1704,8 @@ plot_nad <- function(nad_final) {
         label = lab,
         vjust = vjust
       ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt,
       position = ggplot2::position_dodge(width = 0.6),
       show.legend = FALSE
     ) +
@@ -1704,6 +1716,8 @@ plot_nad <- function(nad_final) {
         label = lab,
         vjust = vjust
       ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt,
       color = "black",
       show.legend = FALSE
     ) +
@@ -1806,6 +1820,8 @@ plot_twoby_densities <- function(df, prot, annot, ylab) {
         vjust = vjust,
         label = lab,
       ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt,
       color = "black",
       show.legend = FALSE
     ) +
@@ -1818,6 +1834,8 @@ plot_twoby_densities <- function(df, prot, annot, ylab) {
         vjust = vjust,
         label = lab,
       ),
+      family = "Calibri",
+      size = 6/ggplot2::.pt,
       position = ggplot2::position_dodge(width = 0.6),
       show.legend = FALSE
     ) +

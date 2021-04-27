@@ -216,20 +216,22 @@ plot_rnaseq_volcano <- function(results) {
     ggrepel::geom_text_repel(
       data = left,
       ggplot2::aes(label = symbol),
-      size = 4/ggplot2::.pt,
+      size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
       nudge_x = -4,
-      direction = "y"
+      direction = "y",
+      family = "Calibri"
     ) +
     ggrepel::geom_text_repel(
       data = right,
       ggplot2::aes(label = symbol),
-      size = 4/ggplot2::.pt,
+      size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
       nudge_x = 4.5,
-      direction = "y"
+      direction = "y",
+      family = "Calibri"
     ) +
     ggplot2::geom_hex(
       bins = c(250, 15),
