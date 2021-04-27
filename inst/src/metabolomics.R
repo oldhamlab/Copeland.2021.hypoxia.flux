@@ -99,7 +99,8 @@ tbl_to_se <- function(tbl_se, assay_name) {
       rt_min = min(rt, na.rm = TRUE),
       rt_max = max(rt, na.rm = TRUE)
     ) %>%
-    tibble::column_to_rownames(attr(tbl_se, "f_names"))
+    tibble::column_to_rownames(attr(tbl_se, "f_names")) %>%
+    .[match(rownames(assay_data), rownames(.)), ]
 
   sample_data <-
     tbl_se %>%
@@ -108,9 +109,10 @@ tbl_to_se <- function(tbl_se, assay_name) {
       attr(tbl_se, "s_data")
     ) %>%
     dplyr::distinct() %>%
-    tibble::column_to_rownames(attr(tbl_se, "s_names"))
+    tibble::column_to_rownames(attr(tbl_se, "s_names")) %>%
+    .[match(colnames(assay_data), rownames(.)), ]
 
-    SummarizedExperiment::SummarizedExperiment(
+  SummarizedExperiment::SummarizedExperiment(
     assays = assay_data,
     rowData = feature_data,
     colData = sample_data
