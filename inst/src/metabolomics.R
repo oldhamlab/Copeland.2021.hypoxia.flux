@@ -17,6 +17,7 @@ format_metab_targeted <- function(metab_targeted_files) {
     ) %>%
     dplyr::left_join(wmo::hmdb_mappings, by = "metabolite") %>%
     dplyr::filter(!is.na(hmdb)) %>%
+    dplyr::filter(!stringr::str_detect(hmdb, "ISTD")) %>%
     dplyr::mutate(
       id = stringr::str_c("S", sprintf("%02d", id)),
       type = dplyr::case_when(
@@ -28,6 +29,8 @@ format_metab_targeted <- function(metab_targeted_files) {
       oxygen = factor(oxygen, levels = c("norm", "hyp"), labels = c("N", "H")),
       treatment = stringr::str_extract(sample, "bay|dmso"),
       treatment = factor(treatment, levels = c("dmso", "bay"), labels = c("DMSO", "BAY")),
+      group = stringr::str_c(oxygen, treatment, sep = "."),
+      group = factor(group, levels = c("N.DMSO", "N.BAY", "H.DMSO", "H.BAY")),
       replicate = stringr::str_extract(sample, "(?<=\\.)\\w{1}$"),
       mz = replace(mz, mz == "N/F", NA_real_),
       mz = as.numeric(mz),
@@ -39,7 +42,7 @@ format_metab_targeted <- function(metab_targeted_files) {
       f_names = "hmdb",
       f_data = c("metabolite", "mz", "rt"),
       s_names = "id",
-      s_data = c("type", "oxygen", "treatment", "replicate")
+      s_data = c("type", "oxygen", "treatment", "replicate", "group")
     ) %>%
     tbl_to_se()
 
@@ -222,7 +225,7 @@ impute_missing <- function(qc) {
 
 # normalize ---------------------------------------------------------------
 
-normalize <- function(imputed) {
+pqn <- function(imputed) {
   mat <- SummarizedExperiment::assay(imputed)
   quotients <- mat / SummarizedExperiment::rowData(imputed)$reference
   quotient_medians <- apply(quotients, 2, median)
@@ -230,4 +233,282 @@ normalize <- function(imputed) {
   imputed
 }
 
+# plot_metab_pca ----------------------------------------------------------
 
+plot_metab_pca <- function(clean) {
+
+  input <-
+    SummarizedExperiment::assay(clean) %>%
+    log() %>%
+    t() %>%
+    scale() %>%
+    t()
+
+  pheno <- SummarizedExperiment::colData(clean)
+
+  design <- model.matrix(~ 0 + group, data = pheno)
+  colnames(design) <- stringr::str_extract(colnames(design), "(?<=group).*")
+
+  df <-
+    limma::removeBatchEffect(input, batch = pheno$replicate, design = design) %>%
+    t() %>%
+    pcaMethods::pca(scale = "none", center = TRUE)
+
+  percent_variance <- round(100 * c(df@R2[[1]], df@R2[[2]]))
+
+  pair_clrs <- c(
+    N.DMSO = "#b2df8a",
+    H.DMSO = "#33a02c",
+    N.BAY = "#cab2d6",
+    H.BAY = "#6a3d9a"
+  )
+
+  merge(pcaMethods::scores(df), SummarizedExperiment::colData(clean), by = 0) %>%
+    dplyr::mutate(
+      label = dplyr::case_when(
+        group == "N.DMSO" ~ "21%\nDMSO",
+        group == "H.DMSO" ~ "0.5%\nDMSO",
+        group == "N.BAY" ~ "21%\nBAY",
+        group == "H.BAY" ~ "0.5%\nBAY"
+      )
+    ) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = PC1,
+      y = PC2,
+      color = group
+    ) +
+    ggplot2::geom_point(
+      ggplot2::aes(fill = group),
+      pch = 21,
+      color = "white",
+      size = 2,
+      show.legend = FALSE
+    ) +
+    ggforce::geom_mark_ellipse(
+      ggplot2::aes(
+        color = group,
+        label = label
+      ),
+      expand = ggplot2::unit(2, "mm"),
+      label.fontsize = 5,
+      label.fontface = "plain",
+      label.family = "Calibri",
+      label.hjust = 0.5,
+      label.buffer = ggplot2::unit(0, "mm"),
+      label.margin = ggplot2::margin(-1.5, -1.5, -1.5, -1.5, "mm"),
+      con.type = "none",
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = paste0("PC1: ", percent_variance[1], "% variance"),
+      y = paste0("PC2: ", percent_variance[2], "% variance")
+    ) +
+    ggplot2::scale_fill_manual(
+      name = NULL,
+      values = pair_clrs,
+      labels = c("21% | DMSO", "0.5% | DMSO", "21% | BAY", "0.5% | BAY")
+    ) +
+    ggplot2::scale_color_manual(
+      name = NULL,
+      values = pair_clrs,
+      labels = c("21% | DMSO", "0.5% | DMSO", "21% | BAY", "0.5% | BAY")
+    ) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(add = c(3, 3))) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(2, 2))) +
+    theme_plots() +
+    ggplot2::theme(
+      legend.position = "bottom",
+      legend.key.size = ggplot2::unit(1, units = "lines")
+    )
+
+}
+
+# fit_metab_limma ---------------------------------------------------------
+
+fit_metab_limma <- function(clean) {
+
+  input <-
+    SummarizedExperiment::assay(clean) %>%
+    log() %>%
+    t() %>%
+    scale() %>%
+    t()
+
+  pheno <- SummarizedExperiment::colData(clean)
+
+  design <- model.matrix(~ 0 + group, data = pheno)
+  colnames(design) <- stringr::str_extract(colnames(design), "(?<=group).*")
+
+  corfit <- limma::duplicateCorrelation(input, design, block = pheno$replicate)
+
+  cm <-
+    limma::makeContrasts(
+      hyp_on_dmso = H.DMSO - N.DMSO,
+      bay_on_norm = N.BAY - N.DMSO,
+      hyp_on_bay = H.BAY - N.BAY,
+      deltas = (H.DMSO - N.DMSO) - (N.BAY - N.DMSO),
+      levels = design
+    )
+
+  fit <-
+    limma::lmFit(
+      input,
+      design,
+      block = pheno$replicate,
+      correlation = corfit$consensus
+    ) %>%
+    limma::contrasts.fit(cm) %>%
+    limma::eBayes()
+
+}
+
+# metab_top_table ---------------------------------------------------------
+
+metab_top_table <- function(clean, fit, contrast) {
+  limma::topTable(
+    fit,
+    number = Inf,
+    p.value = 1,
+    coef = contrast
+  ) %>%
+    tibble::as_tibble(rownames = "hmdb") %>%
+    dplyr::left_join(
+      tibble::as_tibble(SummarizedExperiment::rowData(clean), rownames = "hmdb"),
+      by = "hmdb"
+    )
+}
+
+# plot_metab_volcano ------------------------------------------------------
+
+plot_metab_volcano <- function(results) {
+
+  left <-
+    results %>%
+    dplyr::filter(logFC < 0) %>%
+    dplyr::slice_min(t, n = 10)
+
+  right <-
+    results %>%
+    dplyr::filter(logFC > 0) %>%
+    dplyr::slice_max(t, n = 10)
+
+  ggplot2::ggplot(results) +
+    ggplot2::aes(
+      # x = 2 ^ log2FoldChange,
+      x = logFC,
+      y = adj.P.Val
+    ) +
+    ggrepel::geom_text_repel(
+      data = left,
+      ggplot2::aes(label = metabolite),
+      size = 5/ggplot2::.pt,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_x = -4,
+      direction = "y",
+      family = "Calibri"
+    ) +
+    ggrepel::geom_text_repel(
+      data = right,
+      ggplot2::aes(label = metabolite),
+      size = 5/ggplot2::.pt,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_x = 4.5,
+      direction = "y",
+      family = "Calibri"
+    ) +
+    ggplot2::geom_point(
+      data = subset(results, logFC > 0 & adj.P.Val < 0.05),
+      pch = 21,
+      color = "white",
+      fill = clrs[[2]]
+    ) +
+    ggplot2::geom_point(
+      data = subset(results, logFC < 0 & adj.P.Val < 0.05),
+      pch = 21,
+      color = "white",
+      fill = clrs[[4]]
+    ) +
+    ggplot2::geom_point(
+      data = subset(results, adj.P.Val > 0.05),
+      pch = 21,
+      color = "white",
+      fill = "grey80"
+    ) +
+    ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
+    ggplot2::scale_x_continuous(
+      breaks = seq(-4, 4, 2),
+      labels = scales::math_format(2^.x),
+      expand = ggplot2::expansion(mult = 0.25)
+    ) +
+    ggplot2::labs(
+      x = "ΔHypoxia/ΔBAY",
+      y = "Adjusted P value"
+    ) +
+    theme_plots()
+
+}
+
+# se_to_tibble ------------------------------------------------------------
+
+se_to_tibble <- function(se) {
+  tibble::as_tibble(SummarizedExperiment::assay(se), rownames = "feature") %>%
+    tidyr::pivot_longer(-feature, names_to = "sample", values_to = "area") %>%
+    dplyr::left_join(
+      tibble::as_tibble(SummarizedExperiment::colData(se), rownames = "sample"),
+      by = "sample"
+    ) %>%
+    dplyr::left_join(
+      tibble::as_tibble(SummarizedExperiment::rowData(se), rownames = "feature"),
+      by = "feature"
+    )
+}
+
+# plot_mois ---------------------------------------------------------------
+
+plot_mois <- function(clean, moi) {
+
+  se_to_tibble(clean) %>%
+    dplyr::filter(metabolite %in% moi) %>%
+    dplyr::mutate(oxygen = factor(oxygen, levels = c("N", "H"), labels = c("21%", "0.5%"))) %>%
+    ggplot2::ggplot() +
+    ggplot2::facet_wrap(~ metabolite, scales = "free_y", nrow = 1) +
+    ggplot2::aes(
+      x = treatment,
+      y = area,
+      fill = oxygen
+    ) +
+    ggplot2::stat_summary(
+      geom = "col",
+      fun = "mean",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.6,
+      show.legend = TRUE
+    ) +
+    ggplot2::stat_summary(
+      ggplot2::aes(group = oxygen),
+      geom = "errorbar",
+      fun.data = "mean_se",
+      position = ggplot2::position_dodge(width = 0.6),
+      width = 0.2,
+      size = 0.25,
+      show.legend = FALSE
+    ) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::labs(
+      x = "Treatment",
+      y = "Peak area",
+      fill = NULL
+    ) +
+    ggplot2::ylim(c(0, NA)) +
+    theme_plots() +
+    ggplot2::theme(
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    ) +
+    NULL
+}

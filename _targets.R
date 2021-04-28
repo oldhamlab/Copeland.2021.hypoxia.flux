@@ -492,7 +492,27 @@ list(
       correct_drift() %>%
       quality_control() %>%
       impute_missing() %>%
-      normalize()
+      pqn()
+  ),
+  tar_target(
+    metab_targeted_pca,
+    plot_metab_pca(metab_targeted_clean)
+  ),
+  tar_target(
+    metab_targeted_limma,
+    fit_metab_limma(metab_targeted_clean)
+  ),
+  tar_target(
+    metab_different_differences,
+    metab_top_table(metab_targeted_clean, metab_targeted_limma, "deltas")
+  ),
+  tar_target(
+    metab_volcano,
+    plot_metab_volcano(metab_different_differences)
+  ),
+  tar_target(
+    metab_moi,
+    plot_mois(metab_targeted_clean, c("glyceraldehyde 3-phosphate", "2-hydroxyglutarate", "aconitate", "taurine", "hydroxyproline", "malate"))
   ),
   tar_render(
     metabolomics_report,

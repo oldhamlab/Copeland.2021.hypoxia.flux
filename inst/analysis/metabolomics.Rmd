@@ -47,6 +47,10 @@ theme_set(theme_wmo(base_family = "Calibri"))
 withr::with_dir(here::here(), {
   raw <- tar_read(metab_targeted_raw)
   clean <- tar_read(metab_targeted_clean)
+  metab_pca <- tar_read(metab_targeted_pca)
+  metab_limma <- tar_read(metab_targeted_limma)
+  # metab_tt <- tar_read(metab_different_differences)
+  volcano <- tar_read(metab_volcano)
 })
 ```
 
@@ -64,15 +68,19 @@ We observed that proliferating primary cells exposed to hypoxia do not increase 
 pcaMethods::pca(t(SummarizedExperiment::assay(raw)), scale = "uv", center = TRUE) %>% 
   pcaMethods::scores() %>% 
   merge(SummarizedExperiment::colData(raw), by = 0) %>% 
-  filter(type %nin% c("qc", "blank")) %>% 
+  # filter(type %nin% c("qc", "blank")) %>% 
   ggplot() +
   aes(
     x = PC1, 
     y = PC2, 
-    shape = interaction(type, treatment, oxygen, sep = "|"),
-    color = replicate
+    shape = type,
+    color = interaction(oxygen, treatment, sep = "|")
   ) + 
-  geom_point()
+  geom_point() +
+  labs(
+    color = "Group", 
+    shape = "Type"
+  )
 ```
 ## Cleaning
 
@@ -80,22 +88,23 @@ pcaMethods::pca(t(SummarizedExperiment::assay(raw)), scale = "uv", center = TRUE
 1. remove low quality features (QC RSD > 0.2, dispersion ratio > 0.4)
 1. impute missing values with random forest
 1. probabilistic quotient normalization
+1. batch correction
 
 ```{r}
-pcaMethods::pca(t(SummarizedExperiment::assay(clean)), scale = "uv", center = TRUE) %>% 
-  pcaMethods::scores() %>% 
-  merge(SummarizedExperiment::colData(clean), by = 0) %>% 
-  ggplot() +
-  aes(
-    x = PC1, 
-    y = PC2, 
-    color = interaction(oxygen, treatment, sep = "|")
-  ) + 
-  geom_point() +
-  labs(
-    color = "Group"
-  )
+metab_pca
 ```
+
+## Differentially regulated metabolites
+
+```{r}
+volcano
+```
+
+```{r}
+plot_mois(clean, "malate")
+```
+
+
 
 
 
