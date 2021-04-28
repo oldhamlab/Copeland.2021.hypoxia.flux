@@ -414,6 +414,10 @@ list(
     nad_final,
     finalize_nad(nad_interp, cells_per_dna)
   ),
+  tar_target(
+    nad_annot,
+    annot_nad(nad_final)
+  ),
 
   # RNA-seq -----------------------------------------------------------------
 
@@ -512,7 +516,7 @@ list(
   ),
   tar_target(
     metab_moi,
-    plot_mois(metab_targeted_clean, c("glyceraldehyde 3-phosphate", "2-hydroxyglutarate", "aconitate", "taurine", "hydroxyproline", "malate"))
+    plot_mois(metab_targeted_clean, c("GAP", "2-hydroxyglutarate", "aconitate", "taurine", "hydroxyproline", "malate"))
   ),
   tar_render(
     metabolomics_report,
@@ -920,26 +924,45 @@ list(
     m5c,
     plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "lactate", "Lactate\n(fmol/cell/h)")
   ),
-  # tar_target(
-  #   m5d,
-  #   plot_nad(nad_final)
-  # ),
+  tar_target(
+    m5g,
+    plot_nad(nad_final, nad_annot, "NAD", "NAD\n(nmol/cell)")
+  ),
+  tar_target(
+    m5h,
+    plot_nad(nad_final, nad_annot, "NADH", "NADH\n(nmol/cell)")
+  ),
+  tar_target(
+    m5i,
+    plot_nad(nad_final, nad_annot, "Ratio", "NADH/NAD ratio")
+  ),
+  tar_target(
+    m5,
+    arrange_m5(m5a, m5b, m5c, metab_targeted_pca, metab_volcano, metab_moi, m5g, m5h, m5i)
+  ),
+  tar_target(
+    m5_figure,
+    write_figures(m5, "m5.pdf")
+  ),
+
+  # M6 ----------------------------------------------------------------------
+
   tar_target(
     twoby_densities_annot,
     annot_twoby_densities(blot_norm)
   ),
   tar_target(
-    m5i,
+    m6f,
     plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)") +
       ggplot2::annotation_custom(myc_image, xmin = 2.75, xmax = 2.75 + 2.5)
   ),
   tar_target(
-    m5,
-    arrange_m5(m5a, m5b, m5c, rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m5i)
+    m6,
+    arrange_m6(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m6f)
   ),
   tar_target(
-    m5_figure,
-    write_figures(m5, "m5.pdf")
+    m6_figure,
+    write_figures(m6, "m6.pdf")
   )
 
 )

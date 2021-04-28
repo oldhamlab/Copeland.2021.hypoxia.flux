@@ -75,13 +75,6 @@ plot_rnaseq_pca <- function(pca_data) {
       y = PC2,
       color = group
     ) +
-    ggplot2::geom_point(
-      ggplot2::aes(fill = group),
-      pch = 21,
-      color = "white",
-      size = 2,
-      show.legend = FALSE
-    ) +
     ggforce::geom_mark_ellipse(
       ggplot2::aes(
         color = group,
@@ -95,6 +88,13 @@ plot_rnaseq_pca <- function(pca_data) {
       label.buffer = ggplot2::unit(0, "mm"),
       label.margin = ggplot2::margin(-1.5, -1.5, -1.5, -1.5, "mm"),
       con.type = "none",
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_point(
+      ggplot2::aes(fill = group),
+      pch = 21,
+      color = "white",
+      size = 2,
       show.legend = FALSE
     ) +
     ggplot2::labs(

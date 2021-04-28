@@ -16,6 +16,10 @@ format_metab_targeted <- function(metab_targeted_files) {
       area = `Peak Area`
     ) %>%
     dplyr::left_join(wmo::hmdb_mappings, by = "metabolite") %>%
+    dplyr::mutate(metabolite = dplyr::case_when(
+      metabolite == "glyceraldehyde 3-phosphate" ~ "GAP",
+      TRUE ~ metabolite
+    )) %>%
     dplyr::filter(!is.na(hmdb)) %>%
     dplyr::filter(!stringr::str_detect(hmdb, "ISTD")) %>%
     dplyr::mutate(
@@ -278,13 +282,6 @@ plot_metab_pca <- function(clean) {
       y = PC2,
       color = group
     ) +
-    ggplot2::geom_point(
-      ggplot2::aes(fill = group),
-      pch = 21,
-      color = "white",
-      size = 2,
-      show.legend = FALSE
-    ) +
     ggforce::geom_mark_ellipse(
       ggplot2::aes(
         color = group,
@@ -298,6 +295,13 @@ plot_metab_pca <- function(clean) {
       label.buffer = ggplot2::unit(0, "mm"),
       label.margin = ggplot2::margin(-1.5, -1.5, -1.5, -1.5, "mm"),
       con.type = "none",
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_point(
+      ggplot2::aes(fill = group),
+      pch = 21,
+      color = "white",
+      size = 2,
       show.legend = FALSE
     ) +
     ggplot2::labs(
@@ -420,6 +424,12 @@ plot_metab_volcano <- function(results) {
       family = "Calibri"
     ) +
     ggplot2::geom_point(
+      data = subset(results, adj.P.Val > 0.05),
+      pch = 21,
+      color = "white",
+      fill = "grey80"
+    ) +
+    ggplot2::geom_point(
       data = subset(results, logFC > 0 & adj.P.Val < 0.05),
       pch = 21,
       color = "white",
@@ -431,17 +441,11 @@ plot_metab_volcano <- function(results) {
       color = "white",
       fill = clrs[[4]]
     ) +
-    ggplot2::geom_point(
-      data = subset(results, adj.P.Val > 0.05),
-      pch = 21,
-      color = "white",
-      fill = "grey80"
-    ) +
     ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
     ggplot2::scale_x_continuous(
       breaks = seq(-4, 4, 2),
       labels = scales::math_format(2^.x),
-      expand = ggplot2::expansion(mult = 0.25)
+      expand = ggplot2::expansion(mult = 1)
     ) +
     ggplot2::labs(
       x = "ΔHypoxia/ΔBAY",
@@ -472,9 +476,18 @@ plot_mois <- function(clean, moi) {
 
   se_to_tibble(clean) %>%
     dplyr::filter(metabolite %in% moi) %>%
-    dplyr::mutate(oxygen = factor(oxygen, levels = c("N", "H"), labels = c("21%", "0.5%"))) %>%
+    dplyr::group_by(metabolite) %>%
+    dplyr::mutate(
+      oxygen = factor(oxygen, levels = c("N", "H"), labels = c("21%", "0.5%")),
+      area = area / mean(area[oxygen == "21%" & treatment == "DMSO"]),
+      metabolite = dplyr::case_when(
+        metabolite == "2-hydroxyglutarate" ~ "2HG",
+        metabolite == "glyceraldehyde 3-phosphate" ~ "GAP",
+        TRUE ~ metabolite
+      )
+    ) %>%
     ggplot2::ggplot() +
-    ggplot2::facet_wrap(~ metabolite, scales = "free_y", nrow = 1) +
+    ggplot2::facet_wrap(~ metabolite, nrow = 1) +
     ggplot2::aes(
       x = treatment,
       y = area,
@@ -499,7 +512,7 @@ plot_mois <- function(clean, moi) {
     ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::labs(
       x = "Treatment",
-      y = "Peak area",
+      y = "Peak area (normalized)",
       fill = NULL
     ) +
     ggplot2::ylim(c(0, NA)) +

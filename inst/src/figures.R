@@ -20,12 +20,13 @@ theme_plots <- function() {
 
 # theme_patchwork ---------------------------------------------------------
 
-theme_patchwork <- function(design = NULL, widths = NULL, heights = NULL, tags = "A") {
+theme_patchwork <- function(design = NULL, widths = NULL, heights = NULL, tags = "A", ...) {
   list(
     patchwork::plot_layout(
       design = design,
       widths = widths,
-      heights = heights
+      heights = heights,
+      ...
     ),
     patchwork::plot_annotation(
       tag_levels = tags,
@@ -167,13 +168,29 @@ arrange_s6 <- function(a, b, c, d) {
 # arrange_m5 --------------------------------------------------------------
 
 arrange_m5 <- function(a, b, c, d, e, f, g, h, i) {
+  (a | b | c) / (d | e) / f / (g | h | i ) +
+    theme_patchwork(
+      # design = layout,
+      widths = unit(5, "in"),
+      heights = unit(c(1.25), "in"),
+      guides = "collect"
+    ) &
+    theme(
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    )
+}
+
+# arrange_m6 --------------------------------------------------------------
+
+arrange_m6 <- function(a, b, c, d, e, f) {
   layout <- "
-  abc
-  deg
-  ffg
-  hhi
+  abd
+  ccd
+  eef
   "
-  a + b + c + d + e + f + g + h + i +
+
+  a + b + c + d + e + f +
     theme_patchwork(
       design = layout,
       widths = unit(1.25, "in"),
