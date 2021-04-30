@@ -963,6 +963,13 @@ list(
   tar_target(
     m6_figure,
     write_figures(m6, "m6.pdf")
+  ),
+
+  # resources table ---------------------------------------------------------
+
+  tar_target(
+    resources_table,
+    create_resources()
   )
 
 )

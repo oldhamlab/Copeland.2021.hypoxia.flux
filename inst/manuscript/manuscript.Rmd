@@ -29,20 +29,31 @@ bibliography_main: library.bib
 bibliography_software: packages.bib
 csl: cell-metabolism.csl
 link-citations: yes
-  
+
 output: 
-  bookdown::pdf_document2:
-    template: template.tex
-    keep_tex: false
+  # bookdown::pdf_document2:
+  #   # template: template.tex
+  #   keep_tex: false
+  #   df_print: kable
+  #   toc: false
+  #   number_sections: false
+  #   latex_engine: xelatex
+  #   pandoc_args:
+  #     - '--lua-filter=scholarly-metadata.lua'
+  #     - '--lua-filter=author-info-blocks.lua'
+  #     - '--lua-filter=pagebreak.lua'
+  #     - '--lua-filter=multiple-bibliographies.lua'
+      
+  bookdown::word_document2:
+    reference_docx: template.docx
     df_print: kable
-    toc: false
     number_sections: false
-    latex_engine: xelatex
     pandoc_args:
       - '--lua-filter=scholarly-metadata.lua'
       - '--lua-filter=author-info-blocks.lua'
       - '--lua-filter=pagebreak.lua'
       - '--lua-filter=multiple-bibliographies.lua'
+
 compact-title: true
 geometry: margin = 0.75in
 fontsize: 11pt
@@ -62,6 +73,7 @@ header-includes:
 ```{r setup, include = FALSE}
 # library(Copeland.2021.hypoxia.flux)
 devtools::load_all()
+library(magrittr)
 
 knitr::opts_chunk$set(
   echo = FALSE, 
@@ -87,6 +99,13 @@ my_kable <- function(data, ...) {
   kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>% 
     kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 11)
 }
+
+withr::with_dir(here::here(), {
+  biomass <- targets::tar_read(biomass)
+  resources <- targets::tar_read(resources_table)
+})
+
+biomass <- tibble::deframe(biomass)
 ```
 
 # Summary 
@@ -132,5 +151,156 @@ To characterize further the extent of hypoxia-induced metabolic reprogramming, w
 
 # Tables
 
+\newpage
+
 # STAR Methods
 
+## Resource Availability
+
+### Lead Contact
+
+Further information and requests for resources and reagents should be directed to and will be fulfilled by the lead contact, William Oldham (woldham@bwh.harvard.edu). 
+
+### Materials Availability
+
+This study did not generate new unique reagents.
+
+### Data and code availability
+
+The original data and analysis code are available as a reproducible research compendium formatted as an R package available at OldhamLab/Copeland.2021.hypoxia.flux (https://github.com/oldhamlab/Copeland.2021.hypoxia.flux). RNA-seq data has been deposited in the NIH Short Read Archive (PRJNA721596). 
+
+## Experimental Model Details
+
+### Lung fibrolbasts
+
+Primary normal human lung fibroblasts (LFs) were purchased from Lonza (CC-2512) and cultured in FGM-2 (Lonza CC-3132) in a standard tissue culture incubator in 5% CO~2~ at 37 °C. Cells from two donors were used in these studies: #33652 (56, male) and #29132 (19, female). Cell authentication was performed by the vendor.
+
+### Pulmonary artery smooth muscle cells
+
+Primary human pulmonary artery smooth muscle cells were purchased from Lonza (CC-2581) and cultured in SmGM-2 (Lonza CC-3182) in a standard tissue culture incubator in 5% CO~2~ at 37 °C. Cells from multiple donors were used in these studies: #30020 (64, male), #27662 (35, male), #26698 (51, male), and #19828 (51, male). Cell authentication was performed by the vendor.
+
+## Method Details
+
+### Metabolic flux protocol
+
+For extracellular flux measurements, cells were seeded in either standard growth medium or MCDB131 medium without glucose, glutamine, or phenol red (genDEPOT) supplemented with 2% dialyzed fetal bovine serum (Mediatech) and naturally labeled glucose and glutamine ("light" labeling medium). For LFs, glucose was supplemented at 8 mM and glutamine was supplemented at 1 mM. For PASMCs, glucose was supplemented at 5.55 mM and glutamine was supplemented at 10 mM. These concentrations match the concentrations of these substrates determined in standard growth medium. Preliminary experiments were performed to identify the optimal cell seeding density, exponential growth phase, and labeling duration consistent with metabolic and isotopic steady state. On Day -1, 25,000 cells were seeded in a 35 mm dish in "light" labeling medium. Hypoxia-treated cells were transferred to a tissue culture glovebox set to 0.5% oxygen and 5% CO~2~ (Coy Lab Products). Medium was supplemented with DMSO 0.1% or BAY (10 μM) for DMSO and BAY treatment conditions. On Day 0, cells were washed with PBS and the medium was changed to either "light" medium for flux measurements or "heavy" medium for tracer experiments. For LFs, samples were collected on Day 0 and every 24 h for 72 h. For PASMCs, samples were collected on Day 0 and every 12 h for 48 h. Medium and cell lysates were collected at each time point for intra- and extracellular metabolite measurements and total DNA quantification. Dishes without cells were weighed daily to correct for evaporative medium losses and to empirically determine degradation and accumulation rates of metabolites. Medium samples and cell lysates for DNA measurement were stored at -80 °C until analysis. Each individual experiment included triplicate wells for each treatment and time point, and each experiment was repeated 4-8 times. 
+
+### Cell count
+
+Direct cell counts of trypsizined cell suspensions in PBS were obtained following staining with propidium iodide and acridine orange using a LUNA-FL fluorescence cell counter (Logos Biosystems). Indirect cell counts for flux measurements were interpolated from total DNA quantified using the Quant-iT PicoGreen dsDNA Assay Kit (Thermo). Cells were washed once with two volumes of PBS, lysed with Tris-EDTA buffer containing 2% Triton X-100, and collected by scraping. Total DNA in 10 μL of lysate was determined by adding 100 μL of 1X PicoGreen dye in Tris-EDTA buffer and interpolating the fluorescence intensity with a standard curve generated using the λ DNA standard. Cell counts were interpolated from a standard curve of DNA obtained from known cell numbers seeded in basal medium (Supplementary Figure 1A). No difference in total cellular DNA was identified between normoxia and hypoxia cultures (Supplementary Figure 1B). 
+
+### Immunoblots
+
+Cells were washed with one volume of PBS and collected by scraping in PBS. Cell suspensions were centrifuged at 5,000 ×*g* for 5 min at 4 °C. Pellets were lysed in buffer containing Tris 10 mM, pH 7.4, NaCl 150 mM, EDTA 1 mM, EGTA 1 mM, Triton X-100 1% v/v, NP-40 0.5% v/v, and Halt Protease Inhibitor Cocktail (Thermo). Protein concentrations were determined by BCA Protein Assay (Thermo). Lysates were normalized for protein concentration and subjected to SDS-PAGE separation on stain-free tris-glycine gels (Bio-Rad), cross-linked and imaged with the Chemidoc system (Bio-Rad), transferred to PVDF membranes with the Trans-Blot Turbo transfer system (Bio-Rad), imaged, blocked in 5% blocking buffer (Bio-Rad), blotted in primary and secondary antibodies, and developed using WesternBright ECL (Advansta). Band signal intensity was normalized to total protein per lane as determined from the stain-free gel or membrane images. 
+
+### RT-qPCR
+
+Total RNA was isolated from cells with the RNeasy Mini Kit (Qiagen). cDNA was synthesized from 0.25-1.00 ng RNA with the High Capacity cDNA Reverse Transcription Kit (Applied Biosystems). RT-qPCR analysis was performed with an Applied Biosystems 7500 Fast Real Time PCR System with TaqMan Universal PCR Master Mix and pre-designed TaqMan gene expression assays (Life Technologies). Relative expression levels were calculated using the comparative cycle threshold method referenced to *ACTB*. 
+
+###  Glucose assay
+
+Medium samples were diluted 10-fold in PBS. Glucose concentration was determined using the Glucose Colorimetric Assay Kit (Cayman) according to the manufacturer's protocol. Standards were prepared in PBS.  
+
+### Lactate assay
+
+Medium samples were diluted 10-fold in PBS. Glucose concentration was determined using the ʟ-Lactate Assay Kit (Cayman). Medium samples did not require deproteinization, otherwise the samples were analyzed according to the manufacturer's protocol. Standards were prepared in PBS. 
+
+### Pyruvate assay
+
+Pyruvate was measured using either an enzymatic assay (most samples) or an HPLC-based assay (medium from 0.2% oxygen experiments). For the enzymatic assay, medium samples were diluted 20-fold in PBS. Pyruvate concentration was determined using the Pyruvate Assay Kit (Cayman). Medium samples did not require deproteinization, otherwise the samples were analyzed according to the manufacturer's protocol. Standards were prepared in PBS. For the HPLC assay, 2-oxovaleric acid was added to medium samples as an internal standard. Samples were subsequently deproteinized with 2 volumes of ice-cold acetone. Supernatants were evaporated to < 50% of the starting volume at 43 °C in a SpeedVac concentrator (Thermo Savant) and reconstituted to the starting volume with HPLC-grade water prior to derivatization. Samples were derivatized 1:1 by volume with *o*-phenylenediamine (25 mM in 2 M HCl) for 30 min at 80 °C. Derivatized pyruvate was separated with a Poroshell HPH C-18 column (2.1 × 100 mm, 2.7 μm) on an Infinity II high-performance liquid chromatography system with fluorescence detection of OPD-derivatized α-keto acids as described previously [@RN730].
+
+### Amino acid assay
+
+Medium amino acid concentrations were determined following the addition of norvaline and sarcosine internal standards and deproteinization with 2 volumes of ice-cold acetone. Supernatants were evaporated to < 50% of the starting volume at 43 °C in a SpeedVac concentrator (Thermo Savant) and reconstituted to the starting volume with HPLC-grade water prior to analysis. Amino acids in deproteinized medium were derivatized with *o*-phthalaldehyde (OPA) and 9-fluorenylmethylchloroformate (FMOC) immediately prior to separation with a Poroshell HPH-C18 column (4.6 × 100 mm, 2.7 μm) on an Infinity II high-performance liquid chromatography system with ultraviolet and fluorescence detection of OPA- and FMOC-derivatized amino acids, respectively, according to the manufacturer's protocol (Agilent) [@RN1294]. 
+
+### Flux calculations
+
+The growth rate ($\mu$) and flux (*v*) for each measured metabolite were defined as follows [@RN1523]:
+
+\begin{align}
+\frac{dX}{dt} &= \mu X (\#eq:1) \\[6 pt] 
+\frac{dM}{dt} &= -kM+vX (\#eq:2) 
+\end{align}
+
+where *X* is the cell density, *k* is the first-order degradation or accumulation rate, and *M* is the mass of the metabolite. These equations are solved as follows:
+
+\begin{align}
+X &= X_0e^{\mu t} (\#eq:3)\\[6 pt]
+Me^{k t} &= \frac{v X_0}{\mu + k} (e^{(\mu + k)t}-1) + M_0 (\#eq:4) 
+\end{align}
+
+Growth rate ($\mu$) and cell count at time 0 ($X_0$) were determined by robust linear modeling of the logarithm of cell count as a function of time ($t$). Metabolite mass was calculated from the measured metabolite concentrations and predicted well volume accounting for evaporative losses (Supplementary Figure 1C). First-order degradation and accumulation rates were obtained from robust linear modeling of metabolite mass *v*. time in unconditioned culture medium. Rates that significantly differed from 0 using Student's *t*-test were incorporated into the flux calculations. Final fluxes were obtained by robust linear modeling of $Me^{k t}$ *versus* $(e^{(\mu + k)t}-1)$ to determine the slope from which $v$ was calculated using equation \@ref(eq:4).
+
+### Metabolomics
+
+#### Metabolite extraction
+
+Intracellular metabolites were obtained after washing cells with 2 volumes of ice-cold PBS and floating on liquid nitrogen. Plates were stored at -80 °C until extraction. Metabolites were extracted with 1 mL 80% MeOH pre-cooled to -80 °C containing 10 nmol [D~8~]-\textsc{dl}-valine as an internal standard (Cambridge Isotope Labs). Insoluble material was removed by centrifugation at 21,000 ×*g* for 15 min at 4 °C. The supernatant was evaporated to dryness at 42 °C using a SpeedVac concentrator (Thermo Savant). Samples were resuspended in 35 μL LC-MS-grade water prior to analysis.
+
+#### Acquisition parameters
+
+LC-MS analysis was performed on a Vanquish ultra-high-performance liquid chromatography system coupled to a Q Exactive orbitrap mass spectrometer by a HESI-II electrospray ionization probe (Thermo). External mass calibration was performed weekly. Metabolite samples (2.5 μL) were separated using a ZIC-pHILIC stationary phase (2.1 × 150 mm, 5 μm) (Merck). The autosampler temperature was 4 °C and the column compartment was maintained at 25 °C. Mobile phase A was 20 mM ammonium carbonate and 0.1% ammonium hydroxide. Mobile phase B was acetonitrile. The flow rate was 0.1 mL/min. Solvent was introduced to the mass spectrometer *via* electrospray ionization with the following source parameters: sheath gas 40, auxiliary gas 15, sweep gas 1, spray voltage +3.0 kV for positive mode and -3.1 kV for negative mode, capillary temperature 275 °C, S-lens RF level 40, and probe temperature 350 °C. Data were acquired and peaks integrated using TraceFinder 4.1 (Thermo). 
+
+#### Stable isotope quantification
+
+All metabolites except fructose 2,6-bisphosphate (FBP) and 3-phosphoglycerate (3PG) were measured using the following mobile phase gradient: 0 min, 80% B; 5 min, 80% B; 30 min, 20% B; 31 min, 80% B; 42 min, 80% B. The mass spectrometer was operated in selected ion monitoring mode with an m/*z* window width of 9.0 centered 1.003355-times half the number of carbon atoms in the target metabolite. The resolution was set at 70,000 and AGC target was 1 × 10^5^ ions. Peak areas were corrected for quadrupole bias as previously described [@RN1063]. Mass isotope distributions for FBP and 3PG were calculated from full scan chromatograms as described below. Raw mass isotopomer distributions were corrected for natural isotope abundance using a custom R package (mzrtools, https://github.com/oldhamlab/mzrtools) employing the method of Fernandez, *et al.* [@RN557]. 
+
+#### Metabolomic profiling
+
+For metabolomic profiling and quantification of isotopic enrichment for FBP and 3PG, the following mobile phase gradient was used: 0 min, 80% B; 20 min, 20% B; 20.5 min, 80% B; 28 min, 80% B; 42 min, 80% B. The mass spectrometer was operated in polarity switching full scan mode from 70-1000 m/*z*. Resolution was set to 70,000 and the AGC target was 1x10^6^ ions. Peak identifications were based on an in-house library of authentic metabolite standards previously analyzed utilizing this method. For metabolomics studies, pooled quality control (QC) samples were injected at the beginning, end, and between every four samples of the run. Raw peak areas for each metabolite were corrected for instrument drift using a cubic spline model of QC peak areas. Low quality features were removed on the basis of a relative standard deviation greater than 0.2 in the QC samples and a dispersion ratio greater than 0.4 [@RN3077]. Missing values were imputed using random forrest. Samples peak areas were normalized using probabilistic quotient normalization [@RN3094]. Differentially regulated metabolites were identified using limma [@limma]. 
+
+### Biomass determination
+
+The dry weight of LFs was determined to be `r round(biomass[["lf"]])` pg/cell. The dry weight of PASMCs was determined to be `r round(biomass[["pasmc"]])` pg/cell. These values were estimated by washing 3 × 10^6^ cells twice in PBS and thrice in ice-cold acetone prior to drying overnight in a SpeedVac. The composition of the dry cell mass was estimated from the literature [@RN1741; @RN2005], and stoichiometric coefficients were determined as described [@RN1522; @RN2517].
+
+### Metabolic flux analysis
+
+Metabolic flux analysis was performed using the elementary metabolite unit-based software package INCA [@RN2501]. Inputs to the model include the chemical reactions and atom transitions of central carbon metabolism, extracellular fluxes, the identity and composition of ^13^C-labeled tracers, and the MIDs of labeled intracellular metabolites. The metabolic network was adapted from previously published networks [@RN1522; @RN2266] and comprises `r nrow(dplyr::filter(model_reactions, !(pathway %in% c("mixing", "dilution"))))` reactions representing glycolysis, the pentose phosphate pathway, the tricarboxylic acid cycle, anaplerotic pathways, serine metabolism, and biomass synthesis. The network includes seven extracellular substrates (aspartate, cystine, glucose, glutamine, glycine, pyruvate, serine) and five metabolic products (alanine, biomass, glutamate, lactate, lipid). Models were fit using three ^13^C-labeled tracers, [1,2-^13^C~2~] glucose, [U-^13^C~6~] glucose, and [U-^13^C~5~] glutamine. The MIDs of twelve metabolites (2-oxoglutarate, 3-phosphoglycerate, alanine, aspartate, citrate, fructose bisphosphate, glutamate, glutamine, lactate, malate, pyruvate, serine) were used to constrain intracellular fluxes. The following assumptions were made:
+
+1. Metabolism was at steady state.
+1. Labeled CO~2~ produced during decarboxylation reactions left the system and did not re-incorporate during carboxylation reactions.
+1. Protein turnover occurred at a negligible rate compared to glucose and glutamine consumption.
+1. Acetyl-CoA, aspartate, fumarate, malate, oxaloacetate, pyruvate existed in cytosolic and mitochondrial pools. Aspartate and malate were allowed to exchange freely between the compartments.
+1. The per cell biomass requirements of proliferating lung fibroblasts were similar to published estimated in other cells [@RN1741; @RN2005]. 
+1. Dilution of alanine, aspartate, glutamate, glutamine, lactate, and pyruvate was allowed to occur through reversible exchange with unlabeled substrates in the medium as these metabolites were present in unconditioned medium or serum.
+1. Succinate and fumarate are symmetric molecules that have interchangeable orientations when metabolized by TCA cycle enzymes. 
+
+Flux estimation was repeated a minimum of 50 times from random initial values. Results were subjected to a χ^2^ statistical test to assess goodness-of-fit. Accurate 95% confidence intervals were computed for estimated parameters by evaluating the sensitivity of the sum-of-square residuals to parameter variations [@RN60; @RN1522]. 
+
+### NAD(H) assay
+
+Cellular NAD^+^ and NADH were measured using an enzymatic fluorimetric cycling assay based on the reduction of NAD^+^ to NADH by alcohol dehydrogenase (ADH) and subsequent electron transfer to generate the fluorescent molecule resorufin [@RN1603]. Briefly, cells were washed twice with one volume PBS. Pyridine nucleotides were extracted on ice with buffer containing 50% by volume PBS and 50% lysis buffer (100 mM sodium carbonate, 20 mM sodium bicarbonate, 10 mM nicotinamide, 0.05% by volume Triton-X-100, 1% by mass dodecyltrimethylammonium bromide) and collected by scraping. Extracts were divided equally and 0.5 volume of 0.4 N HCl was added to one sample. Both extracts were heated at 65 °C for 15 min to degrade selectively either the oxidized (buffer) or reduced (HCl) nucleotides. The reaction was cooled on ice and quenched by adding 0.5 M Tris-OH to the acid-treated samples or 0.2 N HCl plus 0.25 M Tris-OH to the buffer samples.  Samples were then diluted in reaction buffer (50 mM EDTA and 10 mM Tris, pH 7.06).  Cell debris was pelleted by centrifugation, and 50 μL was incubated for 2 h with 100 μL reaction buffer containing 0.6 M EtOH, 0.5 mM phenazine methosulfate, 0.05 mM resazurin, and 0.1 mg/mL ADH. Fluorescence intensities were measured with a Spectramax Gemini XPS (Moelcular Devices) with excitation 540 nm, emission 588 nm, and 550 nm excitation cut-off filter. Sample intensities were compared to a standard curve generated from known concentrations of NADH. The ratio of fluorescence in buffer-extracted to acid-extracted samples corresponds to the NADH/NAD^+^ ratio. Absolute NADH and NAD^+^ were normalized to cell count from cells estimated from total DNA quantification as described above.
+
+### RNA-seq
+
+RNA was collected from LFs treated for three days ± hypoxia ± BAY as described above. Four biological replicates were analyzed. Library construction and sequencing was performed by BGI Genomics using 100 bp paired end analysis and a read depth of 50M reads per sample. Sequences were deposited in the NIH SRA (PRJNA721596). Sequences were mapped to the human GRCh38 primary assembly and counts summarized using Rsubread [@Rsubread]. This data is available from the Oldham Lab GitHub repository (https://github.com/oldhamlab/rnaseq.lf.hypoxia.molidustat). Differentially expressed transcripts were identified using DESeq2 [@DESeq2]. Gene set enrichment and transcription factor enrichment was performed using the fgsea and TFEA.ChIP R packages, respectively [@fgsea; @TFEA.ChIP]. 
+
+## Quantification and Statistical Analysis
+
+The raw data and annotated analysis code necessary to reproduce this manuscript are contained in an R package research compendium available from the Oldham Lab GitHub repository (https://github.com/oldhamlab/Copeland.2021.hypoxia.flux). Data analysis, statistical comparisons, and visualization were performed in R [@R-base] using the packages listed below. Experiments included technical and biological replicates as noted above. The number of biological replicates (n) is indicated in the figure legends. Summary data show the mean ± SEM. Outliers were identified using twice the median absolute deviation. Two group comparisons (*e.g.*, 21% *v.* 0.5% oxygen) were performed using Student's *t*-test on log-transformed values with pairing among biological replicates. Multifactor comparisons (*e.g.*, BAY and oxygen) were performed using linear mixed-effects models with Tukey's *post hoc* testing. Metabolomics and RNA-seq data were analyzed as described above. Probability values less than 0.05 were considered significant.  
+
+\newpage
+
+## Key Resources Table  
+
+<br>
+
+```{r, results = "asis"}
+flextable::flextable_to_rmd(resources)
+```
+
+\newpage
+
+# Supplemental Items Titles
+
+\newpage
+
+# References
+
+::: {#refs_main}
+:::
+
+# Software
+
+::: {#refs_software}
+:::
