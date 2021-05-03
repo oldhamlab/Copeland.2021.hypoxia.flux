@@ -1,0 +1,130 @@
+---
+title: "Supplemental Information"
+subtitle: "Hypoxia uncouples HIF gene transcription and metabolic flux in proliferating primary cells"
+
+author:
+- Courtney A. Copeland: 
+    institute: 1
+- Benjamin A. Olenchock: 
+    institute: 1, 2
+- David R. Ziehr:
+    institute: 1, 4
+- Sarah McGarrity: 
+    institute: 1, 5
+- Jamey D. Young: 
+    institute: 3
+- Joseph Loscalzo: 
+    institute: 1
+- William M. Oldham: 
+    institute: 1
+    email: woldham@bwh.harvard.edu
+    correspondence: true
+institute:
+- 1: Department of Medicine, Brigham and Women's Hospital and Harvard Medical School, Boston, MA
+- 2: Regeneron Pharmaceuticals, Tarrytown, NY
+- 3: Departments of Chemical & Biomolecular Engineering and Molecular Physiology & Biophysics, Vanderbilt University, Nashville, TN
+- 4: Department of Medicine, Massachusetts General Hospital and Harvard Medical School, Boston, MA
+- 5: Center for Systems Biology, School of Health Sciences, University of Iceland, Reykjavik, Iceland
+
+bibliography_main: library.bib
+bibliography_software: packages.bib
+csl: cell-metabolism.csl
+link-citations: yes
+
+output: 
+  # bookdown::pdf_document2:
+  #   # template: template.tex
+  #   keep_tex: false
+  #   df_print: kable
+  #   toc: false
+  #   number_sections: false
+  #   latex_engine: xelatex
+  #   pandoc_args:
+  #     - '--lua-filter=scholarly-metadata.lua'
+  #     - '--lua-filter=author-info-blocks.lua'
+  #     - '--lua-filter=pagebreak.lua'
+  #     - '--lua-filter=multiple-bibliographies.lua'
+      
+  bookdown::word_document2:
+    reference_docx: template.docx
+    df_print: kable
+    number_sections: false
+    pandoc_args:
+      - '--lua-filter=scholarly-metadata.lua'
+      - '--lua-filter=author-info-blocks.lua'
+      - '--lua-filter=pagebreak.lua'
+      - '--lua-filter=multiple-bibliographies.lua'
+
+compact-title: true
+geometry: margin = 0.75in
+fontsize: 11pt
+mainfont: Calibri
+graphics: yes
+header-includes:
+- \usepackage{lineno}
+- \linenumbers
+- \setlength\linenumbersep{1cm}
+- \usepackage{setspace}
+- \doublespacing
+- \makeatletter\renewcommand*{\fps@figure}{htbp}\makeatother
+- \setlength{\parskip}{0.75\baselineskip plus 2pt minus 2pt}
+- \usepackage{float}
+---
+
+```{r setup, include = FALSE}
+# library(Copeland.2021.hypoxia.flux)
+devtools::load_all()
+library(magrittr)
+
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  warning = FALSE, 
+  message = FALSE, 
+  out.width = "50%", 
+  fig.align = "center", 
+  fig.pos = "H", 
+  out.extra = ""
+)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+knitr::opts_knit$set(kable.force.latex = FALSE)
+
+options(tinytex.verbose = TRUE)
+
+# kable function
+my_kable <- function(data, ...) {
+  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>% 
+    kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 11)
+}
+
+withr::with_dir(here::here(), {
+  hyp <- targets::tar_read(lf_hypoxia_table)
+  bay <- targets::tar_read(lf_bay_table)
+})
+
+```
+
+\newpage
+
+# Tables
+
+<br>
+
+```{r results = "asis"}
+hyp %>% 
+  flextable::set_caption("Table 1: Lung fibroblast fluxes in 21% and 0.5% oxygen") %>% 
+  flextable::flextable_to_rmd()
+```
+
+\newpage
+
+```{r results = "asis"}
+bay %>% 
+  flextable::set_caption("Table 2: Lung fibroblast fluxes following DMSO and BAY treatment") %>% 
+  flextable::flextable_to_rmd()
+```
+

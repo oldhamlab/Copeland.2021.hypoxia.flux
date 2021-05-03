@@ -135,18 +135,13 @@ arrange_m3 <- function(m3ab, m3c) {
 
 # arrange_m4 --------------------------------------------------------------
 
-arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot, m4c) {
+arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
 
   a <- hypoxia_graph_ratio_plot
   b <- bay_graph_ratio_plot
 
-  top <-
-    a + b +
-    plot_layout(guides = "collect") &
-    theme(legend.text.align = 1)
-
-  top / m4c +
-    theme_patchwork(widths = unit(5, "in"), heights = unit(c(2.5, 2), "in"))
+  a + b +
+    theme_patchwork(widths = unit(2.5, "in"), heights = unit(2.75, "in"), guides = "collect")
 }
 
 # arrange_s6 --------------------------------------------------------------
@@ -165,9 +160,9 @@ arrange_s6 <- function(a, b, c, d) {
     )
 }
 
-# arrange_m5 --------------------------------------------------------------
+# arrange_m6 --------------------------------------------------------------
 
-arrange_m5 <- function(a, b, c, d, e, f, g, h, i) {
+arrange_m6 <- function(a, b, c, d, e, f, g, h, i) {
   (a | b | c) / (d | e) / f / (g | h | i ) +
     theme_patchwork(
       # design = layout,
@@ -181,9 +176,9 @@ arrange_m5 <- function(a, b, c, d, e, f, g, h, i) {
     )
 }
 
-# arrange_m6 --------------------------------------------------------------
+# arrange_m7 --------------------------------------------------------------
 
-arrange_m6 <- function(a, b, c, d, e, f) {
+arrange_m7 <- function(a, b, c, d, e, f) {
   layout <- "
   abd
   ccd
@@ -259,7 +254,96 @@ create_resources <- function() {
       part = "body",
       value = flextable::as_paragraph("[U-", flextable::as_sup("13"), "C", flextable::as_sub("3"), "] lactate")
     ) %>%
-    flextable::font(fontname = "Calibri") %>%
-    flextable::autofit() %>%
-    flextable::fit_to_width(7.25)
+    flextable::font(fontname = "Calibri", part = "all") %>%
+    flextable::fontsize(size = 9, part = "all") %>%
+    flextable::set_table_properties(layout = "autofit")
+}
+
+# format_flux_table -------------------------------------------------------
+
+format_flux_table <- function(
+  cell = c("lf", "pasmc"),
+  experiment = c("0.5%", "BAY"),
+  ssr_ctl = NULL,
+  ssr_exp = NULL
+) {
+
+  big_border = flextable::fp_border_default(color = "black", width = 1)
+  small_border = flextable::fp_border_default(color = "black", width = 0.25)
+
+  conditions <- c(unique(flux_differences$ctl), unique(flux_differences$exp))
+
+  df <-
+    flux_differences %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(normalization == "none" & cell_type == cell & exp == experiment)
+
+  conditions <- c(unique(df$ctl), unique(df$exp))
+
+  df %>%
+    dplyr::select(-c(normalization, cell_type, index, ctl, exp)) %>%
+    dplyr::arrange(desc(type)) %>%
+    dplyr::mutate(
+      pathway = stringr::str_to_sentence(pathway),
+      type = toupper(type),
+      dplyr::across(tidyselect::matches("ctl|exp"), ~scales::scientific(.x))
+    ) %>%
+    flextable::as_grouped_data(groups = c("type", "pathway")) %>%
+    flextable::as_flextable(hide_grouplabel = TRUE) %>%
+    flextable::border_remove() %>%
+    flextable::bold(j = 1, i = ~ !is.na(pathway), bold = TRUE, part = "body") %>%
+    flextable::bold(j = 1, i = ~ !is.na(type), bold = TRUE, part = "body") %>%
+    flextable::add_header_row(
+      values = c("", conditions, ""),
+      colwidths = c(2, 3, 3, 1)
+    ) %>%
+    flextable::compose(
+      i = 1,
+      j = 3:5,
+      part = "header",
+      value = flextable::as_paragraph(conditions[[1]], flextable::as_sup("a"))
+    ) %>%
+    flextable::compose(
+      i = 1,
+      j = 6:8,
+      part = "header",
+      value = flextable::as_paragraph(conditions[[2]], flextable::as_sup("b"))
+    ) %>%
+    flextable::set_header_labels(
+      id = "ID",
+      equation = "Reaction",
+      flux_ctl = "Flux",
+      lb_ctl = "LB",
+      ub_ctl = "UB",
+      flux_exp = "Flux",
+      lb_exp = "LB",
+      ub_exp = "UB",
+      ratio = "Ratio"
+    ) %>%
+    flextable::align(i = 1, part = "header", align = "center") %>%
+    flextable::align(i = 2, j = 3:8, part = "header", align = "center") %>%
+    flextable::merge_h(part = "header") %>%
+    flextable::bold(part = "header", bold = TRUE) %>%
+    flextable::colformat_double(
+      digits = 2,
+      big.mark = ""
+    ) %>%
+    flextable::hline_top(part = "header", border = big_border) %>%
+    flextable::hline_bottom(part = "all", border = big_border) %>%
+    flextable::hline(i = ~ !is.na(type), border = small_border) %>%
+    flextable::hline(i = 1, j = c(3:5, 6:8), border = small_border, part = "header") %>%
+    flextable::add_footer_lines(c("a", "b")) %>%
+    flextable::compose(
+      i = 1,
+      part = "footer",
+      value = flextable::as_paragraph(flextable::as_sup("a"), ssr_ctl)
+    ) %>%
+    flextable::compose(
+      i = 2,
+      part = "footer",
+      value = flextable::as_paragraph(flextable::as_sup("b"), ssr_exp)
+    ) %>%
+    flextable::font(fontname = "Calibri", part = "all") %>%
+    flextable::fontsize(size = 9, part = "all") %>%
+    flextable::set_table_properties(layout = "autofit")
 }

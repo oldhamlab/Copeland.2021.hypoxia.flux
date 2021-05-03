@@ -859,16 +859,23 @@ list(
     plot_ratio_network(bay_graph, "BAY/DMSO")
   ),
   tar_target(
-    m4c,
-    plot_lactate_mids(model_mids, "lf")
-  ),
-  tar_target(
     m4,
-    arrange_m4(hypoxia_graph_ratio_plot, bay_graph_ratio_plot, m4c)
+    arrange_m4(hypoxia_graph_ratio_plot, bay_graph_ratio_plot)
   ),
   tar_target(
     m4_figure,
     write_figures(m4, "m4.pdf")
+  ),
+
+  # M5 ----------------------------------------------------------------------
+
+  tar_target(
+    m5,
+    plot_lactate_mids(model_mids, "lf")
+  ),
+  tar_target(
+    m5_figure,
+    write_figures(m5, "m5.pdf")
   ),
 
   # S6 ----------------------------------------------------------------------
@@ -906,63 +913,63 @@ list(
     write_figures(s6, "s6.pdf")
   ),
 
-  # M5 ----------------------------------------------------------------------
+  # M6 ----------------------------------------------------------------------
 
   tar_target(
     twoby_fluxes,
     analyze_twoby_fluxes(growth_rates, fluxes)
   ),
   tar_target(
-    m5a,
+    m6a,
     plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "growth", "Growth Rate (/h)")
   ),
   tar_target(
-    m5b,
+    m6b,
     plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "glucose", "Glucose\n(fmol/cell/h)") + ggplot2::scale_y_reverse()
   ),
   tar_target(
-    m5c,
+    m6c,
     plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "lactate", "Lactate\n(fmol/cell/h)")
   ),
   tar_target(
-    m5g,
+    m6g,
     plot_nad(nad_final, nad_annot, "NAD", "NAD\n(nmol/cell)")
   ),
   tar_target(
-    m5h,
+    m6h,
     plot_nad(nad_final, nad_annot, "NADH", "NADH\n(nmol/cell)")
   ),
   tar_target(
-    m5i,
+    m6i,
     plot_nad(nad_final, nad_annot, "Ratio", "NADH/NAD ratio")
   ),
   tar_target(
-    m5,
-    arrange_m5(m5a, m5b, m5c, metab_targeted_pca, metab_volcano, metab_moi, m5g, m5h, m5i)
+    m6,
+    arrange_m6(m6a, m6b, m6c, metab_targeted_pca, metab_volcano, metab_moi, m6g, m6h, m6i)
   ),
   tar_target(
-    m5_figure,
-    write_figures(m5, "m5.pdf")
+    m6_figure,
+    write_figures(m6, "m6.pdf")
   ),
 
-  # M6 ----------------------------------------------------------------------
+  # M7 ----------------------------------------------------------------------
 
   tar_target(
     twoby_densities_annot,
     annot_twoby_densities(blot_norm)
   ),
   tar_target(
-    m6f,
+    m7f,
     plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)") +
       ggplot2::annotation_custom(myc_image, xmin = 2.75, xmax = 2.75 + 2.5)
   ),
   tar_target(
-    m6,
-    arrange_m6(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m6f)
+    m7,
+    arrange_m7(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m7f)
   ),
   tar_target(
-    m6_figure,
-    write_figures(m6, "m6.pdf")
+    m7_figure,
+    write_figures(m7, "m7.pdf")
   ),
 
   # resources table ---------------------------------------------------------
@@ -970,6 +977,17 @@ list(
   tar_target(
     resources_table,
     create_resources()
+  ),
+
+  # flux comparison tables --------------------------------------------------
+
+  tar_target(
+    lf_hypoxia_table,
+    format_flux_table("lf", "0.5%", " SSR 391.7 [311.2-416.6] (95% CI, 362 DOF)", " SSR 334.3 [311.2-416.6] (95% CI, 362 DOF)")
+  ),
+  tar_target(
+    lf_bay_table,
+    format_flux_table("lf", "BAY", " SSR 393.5 [311.2-416.6] (95% CI, 362 DOF)", " SSR 392.4 [308.4-413.4] (95% CI, 359 DOF)")
   )
 
 )

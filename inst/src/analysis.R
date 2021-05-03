@@ -966,7 +966,7 @@ plot_labeling_rate <- function(mids) {
     ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::labs(
       x = "Time (h)",
-      y = "Fraction labeled",
+      y = "Pyruvate labeled",
       color = NULL,
       fill = NULL
     ) +
@@ -1316,7 +1316,8 @@ plot_lactate_mids <- function(model_mids, cell) {
     dplyr::filter(tracer == "lac3" & time == 72 & !is.na(metabolite)) %>%
     plot_mids() +
     ggplot2::facet_wrap(~ metabolite, scales = "free_x", nrow = 2) +
-    ggplot2::theme(legend.position = "right")
+    ggplot2::theme(legend.position = "right") +
+    theme_patchwork(widths = unit(4, "in"), heights = unit(2.5, "in"), tags = NULL)
 }
 
 # format_time_course_mids -------------------------------------------------
