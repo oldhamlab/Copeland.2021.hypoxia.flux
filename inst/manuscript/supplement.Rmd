@@ -114,17 +114,23 @@ withr::with_dir(here::here(), {
 
 <br>
 
-```{r results = "asis"}
+```{r t1, results = "asis"}
 hyp %>% 
-  flextable::set_caption("Table 1: Lung fibroblast fluxes in 21% and 0.5% oxygen") %>% 
+  flextable::set_caption(
+    "Lung fibroblast fluxes in 21% and 0.5% oxygen", 
+    autonum = officer::run_autonum()
+  ) %>% 
   flextable::flextable_to_rmd()
 ```
 
 \newpage
 
-```{r results = "asis"}
+```{r t2, results = "asis"}
 bay %>% 
-  flextable::set_caption("Table 2: Lung fibroblast fluxes following DMSO and BAY treatment") %>% 
+  flextable::set_caption(
+    "Lung fibroblast fluxes following DMSO and BAY treatment", 
+    autonum = officer::run_autonum()
+  ) %>% 
   flextable::flextable_to_rmd()
 ```
 

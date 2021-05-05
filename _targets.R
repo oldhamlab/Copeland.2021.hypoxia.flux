@@ -516,7 +516,23 @@ list(
   ),
   tar_target(
     metab_moi,
-    plot_mois(metab_targeted_clean, c("GAP", "2-hydroxyglutarate", "aconitate", "taurine", "hydroxyproline", "malate"))
+    plot_mois(metab_targeted_clean, c("GAP", "2-hydroxyglutarate", "aconitate", "taurine", "hydroxyproline", "GABA"))
+  ),
+  tar_target(
+    metab_msea,
+    run_msea(metab_different_differences, metab_pathways)
+  ),
+  tar_target(
+    metab_pathways,
+    get_metab_pathways()
+  ),
+  tar_target(
+    msea_plot,
+    plot_msea(metab_msea)
+  ),
+  tar_target(
+    leading_edge,
+    plot_leading_edge(metab_different_differences, metab_pathways[["(KEGG) Citrate cycle (TCA cycle)"]])
   ),
   tar_render(
     metabolomics_report,
@@ -945,7 +961,7 @@ list(
   ),
   tar_target(
     m6,
-    arrange_m6(m6a, m6b, m6c, metab_targeted_pca, metab_volcano, metab_moi, m6g, m6h, m6i)
+    arrange_m6(m6a, m6b, m6c, metab_targeted_pca, metab_volcano, metab_moi, msea_plot, leading_edge, m6g, m6h, m6i)
   ),
   tar_target(
     m6_figure,

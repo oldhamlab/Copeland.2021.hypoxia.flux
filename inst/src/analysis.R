@@ -810,9 +810,9 @@ plot_lf_mids <- function(model_mids) {
         levels = c("ALA", "ASP", "GLU", "GLN", "LAC", "SER")
       )
     ) %>%
-    dplyr::filter(tracer != "lac3" & time == 72 & !is.na(metabolite)) %>%
+    dplyr::filter(time == 72 & !is.na(metabolite)) %>%
     plot_mids() +
-    theme_patchwork(widths = unit(7, "in"), heights = unit(4.5, "in"), tags = NULL)
+    theme_patchwork(widths = unit(7, "in"), heights = unit(7.5, "in"), tags = NULL)
 }
 
 # plot_pasmc_mids ---------------------------------------------------------
@@ -841,13 +841,13 @@ plot_pasmc_mids <- function(model_mids) {
       ),
       metabolite = forcats::fct_recode(metabolite, "`3PG`" = "3PG")
     ) %>%
-    dplyr::filter(tracer != "lac3" & time == 48 & !is.na(metabolite)) %>%
+    dplyr::filter(time == 48 & !is.na(metabolite)) %>%
     plot_mids() +
     # ggplot2::facet_grid(
     #   metabolite ~ tracer,
     #   labeller = ggplot2::label_parsed
     # ) +
-    theme_patchwork(widths = unit(9.5, "in"), heights = unit(4.5, "in"), tags = NULL)
+    theme_patchwork(widths = unit(9.5, "in"), heights = unit(7.5, "in"), tags = NULL)
 }
 
 # clean_model_fluxes ------------------------------------------------------
@@ -1198,13 +1198,13 @@ set_gr_style <- function() {
 plot_ratio_network <- function(graph, caption) {
   fold <- c(Inf, 5, 3, 2, 1.5, 1.1, 0.91, 0.67, 0.5, 0.33, 0.2, 0)
 
-  cuts <- log(fold, base = 2)
+  fold_cuts <- log(fold, base = 2)
 
   lvls <-
     tidygraph::activate(graph, edges) %>%
     dplyr::pull(ratio) %>%
     cut(
-      cuts,
+      fold_cuts,
       include.lowest = TRUE
     )
 
@@ -1231,6 +1231,16 @@ plot_ratio_network <- function(graph, caption) {
     rev() %>%
     rlang::set_names(names(clrs))
 
+  graph <-
+    graph %>%
+    tidygraph::activate(edges) %>%
+    dplyr::mutate(Flux = dplyr::case_when(
+      flux > 1000 ~ "> 1000",
+      flux > 100 ~ "> 100",
+      flux > 10 ~ "> 10",
+      TRUE ~ "> 0"
+    ))
+
   set_gr_style()
 
   ggraph::ggraph(
@@ -1241,7 +1251,7 @@ plot_ratio_network <- function(graph, caption) {
   ) +
     ggraph::geom_edge_parallel(
       ggplot2::aes(
-        color = cut(ratio, cuts, include.lowest = TRUE),
+        color = cut(ratio, fold_cuts, include.lowest = TRUE),
         start_cap = ggraph::label_rect(
           node1.name,
           fontfamily = "Calibri",
@@ -1253,9 +1263,9 @@ plot_ratio_network <- function(graph, caption) {
           fontfamily = "Calibri",
           fontsize = 6,
           padding = ggplot2::margin(1, 1, 1, 1, "mm")
-        )
+        ),
+        edge_width = Flux
       ),
-      edge_width = 0.5,
       arrow = ggplot2::arrow(length = ggplot2::unit(1, "mm"), type = "open"),
       linejoin = "mitre",
       lineend = "round",
@@ -1273,16 +1283,20 @@ plot_ratio_network <- function(graph, caption) {
       na.value = "grey90",
       drop = FALSE
     ) +
+    ggraph::scale_edge_width_manual(
+      values = c(0.25, 0.5, 1, 1.5),
+      guide = "legend"
+      ) +
     ggplot2::labs(
       x = NULL,
-      y = NULL,
-      title = caption
+      y = NULL
+      # title = caption
     ) +
     theme_plots() +
     ggplot2::theme(
       legend.position = c(0.07, 0.2),
       plot.title = ggplot2::element_text(
-        size = rel(1),
+        size = ggplot2::rel(1),
         hjust = 0.5,
         face = "bold",
         margin = ggplot2::margin(b = 0)

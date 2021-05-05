@@ -141,7 +141,7 @@ arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
   b <- bay_graph_ratio_plot
 
   a + b +
-    theme_patchwork(widths = unit(2.5, "in"), heights = unit(2.75, "in"), guides = "collect")
+    theme_patchwork(widths = unit(3, "in"), heights = unit(3.5, "in"), guides = "collect")
 }
 
 # arrange_s6 --------------------------------------------------------------
@@ -162,13 +162,17 @@ arrange_s6 <- function(a, b, c, d) {
 
 # arrange_m6 --------------------------------------------------------------
 
-arrange_m6 <- function(a, b, c, d, e, f, g, h, i) {
-  (a | b | c) / (d | e) / f / (g | h | i ) +
+arrange_m6 <- function(a, b, c, d, e, f, g, h, i, j, k) {
+  ((a | b | c) + plot_layout(guides = "collect")) /
+    (d | e) /
+    (f + plot_layout(guides = "collect")) /
+    ((g | h) + plot_layout(widths = c(1, 2), guides = "keep")) /
+    ((i | j | k) + plot_layout(guides = "collect")) +
     theme_patchwork(
       # design = layout,
       widths = unit(5, "in"),
-      heights = unit(c(1.25), "in"),
-      guides = "collect"
+      heights = unit(c(1.1), "in"),
+      # guides = "collect"
     ) &
     theme(
       legend.position = "bottom",

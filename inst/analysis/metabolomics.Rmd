@@ -49,8 +49,10 @@ withr::with_dir(here::here(), {
   clean <- tar_read(metab_targeted_clean)
   metab_pca <- tar_read(metab_targeted_pca)
   metab_limma <- tar_read(metab_targeted_limma)
-  # metab_tt <- tar_read(metab_different_differences)
+  tt <- tar_read(metab_different_differences)
   volcano <- tar_read(metab_volcano)
+  msea <- tar_read(msea_plot)
+  leading_edge <- tar_read(leading_edge)
 })
 ```
 
@@ -100,12 +102,12 @@ metab_pca
 volcano
 ```
 
+## Metabolite set enrichment
+
 ```{r}
-plot_mois(clean, "malate")
+msea
 ```
 
-
-
-
-
-
+```{r}
+leading_edge
+```

@@ -525,3 +525,150 @@ plot_mois <- function(clean, moi) {
     ) +
     NULL
 }
+
+# run_msea ----------------------------------------------------------------
+
+run_msea <- function(tt, pathways) {
+
+  stats <- tt$t
+  names(stats) <- tt$hmdb
+
+  msea_res <-
+    fgsea::fgsea(pathways = pathways, stats = stats) %>%
+    dplyr::filter(pval < 0.05) %>%
+    tidyr::separate(pathway, c("source", "pathway"), "\\) ") %>%
+    dplyr::mutate(source = stringr::str_replace(source, "\\(", "")) %>%
+    dplyr::arrange(-abs(NES))
+
+}
+
+# get_metab_pathways ------------------------------------------------------
+
+get_metab_pathways <- function(databases = "kegg") {
+  multiGSEA::getMultiOmicsFeatures(
+    dbs = databases,
+    layer = "metabolome",
+    organism = "hsapiens",
+    returnMetabolome = "HMDB",
+    useLocal = TRUE
+  ) %>%
+    unlist(recursive = FALSE) %>%
+    rlang::set_names(purrr::map(names(.), stringr::str_extract, pattern = "(?<=metabolome\\.).*"))
+}
+
+
+# plot_msea ---------------------------------------------------------------
+
+plot_msea <- function(msea) {
+  msea %>%
+    dplyr::select(-padj) %>%
+    dplyr::rename(padj = pval) %>%
+    plot_gsea(sources = "KEGG") +
+    ggplot2::theme(
+      axis.text.y.right = element_text(size = 5)
+    )
+}
+
+# plot_leading_edge -------------------------------------------------------
+
+plot_leading_edge <- function(tt, pathway) {
+
+  stats <- tt$t
+  names(stats) <- tt$hmdb
+
+  rnk <- rank(-stats)
+  ord <- order(rnk)
+
+  stats_adj <- stats[ord]
+  stats_adj <- stats_adj / max(abs(stats_adj))
+
+  pathway <- unname(as.vector(na.omit(match(pathway, names(stats_adj)))))
+  pathway <- sort(pathway)
+
+  gsea_res <-
+    fgsea::calcGseaStat(
+      stats_adj,
+      selectedStats = pathway,
+      returnAllExtremes = TRUE
+    )
+
+  bottoms <- gsea_res$bottoms
+  tops <- gsea_res$tops
+
+  n <- length(stats_adj)
+  xs <- as.vector(rbind(pathway - 1, pathway))
+  ys <- as.vector(rbind(bottoms, tops))
+  nms <- as.vector(rbind(names(bottoms), names(tops)))
+  df <- tibble::tibble(
+    x = c(0, xs, n + 1),
+    y = c(0, ys, 0),
+    names = c(NA_character_, nms, NA_character_)
+  ) %>%
+    dplyr::left_join(wmo::hmdb_mappings, by = c("names" = "hmdb"))
+
+  annot <-
+    df %>%
+    dplyr::filter(!is.na(metabolite)) %>%
+    dplyr::group_by(metabolite) %>%
+    dplyr::summarise(x = max(x)) %>%
+    dplyr::mutate(metabolite = dplyr::case_when(
+      metabolite == "2-oxoglutarate" ~ "AKG",
+      metabolite == "phosphoenolpyruvate" ~ "PEP",
+      metabolite == "malate" ~ "MAL",
+      metabolite == "fumarate" ~ "FUM",
+      metabolite == "aconitate" ~ "ACO",
+      metabolite == "pyruvate" ~ "PYR",
+      metabolite == "citrate" ~ "CIT",
+      metabolite == "succinate" ~ "SUC",
+      TRUE ~ metabolite
+    ))
+
+  diff <- (max(tops) - min(bottoms)) / 8
+
+  ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = x,
+      y = y
+    ) +
+    ggplot2::geom_line(color = "green") +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      colour = "black",
+      size = 0.25
+    ) +
+    ggplot2::geom_segment(
+      data = data.frame(x = pathway),
+      ggplot2::aes(
+        x = x,
+        y = -diff/2,
+        xend = x,
+        yend = diff/2
+      ),
+      size = 0.1) +
+    ggrepel::geom_text_repel(
+      data = annot,
+      ggplot2::aes(
+        y = diff/2,
+        label = metabolite
+      ),
+      angle = 90,
+      size = 4/ggplot2::.pt,
+      max.overlaps = 20,
+      segment.size = 0.1,
+      nudge_y = 0.2,
+      # nudge_x = -3,
+      hjust = 1,
+      # vjust = 0.5,
+      direction = "x",
+      min.segment.length = 0.3
+    ) +
+    ggplot2::labs(
+      x = "Rank",
+      y = "Enrichment score",
+      title = "KEGG: Citrate cycle"
+    ) +
+    ggplot2::scale_y_continuous(expand = expansion(mult = c(0.1, 0.3))) +
+    theme_plots() +
+    NULL
+
+}
