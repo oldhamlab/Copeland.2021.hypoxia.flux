@@ -32,7 +32,7 @@ link-citations: yes
 
 output: 
   bookdown::word_document2:
-    reference_docx: template.docx
+    reference_docx: !expr system.file("manuscript", "template.docx", package = "Copeland.2021.hypoxia.flux")
     df_print: kable
     fig_caption: true
     number_sections: false
@@ -91,6 +91,7 @@ my_kable <- function(data, ...) {
 withr::with_dir(here::here(), {
   biomass <- targets::tar_read(biomass)
   resources <- targets::tar_read(resources_table)
+  figs <- targets::tar_load(targets::matches("m\\d\\.pdf"))
 })
 
 biomass <- tibble::deframe(biomass)

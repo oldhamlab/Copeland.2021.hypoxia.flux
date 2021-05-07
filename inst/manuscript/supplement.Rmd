@@ -32,21 +32,8 @@ csl: cell-metabolism.csl
 link-citations: yes
 
 output: 
-  # bookdown::pdf_document2:
-  #   # template: template.tex
-  #   keep_tex: false
-  #   df_print: kable
-  #   toc: false
-  #   number_sections: false
-  #   latex_engine: xelatex
-  #   pandoc_args:
-  #     - '--lua-filter=scholarly-metadata.lua'
-  #     - '--lua-filter=author-info-blocks.lua'
-  #     - '--lua-filter=pagebreak.lua'
-  #     - '--lua-filter=multiple-bibliographies.lua'
-      
   bookdown::word_document2:
-    reference_docx: template.docx
+    reference_docx: !expr system.file("manuscript", "template.docx", package = "Copeland.2021.hypoxia.flux")
     df_print: kable
     number_sections: false
     pandoc_args:
@@ -105,6 +92,7 @@ withr::with_dir(here::here(), {
   hyp <- targets::tar_read(lf_hypoxia_table)
   bay <- targets::tar_read(lf_bay_table)
   pasmc <- targets::tar_read(pasmc_hypoxia_table)
+  figs <- targets::tar_load(targets::matches("s\\d\\.pdf"))
 })
 
 ```

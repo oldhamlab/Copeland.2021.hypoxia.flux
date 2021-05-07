@@ -1020,6 +1020,19 @@ list(
   tar_target(
     pasmc_hypoxia_table,
     format_flux_table(map_flux_differences, "pasmc", "0.5%", " SSR 575.6 [499.1-630.6] (95% CI, 563 DOF)", " SSR 521.3 [482.2-611.6] (95% CI, 545 DOF)")
+  ),
+
+  # write manuscript --------------------------------------------------------
+
+  tar_render(
+    manuscript,
+    path = path_to_manuscript("manuscript.Rmd"),
+    output_dir = path_to_manuscript("")
+  ),
+  tar_render(
+    supplement,
+    path = path_to_manuscript("supplement.Rmd"),
+    output_dir = path_to_manuscript("")
   )
 
 )
