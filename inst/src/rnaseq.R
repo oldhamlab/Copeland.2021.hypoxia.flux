@@ -215,29 +215,40 @@ plot_rnaseq_volcano <- function(results) {
     ) +
     ggrepel::geom_text_repel(
       data = left,
-      ggplot2::aes(label = symbol),
+      ggplot2::aes(
+        label = symbol,
+        color = symbol %in% c("EPAS1","HDAC9", "P4HA2", "RBM3")
+      ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
       nudge_x = -4,
       direction = "y",
-      family = "Calibri"
+      family = "Calibri",
+      segment.color = "black",
+      show.legend = FALSE
     ) +
     ggrepel::geom_text_repel(
       data = right,
-      ggplot2::aes(label = symbol),
+      ggplot2::aes(
+        label = symbol,
+        color = symbol %in% c("EPAS1","HDAC9", "P4HA2", "RBM3")
+      ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
       nudge_x = 4.5,
       direction = "y",
-      family = "Calibri"
+      segment.color = "black",
+      family = "Calibri",
+      show.legend = FALSE
     ) +
     ggplot2::geom_hex(
       bins = c(250, 15),
       show.legend = FALSE
     ) +
     ggplot2::scale_fill_viridis_c(trans = "log10") +
+    ggplot2::scale_color_manual(values = c("black", "darkred")) +
     ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
     ggplot2::scale_x_continuous(
       breaks = seq(-4, 4, 2),

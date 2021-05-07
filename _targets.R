@@ -859,16 +859,16 @@ list(
     readr::read_csv(node_file)
   ),
   tar_target(
-    hypoxia_graph,
-    make_graph(map_flux_differences, nodes, treat = "21%", normalizer = "none")
+    lf_hypoxia_graph,
+    make_graph(map_flux_differences, nodes, cell = "lf", treat = "21%", normalizer = "none")
   ),
   tar_target(
-    hypoxia_graph_ratio_plot,
-    plot_ratio_network(hypoxia_graph, "Hypoxia/Normoxia")
+    lf_hypoxia_graph_ratio_plot,
+    plot_ratio_network(lf_hypoxia_graph, "Hypoxia/Normoxia")
   ),
   tar_target(
     bay_graph,
-    make_graph(map_flux_differences, nodes, treat = "DMSO", normalizer = "none")
+    make_graph(map_flux_differences, nodes, cell = "lf", treat = "DMSO", normalizer = "none")
   ),
   tar_target(
     bay_graph_ratio_plot,
@@ -876,7 +876,7 @@ list(
   ),
   tar_target(
     m4,
-    arrange_m4(hypoxia_graph_ratio_plot, bay_graph_ratio_plot)
+    arrange_m4(lf_hypoxia_graph_ratio_plot, bay_graph_ratio_plot)
   ),
   tar_target(
     m4_figure,
@@ -910,19 +910,31 @@ list(
   ),
   tar_target(
     s6c,
-    plot_normoxia_network(hypoxia_graph)
+    plot_normoxia_network(lf_hypoxia_graph, "lf")
   ),
   tar_target(
     hypoxia_growth_graph,
-    make_graph(map_flux_differences, nodes, treat = "0.5%", normalizer = "growth")
+    make_graph(map_flux_differences, nodes, cell = "lf", treat = "0.5%", normalizer = "growth")
   ),
   tar_target(
     s6d,
     plot_ratio_network(hypoxia_growth_graph, "Hypoxia/Normoxia\nGrowth Rate Normalized")
   ),
   tar_target(
+    pasmc_hypoxia_graph,
+    make_graph(map_flux_differences, nodes, cell = "pasmc", treat = "21%", normalizer = "none")
+  ),
+  tar_target(
+    s6e,
+    plot_normoxia_network(pasmc_hypoxia_graph) + ggplot2::ggtitle("PASMC Normoxia")
+  ),
+  tar_target(
+    s6f,
+    plot_ratio_network(lf_hypoxia_graph, "PASMC Hypoxia/Normoxia")
+  ),
+  tar_target(
     s6,
-    arrange_s6(s6a, s6b, s6c, s6d)
+    arrange_s6(s6a, s6b, s6c, s6d, s6e, s6f)
   ),
   tar_target(
     s6_figure,
@@ -999,11 +1011,15 @@ list(
 
   tar_target(
     lf_hypoxia_table,
-    format_flux_table("lf", "0.5%", " SSR 391.7 [311.2-416.6] (95% CI, 362 DOF)", " SSR 334.3 [311.2-416.6] (95% CI, 362 DOF)")
+    format_flux_table(map_flux_differences, "lf", "0.5%", " SSR 391.7 [311.2-416.6] (95% CI, 362 DOF)", " SSR 334.3 [311.2-416.6] (95% CI, 362 DOF)")
   ),
   tar_target(
     lf_bay_table,
-    format_flux_table("lf", "BAY", " SSR 393.5 [311.2-416.6] (95% CI, 362 DOF)", " SSR 392.4 [308.4-413.4] (95% CI, 359 DOF)")
+    format_flux_table(map_flux_differences, "lf", "BAY", " SSR 393.5 [311.2-416.6] (95% CI, 362 DOF)", " SSR 392.4 [308.4-413.4] (95% CI, 359 DOF)")
+  ),
+  tar_target(
+    pasmc_hypoxia_table,
+    format_flux_table(map_flux_differences, "pasmc", "0.5%", " SSR 575.6 [499.1-630.6] (95% CI, 563 DOF)", " SSR 521.3 [482.2-611.6] (95% CI, 545 DOF)")
   )
 
 )

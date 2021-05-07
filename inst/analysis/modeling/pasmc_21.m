@@ -111,7 +111,7 @@ end
 clear a b c y n x z time compound label;
 
 % assign sem for mid (can repeat loop above to assign actual sem values)
-sem_value = 0.013;
+sem_value = 0.02;
 for i=1:length(d)
     for j=1:length(d{i})
         d{i}{d{i}.id{j}}.mdvs.std = sem_value * ones(length(d{i}{d{i}.id{j}}.mdvs.val),1);
@@ -182,10 +182,10 @@ m.options.sim_sens = false;
 m.options.sim_more = false;
 m.options.sim_na = false;
 m.options.fit_reinit = true;
-m.options.fit_starts = 10;
+m.options.fit_starts = 50;
 m.options.fit_reltol = 0.001;
 m.options.fit_tau = 1e-6;
-m.options.fit_nudge = 6;
+m.options.fit_nudge = 8;
 m.options.int_tspan = [0 12 24 36 48];
 m.options.int_maxstep = Inf;
 m.options.hpc_on = 1;

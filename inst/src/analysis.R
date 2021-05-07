@@ -1077,16 +1077,16 @@ assemble_flux_differences <- function(map_fluxes) {
   growth_norm <- normalize_fluxes(map_fluxes, "BIOMASS")
 
   tibble::tibble(
-    map_fluxes = list(map_fluxes, map_fluxes, glc_norm, glc_norm, growth_norm, growth_norm),
-    cell = rep(c("lf", "lf"), 3),
-    control = rep(c("21%", "DMSO"), 3),
-    experiment = rep(c("0.5%", "BAY"), 3)
+    map_fluxes = list(map_fluxes, map_fluxes, map_fluxes, glc_norm, glc_norm, glc_norm, growth_norm, growth_norm, growth_norm),
+    cell = rep(c("lf", "lf", "pasmc"), 3),
+    control = rep(c("21%", "DMSO", "21%"), 3),
+    experiment = rep(c("0.5%", "BAY", "0.5%"), 3)
   ) %>%
     purrr::pmap_dfr(calculate_flux_differences, .id = "normalization") %>%
     dplyr::mutate(normalization = dplyr::case_when(
-      normalization %in% 1:2 ~ "none",
-      normalization %in% 3:4 ~ "glucose",
-      normalization %in% 5:6 ~ "growth"
+      normalization %in% 1:3 ~ "none",
+      normalization %in% 4:6 ~ "glucose",
+      normalization %in% 7:9 ~ "growth"
     ))
 
 }
@@ -1145,7 +1145,7 @@ parse_eq <- function(df) {
 
 # make_graph --------------------------------------------------------------
 
-make_graph <- function(map_flux_differences, nodes, treat, normalizer) {
+make_graph <- function(map_flux_differences, cell, nodes, treat, normalizer) {
 
   edges <-
     map_flux_differences %>%
@@ -1158,7 +1158,7 @@ make_graph <- function(map_flux_differences, nodes, treat, normalizer) {
       names_to = c(".value", NA),
       names_sep = "_"
     ) %>%
-    dplyr::filter(normalization == normalizer & treatment == treat) %>%
+    dplyr::filter(cell_type == cell & normalization == normalizer & treatment == treat) %>%
     parse_eq() %>%
     dplyr::select(
       cell_type,
@@ -1289,8 +1289,8 @@ plot_ratio_network <- function(graph, caption) {
       ) +
     ggplot2::labs(
       x = NULL,
-      y = NULL
-      # title = caption
+      y = NULL,
+      title = caption
     ) +
     theme_plots() +
     ggplot2::theme(
@@ -1414,7 +1414,7 @@ plot_mid_time_course <- function(time_course_mids, cells, o2, treat, color) {
 
 # plot_normoxia_network ---------------------------------------------------
 
-plot_normoxia_network <- function(hypoxia_graph) {
+plot_normoxia_network <- function(hypoxia_graph, cell) {
 
   hypoxia_graph %>%
     tidygraph::activate(edges) %>%

@@ -405,23 +405,33 @@ plot_metab_volcano <- function(results) {
     ) +
     ggrepel::geom_text_repel(
       data = left,
-      ggplot2::aes(label = metabolite),
+      ggplot2::aes(
+        label = metabolite,
+        color = metabolite %in% c("2-hydroxyglutarate","aconitate", "glyceraldehyde 3-phosphate", "hydroxyproline", "malate", "taurine")
+        ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
       nudge_x = -4,
+      segment.color = "black",
       direction = "y",
-      family = "Calibri"
+      family = "Calibri",
+      show.legend = FALSE
     ) +
     ggrepel::geom_text_repel(
       data = right,
-      ggplot2::aes(label = metabolite),
+      ggplot2::aes(
+        label = metabolite,
+        color = metabolite %in% c("2-hydroxyglutarate","aconitate", "glyceraldehyde 3-phosphate", "hydroxyproline", "malate", "taurine")
+        ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
+      segment.color = "black",
       nudge_x = 4.5,
       direction = "y",
-      family = "Calibri"
+      family = "Calibri",
+      show.legend = FALSE
     ) +
     ggplot2::geom_point(
       data = subset(results, adj.P.Val > 0.05),
@@ -441,6 +451,7 @@ plot_metab_volcano <- function(results) {
       color = "white",
       fill = clrs[[4]]
     ) +
+    ggplot2::scale_color_manual(values = c("black", "darkred")) +
     ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
     ggplot2::scale_x_continuous(
       breaks = seq(-4, 4, 2),
@@ -630,7 +641,7 @@ plot_leading_edge <- function(tt, pathway) {
       x = x,
       y = y
     ) +
-    ggplot2::geom_line(color = "green") +
+    ggplot2::geom_line(color = clrs[[3]]) +
     ggplot2::geom_hline(
       yintercept = 0,
       colour = "black",
@@ -652,7 +663,7 @@ plot_leading_edge <- function(tt, pathway) {
         label = metabolite
       ),
       angle = 90,
-      size = 4/ggplot2::.pt,
+      size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
       nudge_y = 0.2,
@@ -667,8 +678,14 @@ plot_leading_edge <- function(tt, pathway) {
       y = "Enrichment score",
       title = "KEGG: Citrate cycle"
     ) +
-    ggplot2::scale_y_continuous(expand = expansion(mult = c(0.1, 0.3))) +
+    ggplot2::scale_y_continuous(expand = expansion(mult = c(0.1, 0.35))) +
     theme_plots() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        margin = ggplot2::margin(b = 1),
+        size = 8
+      )
+    ) +
     NULL
 
 }

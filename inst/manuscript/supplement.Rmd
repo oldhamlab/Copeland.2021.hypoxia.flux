@@ -104,6 +104,7 @@ my_kable <- function(data, ...) {
 withr::with_dir(here::here(), {
   hyp <- targets::tar_read(lf_hypoxia_table)
   bay <- targets::tar_read(lf_bay_table)
+  pasmc <- targets::tar_read(pasmc_hypoxia_table)
 })
 
 ```
@@ -134,3 +135,111 @@ bay %>%
   flextable::flextable_to_rmd()
 ```
 
+\newpage
+
+```{r t3, results = "asis"}
+pasmc %>% 
+  flextable::set_caption(
+    "PASMC fluxes in 21% and 0.5% oxygen", 
+    autonum = officer::run_autonum()
+  ) %>% 
+  flextable::flextable_to_rmd()
+```
+
+\newpage
+
+# Figures
+
+# Figure legends
+
+(ref:s1) **Supporting data for extracellular flux calculations.** (**A**) Standard curves were generated to interpolate cell counts from total DNA by seeding lung fibroblasts (LF) and pulmonary artery smooth muscle cells (PASMC) at the indicated densities in basal medium. Data are mean ± SEM of three biological replicates. (**B**) Total DNA measurements were compared to direct cell count over the experimental time course. Cell counts and total DNA were obtained from the same sample wells. The slopes of the best-fit lines for normoxia and hypoxia samples were not different. (**C**) Predicted well volumes were estimated from the change in culture plate mass over the time course of the experiment. Evaporation rates were different depending on the treatment. Although the mean evaporation rate is depicted, experiment-specific evaporation rates were used to calculate fluxes for each experiment. (**D**) Metabolite accumulation (positive values) and degradation (negative values) rates. Data are mean ± SEM of 3-8 biological replicates.
+
+(ref:s2) **Extracellular flux measurements in 0.2% oxygen.** (**A**) Growth curves of LFs cultured in 21% and 0.2% oxygen (n = 4). (**B**) Growth rates were determined by linear fitting of log-transformed growth curves. (**C**) Representative immunoblot of LF protein lysates collected at the indicated times. (**D**, **E**) Relative change in HIF-1α (D) and LDHA (E) protein levels compared to 21% oxygen time 0. (**F**, **G**) Relative changes in GLUT1 (F) and LDHA (G) mRNA levels compared to 21% oxygen time 0. (**H**, **I**) Extracellular fluxes of the indicated metabolites (n = 8). Data are mean ± SEM. Comparisons were performed using Student's paired *t*-test and p < 0.05 indicated by *. Flux probability values were not corrected for multiple comparisons. Abbreviations as noted in the text.
+
+(ref:s3) **Extracellular flux measurements in pulmonary artery smooth muscle cells in 0.5% oxygen.** (**A**) Growth curves of PASMCs cultured in 21% and 0.5% oxygen (n = 8). (**B**) Growth rates were determined by linear fitting of log-transformed growth curves. (**C**) Representative immunoblot of PASMC protein lysates collected at the indicated times. (**D**, **E**) Relative change in HIF-1α (D) and LDHA (E) protein levels compared to 21% oxygen time 0. (**F**, **G**) Relative changes in GLUT1 (F) and LDHA (G) mRNA levels compared to 21% oxygen time 0. (**H**, **I**) Extracellular fluxes of the indicated metabolites (n = 8). Data are mean ± SEM. Comparisons were performed using Student's paired *t*-test and p < 0.05 indicated by *. Flux probability values were not corrected for multiple comparisons. Abbreviations as noted in the text.
+
+(ref:s4) **Mass isotopomer distributions after 72 h of labeling in lung fibroblasts.** LFs were labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS. Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates.
+
+(ref:s5) **Mass isotopomer distributions after 72 h of labeling in pulmonary artery smooth muscle cells.** PASMCs were labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS. Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates.
+
+(ref:s6) **Isotopically non-stationary metabolic flux analysis.** (**A**, **B**) LFs were cultured in 21% (A) or 0.5% (B) oxygen and labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS (PYR, pyruvate; CIT, citrate; MAL, malate). Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. (**C**) Metabolic flux model of LF metabolism in 21% oxygen. (**D**) LF fluxes were normalized to cell growth rate. Graph depicts the ratio of normalized metabolic fluxes in LFs cultured in 0.5% oxygen compared to 21% oxygen control. Fluxes with non-overlapping confidence intervals are highlighted to indicate significant changes. (**E**) Metabolic flux model of PASMC metabolism in 21% oxygen. (**F**) Ratio of metabolic fluxes in 0.5% oxygen compared to 21% oxygen in PASMCs.
+
+Supplementary Figure 1: (ref:s1)
+
+Supplementary Figure 2: (ref:s2)
+
+Supplementary Figure 3: (ref:s3)
+
+Supplementary Figure 4: (ref:s4)
+
+Supplementary Figure 5: (ref:s5)
+
+Supplementary Figure 6: (ref:s6)
+
+\newpage
+
+# Figures
+
+```{r s1, fig.cap = "(ref:s1)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s1.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage
+
+```{r s2, fig.cap = "(ref:s2)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s2.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage
+
+```{r s3, fig.cap = "(ref:s3)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s3.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage
+
+```{r s4, fig.cap = "(ref:s4)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s4.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage
+
+```{r s5, fig.cap = "(ref:s5)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s5.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage
+
+```{r s6, fig.cap = "(ref:s6)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s6.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```

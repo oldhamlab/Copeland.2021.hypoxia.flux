@@ -146,13 +146,15 @@ arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
 
 # arrange_s6 --------------------------------------------------------------
 
-arrange_s6 <- function(a, b, c, d) {
+arrange_s6 <- function(a, b, c, d, e, f) {
   layout <- "
     ab
     cd
-    cd"
+    cd
+    ef
+    ef"
 
-  a + b + c + d +
+  a + b + c + d + e + f +
     theme_patchwork(
       design = layout,
       widths = unit(5, "in"),
@@ -266,6 +268,7 @@ create_resources <- function() {
 # format_flux_table -------------------------------------------------------
 
 format_flux_table <- function(
+  flux_differences,
   cell = c("lf", "pasmc"),
   experiment = c("0.5%", "BAY"),
   ssr_ctl = NULL,

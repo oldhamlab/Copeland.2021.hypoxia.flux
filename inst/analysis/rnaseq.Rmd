@@ -47,8 +47,11 @@ theme_set(theme_wmo(base_family = "Calibri"))
 withr::with_dir(here::here(), {
   pca <- tar_read(rnaseq_pca)
   deg <- tar_read(rnaseq_different_differences)
+  results <- tar_read(rnaseq_different_differences)
+  gsea_res <- tar_read(rnaseq_gsea)
   gsea_p <- tar_read(rnaseq_gsea_plot)
   tfea_p <- tar_read(rnaseq_tfea_plot)
+  dds <- tar_read(dds_symbols)
 })
 ```
 
@@ -84,6 +87,47 @@ deg %>%
 ```{r}
 gsea_p
 ```
+
+```{r, eval = FALSE}
+pathways <-
+  fgsea::gmtPathways("~/Dropbox (Partners HealthCare)/msigdb_v7.2/msigdb_v7.2_GMTs/msigdb.v7.2.entrez.gmt")
+
+df <- 
+  gsea_res %>% 
+  dplyr::filter(source == "HALLMARK") %>% 
+  dplyr::filter(padj < 0.05) %>% 
+  tidyr::unnest(leadingEdge) %>% 
+  dplyr::inner_join(results, by = c("leadingEdge" = "row")) %>% 
+  dplyr::group_by(pathway) %>% 
+  dplyr::slice_max(order_by = stat, n = 1) %>% 
+  dplyr::arrange(desc(NES))
+
+gois <- df$symbol %>% rlang::set_names(df$pathway)
+
+rnks <-
+  results %>%
+  dplyr::select(row, stat) %>%
+  dplyr::arrange(stat) %>%
+  tibble::deframe()
+
+gsea_res <-
+    fgsea::calcGseaStat(
+      rnks,
+      selectedStats = path,
+      returnAllExtremes = TRUE
+    )
+
+fgsea::plotEnrichment(
+  pathway = pathways[["HALLMARK_OXIDATIVE_PHOSPHORYLATION"]], 
+  stats = rnks
+)
+```
+
+
+```{r}
+plot_rnaseq_goi(dds, "HIRA")
+```
+
 
 ## Transcription Factor Analysis
 
