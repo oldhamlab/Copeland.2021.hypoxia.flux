@@ -351,6 +351,6 @@ format_flux_table <- function(
       value = flextable::as_paragraph(flextable::as_sup("b"), ssr_exp)
     ) %>%
     flextable::font(fontname = "Calibri", part = "all") %>%
-    flextable::fontsize(size = 9, part = "all") %>%
+    flextable::fontsize(size = 8.5, part = "all") %>%
     flextable::set_table_properties(layout = "autofit")
 }

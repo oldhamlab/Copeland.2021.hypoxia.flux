@@ -146,7 +146,7 @@ plot_nad <- function(nad_final, annot, metab, ylab) {
       fill = NULL,
       color = NULL
     ) +
-    # ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(NA, 0.2))) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.1))) +
     # ggplot2::coord_cartesian(ylim = c(-750, 1250)) +
     theme_plots() +
     ggplot2::theme(

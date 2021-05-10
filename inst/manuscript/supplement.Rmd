@@ -47,15 +47,16 @@ geometry: margin = 0.75in
 fontsize: 11pt
 mainfont: Calibri
 graphics: yes
-header-includes:
-- \usepackage{lineno}
-- \linenumbers
-- \setlength\linenumbersep{1cm}
-- \usepackage{setspace}
-- \doublespacing
-- \makeatletter\renewcommand*{\fps@figure}{htbp}\makeatother
-- \setlength{\parskip}{0.75\baselineskip plus 2pt minus 2pt}
-- \usepackage{float}
+
+nocite: |
+  @R-base, @R-bookdown, @R-broom, @R-cellranger, @R-cowplot, @R-devtools, @R-dplyr, 
+  @R-emmeans, @R-forcats, @R-ggbeeswarm, @R-ggplot2, @R-ggraph, @R-kableExtra, 
+  @R-knitr, @R-lme4, @R-lmerTest, @R-lubridate, @R-magick, @R-magrittr, @R-MASS, 
+  @R-mzrtools, @R-patchwork, @R-pbkrtest, @R-purrr, @R-RColorBrewer, @R-readr, 
+  @R-readxl, @R-renv, @R-rlang, @R-rmarkdown, @R-roxygen2, @R-stringr, @R-tibble, 
+  @R-tidygraph, @R-tidyr, @R-tidyverse, @R-tinytex, @R-usethis, @R-viridis, @R-wmo, 
+  @bookdown2016, @ggplot22016, @knitr2015, @lme42015, @lmerTest2017, @lubridate2011, 
+  @MASS2002, @pbkrtest2014, @rmarkdown2018, @tidyverse2019, tinytex2019
 ---
 
 ```{r setup, include = FALSE}
@@ -92,7 +93,7 @@ withr::with_dir(here::here(), {
   hyp <- targets::tar_read(lf_hypoxia_table)
   bay <- targets::tar_read(lf_bay_table)
   pasmc <- targets::tar_read(pasmc_hypoxia_table)
-  figs <- targets::tar_load(targets::matches("s\\d\\.pdf"))
+  figs <- targets::tar_load(targets::matches("s\\d_figure"))
 })
 
 ```
@@ -231,3 +232,11 @@ knitr::include_graphics(
   )
 )
 ```
+
+# Supplemental References
+
+::: {#refs_main}
+:::
+
+::: {#refs_software}
+:::
