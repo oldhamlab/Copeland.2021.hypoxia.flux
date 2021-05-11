@@ -74,18 +74,9 @@ knitr::opts_knit$set(kable.force.latex = FALSE)
 
 options(tinytex.verbose = TRUE)
 
-# kable function
-my_kable <- function(data, ...) {
-  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>% 
-    kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 11)
-}
-
-withr::with_dir(here::here(), {
-  biomass <- targets::tar_read(biomass)
-  resources <- targets::tar_read(resources_table)
-  figs <- targets::tar_load(targets::matches("m\\d_figure"))
-})
-
+biomass <- targets::tar_read(biomass)
+resources <- targets::tar_read(resources_table)
+figs <- targets::tar_load(targets::matches("m\\d_figure"))
 biomass <- tibble::deframe(biomass)
 ```
 

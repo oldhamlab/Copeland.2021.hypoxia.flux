@@ -77,7 +77,7 @@ In this analysis, will identify those genes where the effects of hypoxia and mol
 
 ```{r}
 deg %>% 
-  dplyr::select(row, symbol, description, lg2fc = log2FoldChange, padj) %>% 
+  dplyr::select(row, symbol, description, log2fc = log2FoldChange, padj) %>% 
   head(20) %>% 
   my_kable()
 ```

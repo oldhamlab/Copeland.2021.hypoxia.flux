@@ -1,12 +1,24 @@
 # utilities.R
 
+# src ---------------------------------------------------------------------
+
 src <- function() {
   files <-
     list.files(
-    system.file("src/", package = "Copeland.2021.hypoxia.flux"),
-    pattern = "\\.R$",
-    full.names = TRUE
-  )
+      "scripts",
+      pattern = "\\.R$",
+      full.names = TRUE
+    )
 
   invisible(lapply(files, source))
+}
+
+# my_kable ----------------------------------------------------------------
+
+my_kable <- function(data, ...) {
+  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>%
+    kableExtra::kable_styling(
+      latex_options = c("hold_position"),
+      font_size = 9
+    )
 }

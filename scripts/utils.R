@@ -14,23 +14,11 @@
   match(x, table, nomatch = 0L) == 0L
 }
 
-# my_kable ----------------------------------------------------------------
-
-my_kable <- function(data, ...) {
-  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>%
-    kableExtra::kable_styling(
-      latex_options = c("hold_position"),
-      font_size = 9
-    )
-}
 # path_to_data ------------------------------------------------------------
 
 path_to_data <- function(nm) {
   dir(
-    system.file(
-      "extdata/",
-      package = "Copeland.2021.hypoxia.flux"
-    ),
+    path = "data-raw/",
     pattern = nm,
     all.files = TRUE,
     full.names = TRUE,
@@ -42,46 +30,20 @@ path_to_data <- function(nm) {
 # path_to_reports ---------------------------------------------------------
 
 path_to_reports <- function(nm) {
-  path <-
-    stringr::str_c(
-      system.file(
-        stringr::str_c("analysis"),
-        package = "Copeland.2021.hypoxia.flux"
-      ),
-      "/",
-      nm
-    )
-  path
+  stringr::str_c("analysis/", nm)
 }
 
 
 # path_to_manuscript ------------------------------------------------------
 
 path_to_manuscript <- function(nm) {
-  path <-
-    stringr::str_c(
-      system.file(
-        stringr::str_c("manuscript"),
-        package = "Copeland.2021.hypoxia.flux"
-      ),
-      "/",
-      nm
-    )
-  path
+  stringr::str_c("manuscript/", nm)
 }
 
 # path_to_plots -----------------------------------------------------------
 
 path_to_plots <- function(nm) {
-  path <-
-    stringr::str_c(
-      system.file(
-        stringr::str_c("analysis/"),
-        package = "Copeland.2021.hypoxia.flux"
-      ),
-      "/figures/",
-      nm
-    )
+  path <- stringr::str_c("analysis/figures/", nm)
 
   if (dir.exists(path)) unlink(path, recursive = TRUE)
 

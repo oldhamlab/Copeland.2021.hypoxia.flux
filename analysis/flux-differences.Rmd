@@ -46,7 +46,7 @@ theme_set(theme_wmo(base_family = "Calibri"))
 ```{r}
 withr::with_dir(here::here(), {
   model_fluxes <- tar_read(model_fluxes)
-  flux_differences <- tar_read(flux_differences)
+  flux_differences <- tar_read(map_flux_differences)
 })
 ```
 

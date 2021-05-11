@@ -69,8 +69,6 @@ knitr::opts_chunk$set(
   warning = FALSE, 
   message = FALSE, 
   out.width = "50%", 
-  fig.align = "center", 
-  fig.pos = "H", 
   out.extra = ""
 )
 
@@ -83,19 +81,10 @@ knitr::opts_knit$set(kable.force.latex = FALSE)
 
 options(tinytex.verbose = TRUE)
 
-# kable function
-my_kable <- function(data, ...) {
-  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>% 
-    kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 11)
-}
-
-withr::with_dir(here::here(), {
-  hyp <- targets::tar_read(lf_hypoxia_table)
-  bay <- targets::tar_read(lf_bay_table)
-  pasmc <- targets::tar_read(pasmc_hypoxia_table)
-  figs <- targets::tar_load(targets::matches("s\\d_figure"))
-})
-
+hyp <- targets::tar_read(lf_hypoxia_table)
+bay <- targets::tar_read(lf_bay_table)
+pasmc <- targets::tar_read(pasmc_hypoxia_table)
+figs <- targets::tar_load(targets::matches("s\\d_figure"))
 ```
 
 \newpage
@@ -232,6 +221,8 @@ knitr::include_graphics(
   )
 )
 ```
+
+\newpage 
 
 # Supplemental References
 

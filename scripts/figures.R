@@ -38,11 +38,7 @@ theme_patchwork <- function(design = NULL, widths = NULL, heights = NULL, tags =
 # write_figures -----------------------------------------------------------
 
 write_figures <- function(plot, filename) {
-  path <-
-    system.file(
-      "manuscript/figures",
-      package = "Copeland.2021.hypoxia.flux"
-    )
+  path <- "manuscript/figures"
 
   gtab <- patchwork::patchworkGrob(plot)
 
@@ -351,6 +347,6 @@ format_flux_table <- function(
       value = flextable::as_paragraph(flextable::as_sup("b"), ssr_exp)
     ) %>%
     flextable::font(fontname = "Calibri", part = "all") %>%
-    flextable::fontsize(size = 8.5, part = "all") %>%
+    flextable::fontsize(size = 8, part = "all") %>%
     flextable::set_table_properties(layout = "autofit")
 }
