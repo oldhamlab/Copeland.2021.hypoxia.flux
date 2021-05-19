@@ -5,7 +5,7 @@
 src <- function() {
   files <-
     list.files(
-      "scripts",
+      "functions",
       pattern = "\\.R$",
       full.names = TRUE
     )
