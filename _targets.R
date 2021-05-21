@@ -142,7 +142,7 @@ list(
   ),
   tar_target(
     degradation_curves,
-    plot_degradation_curves(flux_measurement)
+    plot_degradation_curves(flux_measurements)
   ),
   tar_target(
     degradation_curve_plots,

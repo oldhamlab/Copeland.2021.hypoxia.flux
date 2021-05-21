@@ -18,7 +18,7 @@
 
 path_to_data <- function(nm) {
   dir(
-    path = "data-raw/",
+    path = "data-raw",
     pattern = nm,
     all.files = TRUE,
     full.names = TRUE,
