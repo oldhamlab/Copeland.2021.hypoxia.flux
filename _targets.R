@@ -6,7 +6,12 @@ devtools::load_all()
 library(targets)
 library(tarchetypes)
 
-src()
+invisible(
+  lapply(
+    list.files(path = "R", pattern = "\\.R$", full.names = TRUE),
+    source
+  )
+)
 
 conflicted::conflict_prefer("filter", "dplyr")
 

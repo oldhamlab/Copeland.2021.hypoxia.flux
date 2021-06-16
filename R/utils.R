@@ -208,3 +208,13 @@ reverselog_trans <- function(base = exp(1)) {
                     scales::log_breaks(base = base),
                     domain = c(1e-100, Inf))
 }
+
+# my_kable ----------------------------------------------------------------
+
+my_kable <- function(data, ...) {
+  kableExtra::kable(data, booktabs = TRUE, linesep = "", ...) %>%
+    kableExtra::kable_styling(
+      latex_options = c("hold_position"),
+      font_size = 9
+    )
+}
