@@ -44,13 +44,9 @@ path_to_manuscript <- function(nm) {
 
 path_to_plots <- function(nm) {
   path <- stringr::str_c("analysis/figures/", nm)
-
   if (dir.exists(path)) unlink(path, recursive = TRUE)
-
   if (!dir.exists(path)) dir.create(path = path, recursive = TRUE)
-
   path
-
 }
 
 # read_multi_excel --------------------------------------------------------
