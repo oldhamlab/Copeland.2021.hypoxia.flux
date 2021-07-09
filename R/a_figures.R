@@ -1,5 +1,11 @@
 # figures.R
 
+
+# plot setup --------------------------------------------------------------
+
+clrs <- c(RColorBrewer::brewer.pal(4, "Set1")[1:4], "#08306b")
+names(clrs) <- c("21%", "0.5%", "DMSO", "BAY", "0.2%")
+
 # theme_plots -------------------------------------------------------------
 
 theme_plots <- function() {
