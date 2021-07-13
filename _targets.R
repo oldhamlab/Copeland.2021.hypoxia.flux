@@ -20,13 +20,18 @@ options(
   usethis.quiet = TRUE
 )
 
-future::plan(future::multisession(workers = future::availableCores() - 1))
+future::plan(future.callr::callr(workers = future::availableCores() - 1))
 
 # target-specific options
 tar_option_set(
-  packages = c("tidyverse", "patchwork"),
+  packages = c("tidyverse", "patchwork", "xcms"),
   imports = c("rnaseq.lf.hypoxia.molidustat"),
   format = "qs"
+)
+
+values <- tibble::tibble(
+  polarity = c("positive", "negative"),
+  names = c("pos", "neg")
 )
 
 # list of targets ---------------------------------------------------------
@@ -536,8 +541,70 @@ list(
   ),
   tar_render(
     metabolomics_report,
-    path = path_to_reports("metabolomics.Rmd"),
+    path = path_to_reports("metabolomics-targeted.Rmd"),
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
+  ),
+  tar_target(
+    metab_untargeted_files,
+    path_to_data(".mzML"),
+    format = "file"
+  ),
+  tar_target(
+    metab_untargeted_sample_file,
+    path_to_data("sample-sheet.csv"),
+    format = "file"
+  ),
+  tar_target(
+    metab_untargeted_samples,
+    format_sample_info(metab_untargeted_sample_file)
+  ),
+  tar_map(
+    values = values,
+    names = "names",
+    tar_target(
+      raw,
+      read_metab_raw(metab_untargeted_files, polarity, metab_untargeted_samples)
+    ),
+    tar_target(
+      tics,
+      get_tics(raw, metab_untargeted_samples)
+    ),
+    tar_target(
+      chromatograms,
+      plot_chromatograms(tics)
+    ),
+    tar_target(
+      intensities,
+      plot_intensities(tics)
+    ),
+    tar_target(
+      cwp,
+      optimize_centwave_params(raw, polarity)
+    ),
+    tar_target(
+      peaks,
+      findChromPeaks(raw, cwp$best_cwp)
+    ),
+    tar_target(
+      merged,
+      refineChromPeaks(peaks, param = MergeNeighboringPeaksParam(expandRt = 4, ppm = 2.5))
+    ),
+    tar_target(
+      align_group,
+      optimize_align_group_params(merged, polarity)
+    ),
+    tar_target(
+      aligned,
+      adjust_rtime(merged, align_group$best_obi)
+    ),
+    tar_target(
+      grouped,
+      group_peaks(aligned, align_group$best_density)
+    ),
+    tar_target(
+      filled,
+      fillChromPeaks(grouped)
+    )
   ),
 
   # M1 ----------------------------------------------------------------------

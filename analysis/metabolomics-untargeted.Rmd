@@ -1,5 +1,5 @@
 ---
-title: "Metabolomics"
+title: "Untargeted Metabolomics"
 subtitle: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
   bookdown::pdf_document2:
@@ -45,14 +45,10 @@ theme_set(theme_wmo(base_family = "Calibri"))
 
 ```{r}
 withr::with_dir(here::here(), {
-  raw <- tar_read(metab_targeted_raw)
-  clean <- tar_read(metab_targeted_clean)
-  metab_pca <- tar_read(metab_targeted_pca)
-  metab_limma <- tar_read(metab_targeted_limma)
-  tt <- tar_read(metab_different_differences)
-  volcano <- tar_read(metab_volcano)
-  msea <- tar_read(msea_plot)
-  leading_edge <- tar_read(leading_edge)
+  pos_chrom <- tar_read(chromatograms_pos)
+  neg_chrom <- tar_read(chromatograms_neg)
+  pos_int <- tar_read(intensities_pos)
+  neg_int <- tar_read(intensities_neg)
 })
 ```
 
@@ -62,52 +58,18 @@ withr::with_dir(here::here(), {
 
 We observed that proliferating primary cells exposed to hypoxia do not increase glucose uptake and lactate efflux despite up-regulation of glucose transporters and glycolytic genes. When these cells are treated with the prolyl hydroxylase inhibitor molidustat in normoxia, the expected increases in glycolytic flux are observed. Interestingly, when molidustat-treated cells are cultured in hypoxia, hypoxia blocks molidustat-mediated increases in glycolysis. In an effort to identify the mechanism mediating this effect, we performed metabolomics on lung fibroblasts treated for three days with 0.5% oxygen or molidustat (10 μM) with 21% and DMSO (0.1%) controls. 
 
-# Data Processing
+# Data
 
-## PCA
+## Preprocessing
 
-```{r}
-pcaMethods::pca(t(SummarizedExperiment::assay(raw)), scale = "uv", center = TRUE) %>% 
-  pcaMethods::scores() %>% 
-  merge(SummarizedExperiment::colData(raw), by = 0) %>% 
-  # filter(type %nin% c("qc", "blank")) %>% 
-  ggplot() +
-  aes(
-    x = PC1, 
-    y = PC2, 
-    shape = type,
-    color = interaction(oxygen, treatment, sep = "|")
-  ) + 
-  geom_point() +
-  labs(
-    color = "Group", 
-    shape = "Type"
-  )
-```
-## Cleaning
-
-1. drift correction
-1. remove low quality features (QC RSD > 0.2, dispersion ratio > 0.4)
-1. impute missing values with random forest
-1. probabilistic quotient normalization
-1. batch correction
+The raw total ion intensity chromatogram were reviewed for an overview of signal acquisition quality:
 
 ```{r}
-metab_pca
-```
-
-## Differentially regulated metabolites
-
-```{r}
-volcano
-```
-
-## Metabolite set enrichment
-
-```{r}
-msea
+pos_chrom
+neg_chrom
 ```
 
 ```{r}
-leading_edge
+pos_int
+neg_int
 ```

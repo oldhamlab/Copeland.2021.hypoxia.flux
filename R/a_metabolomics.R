@@ -1,7 +1,5 @@
 # metabolomics.R
 
-# format_metab_targeted ---------------------------------------------------
-
 format_metab_targeted <- function(metab_targeted_files) {
   readxl::read_excel(
     metab_targeted_files,
@@ -52,8 +50,6 @@ format_metab_targeted <- function(metab_targeted_files) {
 
 }
 
-# new_tbl_se --------------------------------------------------------------
-
 new_tbl_se <- function(
   tbl,
   a_data,
@@ -72,8 +68,6 @@ new_tbl_se <- function(
     s_data = s_data
   )
 }
-
-# tibble_to_se ------------------------------------------------------------
 
 tbl_to_se <- function(tbl_se, assay_name) {
 
@@ -127,8 +121,6 @@ tbl_to_se <- function(tbl_se, assay_name) {
 
 }
 
-# remove_missing_metab ----------------------------------------------------
-
 remove_missing_metab <- function(raw) {
 
   qc <- SummarizedExperiment::assay(raw[, raw$type == "qc"])
@@ -139,21 +131,19 @@ remove_missing_metab <- function(raw) {
 
 }
 
-# correct_drift -----------------------------------------------------------
+prepare_assay_data <- function(se) {
+  SummarizedExperiment::assay(se) %>%
+    tibble::rownames_to_column("hmdb") %>%
+    tidyr::pivot_longer(-hmdb, names_to = "sample", values_to = "value") %>%
+    dplyr::mutate(
+      value = log(value),
+      run_order = as.numeric(stringr::str_extract(sample, "\\d{2}"))
+    ) %>%
+    dplyr::group_by(hmdb) %>%
+    tidyr::nest()
+}
 
 correct_drift <- function(missing) {
-
-  prepare_assay_data <- function(se) {
-    SummarizedExperiment::assay(se) %>%
-      tibble::rownames_to_column("hmdb") %>%
-      tidyr::pivot_longer(-hmdb, names_to = "sample", values_to = "value") %>%
-      dplyr::mutate(
-        value = log(value),
-        run_order = as.numeric(stringr::str_extract(sample, "\\d{2}"))
-      ) %>%
-      dplyr::group_by(hmdb) %>%
-      tidyr::nest()
-  }
 
   models <-
     missing[, missing$type == "qc"] %>%
@@ -180,8 +170,6 @@ correct_drift <- function(missing) {
   missing
 
 }
-
-# quality_control ---------------------------------------------------------
 
 quality_control <- function(drift) {
   rsd <-
@@ -214,8 +202,6 @@ quality_control <- function(drift) {
   drift[SummarizedExperiment::rowData(drift)$good == TRUE, drift$type != "qc"]
 }
 
-# impute_missing ----------------------------------------------------------
-
 impute_missing <- function(qc) {
   set.seed(42)
   SummarizedExperiment::assay(qc) <-
@@ -227,8 +213,6 @@ impute_missing <- function(qc) {
   qc
 }
 
-# normalize ---------------------------------------------------------------
-
 pqn <- function(imputed) {
   mat <- SummarizedExperiment::assay(imputed)
   quotients <- mat / SummarizedExperiment::rowData(imputed)$reference
@@ -236,8 +220,6 @@ pqn <- function(imputed) {
   SummarizedExperiment::assay(imputed) <- t(t(mat) / quotient_medians)
   imputed
 }
-
-# plot_metab_pca ----------------------------------------------------------
 
 plot_metab_pca <- function(clean) {
 
@@ -325,10 +307,7 @@ plot_metab_pca <- function(clean) {
       legend.position = "bottom",
       legend.key.size = ggplot2::unit(1, units = "lines")
     )
-
 }
-
-# fit_metab_limma ---------------------------------------------------------
 
 fit_metab_limma <- function(clean) {
 
@@ -364,10 +343,7 @@ fit_metab_limma <- function(clean) {
     ) %>%
     limma::contrasts.fit(cm) %>%
     limma::eBayes()
-
 }
-
-# metab_top_table ---------------------------------------------------------
 
 metab_top_table <- function(clean, fit, contrast) {
   limma::topTable(
@@ -382,8 +358,6 @@ metab_top_table <- function(clean, fit, contrast) {
       by = "hmdb"
     )
 }
-
-# plot_metab_volcano ------------------------------------------------------
 
 plot_metab_volcano <- function(results) {
 
@@ -408,7 +382,7 @@ plot_metab_volcano <- function(results) {
       ggplot2::aes(
         label = metabolite,
         color = metabolite %in% c("2-hydroxyglutarate","aconitate", "glyceraldehyde 3-phosphate", "hydroxyproline", "malate", "taurine")
-        ),
+      ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
@@ -423,7 +397,7 @@ plot_metab_volcano <- function(results) {
       ggplot2::aes(
         label = metabolite,
         color = metabolite %in% c("2-hydroxyglutarate","aconitate", "glyceraldehyde 3-phosphate", "hydroxyproline", "malate", "taurine")
-        ),
+      ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
@@ -463,10 +437,7 @@ plot_metab_volcano <- function(results) {
       y = "Adjusted P value"
     ) +
     theme_plots()
-
 }
-
-# se_to_tibble ------------------------------------------------------------
 
 se_to_tibble <- function(se) {
   tibble::as_tibble(SummarizedExperiment::assay(se), rownames = "feature") %>%
@@ -480,8 +451,6 @@ se_to_tibble <- function(se) {
       by = "feature"
     )
 }
-
-# plot_mois ---------------------------------------------------------------
 
 plot_mois <- function(clean, moi) {
 
@@ -537,8 +506,6 @@ plot_mois <- function(clean, moi) {
     NULL
 }
 
-# run_msea ----------------------------------------------------------------
-
 run_msea <- function(tt, pathways) {
 
   stats <- tt$t
@@ -550,10 +517,7 @@ run_msea <- function(tt, pathways) {
     tidyr::separate(pathway, c("source", "pathway"), "\\) ") %>%
     dplyr::mutate(source = stringr::str_replace(source, "\\(", "")) %>%
     dplyr::arrange(-abs(NES))
-
 }
-
-# get_metab_pathways ------------------------------------------------------
 
 get_metab_pathways <- function(databases = "kegg") {
   multiGSEA::getMultiOmicsFeatures(
@@ -567,9 +531,6 @@ get_metab_pathways <- function(databases = "kegg") {
     rlang::set_names(purrr::map(names(.), stringr::str_extract, pattern = "(?<=metabolome\\.).*"))
 }
 
-
-# plot_msea ---------------------------------------------------------------
-
 plot_msea <- function(msea) {
   msea %>%
     dplyr::select(-padj) %>%
@@ -579,8 +540,6 @@ plot_msea <- function(msea) {
       axis.text.y.right = element_text(size = 5)
     )
 }
-
-# plot_leading_edge -------------------------------------------------------
 
 plot_leading_edge <- function(tt, pathway) {
 
@@ -687,5 +646,150 @@ plot_leading_edge <- function(tt, pathway) {
       )
     ) +
     NULL
+}
 
+format_sample_info <- function(filename) {
+  readr::read_csv(filename, col_types = readr::cols()) %>%
+    dplyr::select(
+      file = Filename,
+      type = `Sample type`,
+      id = `Sample ID`
+    ) %>%
+    dplyr::mutate(
+      file = stringr::str_c("S", file, ".mzML"),
+      run_order = stringr::str_extract(file, "\\d+") %>% as.numeric(),
+      type = dplyr::case_when(
+        id == "water" ~ "blank",
+        stringr::str_detect(id, "mix") ~ "qc",
+        TRUE ~ "sample"
+      ),
+      oxygen = dplyr::case_when(
+        stringr::str_detect(id, "hyp") ~ "Hyp",
+        stringr::str_detect(id, "norm") ~ "Norm",
+        TRUE ~ NA_character_
+      ),
+      treatment = dplyr::case_when(
+        stringr::str_detect(id, "dmso") ~ "DMSO",
+        stringr::str_detect(id, "bay") ~ "BAY",
+        TRUE ~ NA_character_
+      ),
+      replicate = stringr::str_extract(id, "(?<=(dmso|bay)\\.)\\w{1}$"),
+      replicate = dplyr::case_when(
+        replicate == "a" ~ "11",
+        replicate == "b" ~ "12",
+        TRUE ~ stringr::str_c(2, replicate)
+      ),
+      group = dplyr::case_when(
+        type == "qc" ~ "QC",
+        type == "sample" ~ stringr::str_c(oxygen, treatment, sep = "."),
+        TRUE ~ NA_character_
+      )
+    ) %>%
+    dplyr::select(file, run_order, type, oxygen, treatment, replicate, group)
+}
+
+read_metab_raw <- function(data_files, polarity, samples) {
+  data_files[which(stringr::str_detect(data_files, polarity))] %>%
+    MSnbase::readMSData(
+      files = .,
+      pdata = new("NAnnotatedDataFrame", samples),
+      mode = "onDisk"
+    ) %>%
+    MSnbase::filterRt(c(160, 1200))
+}
+
+get_tics <- function(msnexp, samples) {
+  tics <- MSnbase::chromatogram(msnexp, aggregationFun = "sum")
+  rt <- lapply(unlist(tics), MSnbase::rtime)
+  int <- lapply(unlist(tics), MSnbase::intensity)
+  purrr::map2_dfr(rt, int, ~dplyr::bind_cols(rt = .x, intensity = .y), .id = "run_order") %>%
+    dplyr::mutate(run_order = as.numeric(run_order)) %>%
+    dplyr::left_join(samples, by = "run_order")
+}
+
+plot_chromatograms <- function(df) {
+  ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = rt,
+      y = intensity,
+      color = group,
+      group = run_order
+    ) +
+    ggplot2::geom_line(size = 0.25) +
+    ggplot2::labs(color = NULL)
+}
+
+plot_intensities <- function(df) {
+  ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = run_order,
+      y = intensity,
+      group = run_order,
+      fill = group
+    ) +
+    ggplot2::geom_boxplot(
+      outlier.alpha = 0.02
+    )
+}
+
+optimize_centwave_params <- function(raw, polarity) {
+  parameter_list <-
+    list(
+      ppm = 2.5,
+      min_peakwidth = c(20, 40),
+      max_peakwidth = c(300, 500),
+      snthresh = 1,
+      prefilter_k = 3,
+      prefilter_int = 4500,
+      mzdiff = c(-0.01, 0.1),
+      noise = 1000
+    )
+
+  out_dir <-
+    stringr::str_c(
+      system.file(
+        "data-raw/metabolomics/lf_05-bay",
+        package = "Copeland.2021.hypoxia.flux"
+      ),
+      "/optimize/",
+      polarity
+    )
+
+  test <- MSnbase::filterFile(raw, "S10.mzML")
+
+  IPO2::optimize_centwave(test, parameter_list, out_dir)
+}
+
+plot_metabolite <- function(xcmsnexp, samples, mz, rt) {
+  mzr <- mz + c(-0.02, 0.02)
+  rtr <- 60 * (rt + c(-2, 2))
+  object <- filterFile(xcmsnexp, samples)
+  chr_ex <- chromatogram(object, mz = mzr, rt = rtr)
+  plot(chr_ex, peakType = "rectangle", peakBg = NA)
+}
+
+optimize_align_group_params <- function(merged, polarity) {
+  out_dir <-
+    stringr::str_c(
+      system.file(
+        "data-raw/metabolomics/lf_05-bay",
+        package = "Copeland.2021.hypoxia.flux"
+      ),
+      "/optimize/",
+      polarity
+    )
+
+  test <- MSnbase::filterFile(merged, seq(5, 40, 7))
+
+  IPO2::optimize_align_group(test, out_dir = out_dir)
+}
+
+adjust_rtime <- function(object, param, center_sample = integer()) {
+  centerSample(param) <- center_sample
+  adjustRtime(object, param)
+}
+
+group_peaks <- function(object, param) {
+  sampleGroups(param) <- object$group
+  groupChromPeaks(object, param = param)
 }

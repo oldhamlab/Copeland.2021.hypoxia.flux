@@ -13,3 +13,4 @@ inst/analysis/figures
 data-raw/immunoblots
 *.png
 *.mzML
+data-raw/metabolomics
