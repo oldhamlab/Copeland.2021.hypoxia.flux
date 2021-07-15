@@ -1,121 +1,5 @@
 # analysis.R
 
-# plot_growth_curve -------------------------------------------------------
-
-plot_growth_curve <- function(
-  cell = c("lf", "pasmc"),
-  exp = c("02", "05", "bay"),
-  clr = c("oxygen", "treatment")
-) {
-
-  flux_measurements %>%
-    dplyr::filter(
-      cell_type == cell &
-        experiment == exp &
-        metabolite == "cells" &
-        time < 96
-    ) %>%
-    dplyr::group_by(
-      date,
-      oxygen,
-      treatment,
-      time
-    ) %>%
-    dplyr::summarize(count = mean(conc, na.rm = TRUE)) %>%
-    plot_time_lines(
-      y = count/1000,
-      ylab = expression(paste("Cell count (x", 10^3, ")")),
-      clr = clr
-    )
-}
-
-# plot_growth_rates -------------------------------------------------------
-
-plot_growth_rates <- function(
-  cell = c("lf", "pasmc"),
-  exp = c("02", "05", "bay"),
-  clr = c("oxygen", "treatment"),
-  xaxis = clr,
-  annot
-) {
-
-  if(missing(annot)) {
-    annot <-
-      tibble::tibble(
-        p = t.test(
-          mu ~ !!rlang::ensym(clr),
-          data = growth_rates,
-          subset = c(cell_type == cell & experiment == exp),
-          paired = TRUE
-        )$p.value,
-        y_pos = Inf,
-        x_pos = 1.5,
-        vjustvar = 1.5) %>%
-      dplyr::mutate(lab = annot_p(p))
-  }
-
-  growth_rates %>%
-    dplyr::filter(cell_type == cell & experiment == exp) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = .data[[xaxis]],
-      y = mu
-    ) +
-    ggplot2::stat_summary(
-      ggplot2::aes(fill = .data[[clr]]),
-      geom = "col",
-      fun = "mean",
-      width = 0.6,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      geom = "errorbar",
-      fun.data = "mean_se",
-      width = 0.2,
-      size = 0.25,
-      show.legend = FALSE
-    ) +
-    # ggbeeswarm::geom_beeswarm(
-    #   ggplot2::aes(color = .data[[clr]]),
-    #   priority = "random",
-    #   alpha = 0.4,
-    #   cex = 4,
-    #   size = 1,
-    #   dodge.width = 0.7,
-    #   show.legend = FALSE
-    # ) +
-    # ggplot2::stat_summary(
-    #   color = "black",
-  #   ggplot2::aes(group = .data[[clr]]),
-  #   geom = "crossbar",
-  #   fun = "mean",
-  #   fatten = 1,
-  #   width = 0.4,
-  #   position = ggplot2::position_dodge(width = 0.7),
-  #   show.legend = FALSE
-  # ) +
-  ggplot2::geom_text(
-    data = annot,
-    ggplot2::aes(
-      label = lab,
-      x = x_pos,
-      y = y_pos,
-      vjust = vjustvar
-    ),
-    family = "Calibri",
-    size = 6/ggplot2::.pt
-  ) +
-    ggplot2::labs(
-      x = "Treatment",
-      y = "Growth rate (/h)"
-    ) +
-    ggplot2::scale_fill_manual(values = clrs) +
-    ggplot2::coord_cartesian(ylim = c(0, 0.03)) +
-    theme_plots()
-}
-
-# clean_viability ---------------------------------------------------------
-
 clean_viability <- function(viability_file) {
   readr::read_csv(viability_file) %>%
     dplyr::mutate(
@@ -125,252 +9,6 @@ clean_viability <- function(viability_file) {
     dplyr::group_by(time, oxygen) %>%
     wmo::remove_nested_outliers(viability, remove = TRUE)
 }
-
-# plot_blot ---------------------------------------------------------------
-
-plot_blot <- function(blot_image) {
-
-  # blot_image <- magick::image_read_pdf(blot_image)
-  blot_image <- magick::image_read(blot_image)
-
-  cowplot::ggdraw() +
-    cowplot::draw_image(
-      blot_image,
-      scale = 1.3,
-      hjust = 0.15,
-      vjust = 0.1
-    ) +
-    wmo::theme_wmo(
-      base_family = "Calibri",
-      base_size = 8
-    ) +
-    ggplot2::theme(
-      plot.margin = ggplot2::margin(5, 5, 5, 5),
-      panel.border = ggplot2::element_blank(),
-      plot.tag = ggplot2::element_text(face = "bold")
-    )
-}
-
-
-# plot_densities ----------------------------------------------------------
-
-plot_densities <- function(
-  densities,
-  exp,
-  prot = c("ldha", "hif1a"),
-  ylab = prot,
-  clr = c("oxygen", "treatment")
-) {
-
-  densities %>%
-    dplyr::filter(experiment == exp) %>%
-    dplyr::filter(protein == prot) %>%
-    plot_time_lines(y = fold_change, ylab = ylab, clr = clr)
-}
-
-# normalize_qpcr ----------------------------------------------------------
-
-normalize_qpcr <- function(raw_mrna) {
-  raw_mrna %>%
-    dplyr::mutate(gene = tolower(gene)) %>%
-    dplyr::group_by(dplyr::across(c(experiment:gene))) %>%
-    dplyr::summarize(ct = mean(ct, na.rm = TRUE)) %>%
-    tidyr::pivot_wider(names_from = gene, values_from = ct) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      dplyr::across(-c(experiment:time, actin), ~ . - actin)
-    ) %>%
-    dplyr::select(-actin) %>%
-    tidyr::pivot_longer(
-      -c(experiment:time),
-      names_to = "rna",
-      values_to = "dct"
-    ) %>%
-    dplyr::filter(!is.na(dct)) %>%
-    dplyr::group_by(.data$experiment, .data$rna) %>%
-    dplyr::mutate(
-      ddct = dct - mean(
-        dct[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == 0]
-      ),
-      log2fc = 2 ^ -ddct
-    ) %>%
-    dplyr::group_by(experiment, oxygen, treatment, time, rna) %>%
-    wmo::remove_nested_outliers(log2fc, remove = TRUE)
-}
-
-# plot_mrna ---------------------------------------------------------------
-
-plot_mrna <- function(
-  mrna,
-  exp,
-  gene = c("ldha", "hif1a"),
-  ylab = prot,
-  clr = c("oxygen", "treatment")
-) {
-
-  mrna %>%
-    dplyr::filter(rna == gene) %>%
-    dplyr::filter(experiment == exp) %>%
-    plot_time_lines(y = log2fc, ylab = ylab, clr = clr)
-}
-
-# plot_high_fluxes --------------------------------------------------------
-
-plot_high_fluxes <- function(
-  cell = c("lf", "pasmc"),
-  exp = c("02", "05", "bay"),
-  clr = c("oxygen", "treatment"),
-  xaxis = clr,
-  annot
-) {
-
-  annot <-
-    annot %>%
-    dplyr::filter(
-      cell_type %in% cell &
-        experiment %in% exp &
-        metabolite %in% c("lactate", "glucose")
-    )
-
-  fluxes %>%
-    dplyr::filter(
-      cell_type %in% cell &
-        experiment %in% exp &
-        metabolite %in% c("lactate", "glucose")
-    ) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = reorder(toupper(abbreviation), flux),
-      y = flux
-    ) +
-    ggplot2::geom_hline(
-      yintercept = 0,
-      color = "black",
-      lwd = 0.25
-    ) +
-    ggplot2::stat_summary(
-      ggplot2::aes(fill = .data[[clr]]),
-      geom = "col",
-      fun = "mean",
-      position = ggplot2::position_dodge(width = 0.6),
-      width = 0.6,
-      show.legend = FALSE
-    ) +
-    ggplot2::stat_summary(
-      ggplot2::aes(group = .data[[clr]]),
-      geom = "errorbar",
-      fun.data = "mean_se",
-      position = ggplot2::position_dodge(width = 0.6),
-      width = 0.2,
-      size = 0.25,
-      show.legend = FALSE
-    ) +
-    ggplot2::geom_text(
-      data = annot,
-      ggplot2::aes(
-        x = abbreviation,
-        y = y_pos,
-        vjust = vjust,
-        label = pval
-      ),
-      family = "Calibri",
-      size = 6/ggplot2::.pt
-    ) +
-    ggplot2::labs(
-      x = "Metabolite",
-      y = "Flux (fmol/cell/h)"
-    ) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::scale_fill_manual(values = clrs) +
-    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.2)) +
-    theme_plots()
-}
-
-# plot_low_fluxes ---------------------------------------------------------
-
-plot_low_fluxes <- function(
-  cell = c("lf", "pasmc"),
-  exp = c("02", "05", "bay"),
-  clr = c("oxygen", "treatment"),
-  xaxis = clr,
-  annot
-) {
-
-  annot <-
-    annot %>%
-    dplyr::filter(
-      cell_type %in% cell &
-        experiment %in% exp &
-        !(metabolite %in% c("lactate", "glucose"))
-    )
-
-  fluxes %>%
-    dplyr::filter(
-      cell_type %in% cell &
-        experiment %in% exp &
-        !(metabolite %in% c("lactate", "glucose"))
-    ) %>%
-    ggplot2::ggplot() +
-    ggplot2::aes(
-      x = reorder(toupper(abbreviation), flux),
-      y = flux
-    ) +
-    ggplot2::geom_hline(
-      yintercept = 0,
-      color = "black",
-      lwd = 0.25
-    ) +
-    ggplot2::stat_summary(
-      ggplot2::aes(fill = .data[[clr]]),
-      geom = "col",
-      fun = "mean",
-      position = ggplot2::position_dodge(width = 0.6),
-      width = 0.6,
-      show.legend = TRUE
-    ) +
-    ggplot2::stat_summary(
-      ggplot2::aes(group = .data[[clr]]),
-      geom = "errorbar",
-      fun.data = "mean_se",
-      position = ggplot2::position_dodge(width = 0.6),
-      width = 0.2,
-      size = 0.25,
-      show.legend = FALSE
-    ) +
-    ggplot2::geom_text(
-      data = annot,
-      ggplot2::aes(
-        x = abbreviation,
-        y = y_pos,
-        vjust = vjust,
-        label = pval
-      ),
-      family = "Calibri",
-      size = 6/ggplot2::.pt
-    ) +
-    ggplot2::labs(
-      x = "Metabolite",
-      y = "Flux (fmol/cell/h)",
-      fill = NULL
-    ) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::scale_fill_manual(values = clrs) +
-    ggplot2::scale_y_continuous(
-      trans = ggallin::pseudolog10_trans,
-      breaks = c(-100, -10, 0, 10, 100),
-      limits = c(-250, 250)
-    ) +
-    theme_plots() +
-    ggplot2::theme(
-      panel.grid.major.x = ggplot2::element_line(color = "gray90"),
-      legend.key.width = ggplot2::unit(0.5, "lines"),
-      legend.key.height = ggplot2::unit(0.5, "lines"),
-      legend.position = "bottom",
-      legend.box.margin = ggplot2::margin(t = -10)
-    )
-}
-
-# plot_viability ----------------------------------------------------------
 
 plot_viability <- function(viability) {
 
@@ -394,31 +32,7 @@ read_data <- function(data_files) {
     )
 }
 
-# normalize_densities -----------------------------------------------------
 
-normalize_densities <- function(blot_raw) {
-  blot_raw %>%
-    dplyr::filter(.data$time < 96) %>%
-    dplyr::filter(!(experiment == "lf_05-bay" & gel == "b")) %>%
-    tidyr::pivot_longer(
-      blot:tidyselect::last_col(),
-      names_to = "protein",
-      values_to = "value",
-      values_drop_na = TRUE
-    ) %>%
-    dplyr::group_by(.data$experiment, .data$gel, .data$protein) %>%
-    dplyr::mutate(norm = value / mean(value, na.rm = TRUE)) %>%
-    dplyr::group_by(dplyr::across(.data$experiment:.data$time)) %>%
-    dplyr::mutate(density = norm / norm[protein == "blot"]) %>%
-    dplyr::filter(protein != "blot") %>%
-    dplyr::group_by(.data$experiment, .data$protein) %>%
-    dplyr::mutate(
-      fold_change = density /
-        mean(density[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == min(time)])
-    ) %>%
-    dplyr::group_by(experiment, oxygen, treatment, time, protein) %>%
-    wmo::remove_nested_outliers(fold_change, remove = TRUE)
-}
 
 # plot_time_lines ---------------------------------------------------------
 
@@ -426,7 +40,7 @@ plot_time_lines <- function(
   df,
   y,
   ylab = prot,
-  clr = c("oxygen", "treatment")
+  clr = c("oxygen", "treatment", "group")
 ) {
 
   ggplot2::ggplot(df) +
@@ -461,6 +75,7 @@ plot_time_lines <- function(
       y = ylab
     ) +
     ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
+    ggplot2::scale_y_continuous(limits = c(0, NA)) +
     ggplot2::scale_color_manual(values = clrs) +
     ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::coord_cartesian(ylim = c(0, NA)) +
@@ -1286,7 +901,7 @@ plot_ratio_network <- function(graph, caption) {
     ggraph::scale_edge_width_manual(
       values = c(0.25, 0.5, 1, 1.5),
       guide = "legend"
-      ) +
+    ) +
     ggplot2::labs(
       x = NULL,
       y = NULL,

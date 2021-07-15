@@ -1,7 +1,5 @@
 # extracellular-fluxes.R
 
-# clean_dna_per_cell ------------------------------------------------------
-
 clean_dna_per_cell <- function(filename) {
   filename %>%
     read_multi_excel() %>%
@@ -10,8 +8,6 @@ clean_dna_per_cell <- function(filename) {
     tidyr::separate(id, c("cell_type", "volume"), sep = "_", convert = TRUE) %>%
     dplyr::mutate(cells = 1000 * cells)
 }
-
-# calculate_cells_per_dna -------------------------------------------------
 
 calculate_cells_per_dna <- function(tbl) {
   tbl %>%
@@ -28,8 +24,6 @@ calculate_cells_per_dna <- function(tbl) {
     dplyr::mutate(slope = 1/slope)
 }
 
-# clean_flux_meta ---------------------------------------------------------
-
 clean_flux_meta <- function(file_list) {
   file_list %>%
     rlang::set_names(stringr::str_extract(basename(.), "^.+(?=_)")) %>%
@@ -41,8 +35,6 @@ clean_flux_meta <- function(file_list) {
     tidyr::separate(experiment, c("cell_type", "experiment"), "_")
 }
 
-# assemble_flux_data ------------------------------------------------------
-
 assemble_flux_data <- function(file_list) {
   nms <- sub("\\..*$", "", basename(file_list))
   sheets <- unique(unlist(purrr::map(file_list, readxl::excel_sheets)))
@@ -53,8 +45,6 @@ assemble_flux_data <- function(file_list) {
     purrr::map(rlang::set_names, nms) %>%
     purrr::map(dplyr::bind_rows, .id = "experiment")
 }
-
-# clean_fluxes ------------------------------------------------------------
 
 clean_fluxes <- function(data_list) {
   df <-
@@ -177,8 +167,6 @@ clean_fluxes <- function(data_list) {
     dplyr::filter(metabolite %nin% c(tolower(istds), "hydroxyproline"))
 }
 
-# clean_flux_std ----------------------------------------------------------
-
 clean_flux_std <- function(df) {
   outliers <-
     tibble::tribble(
@@ -201,8 +189,6 @@ clean_flux_std <- function(df) {
     )) %>%
     make_std_curves()
 }
-
-# fill_missing_fluxes -----------------------------------------------------
 
 fill_missing_fluxes <- function(df, meta) {
   df_meta <-
@@ -252,8 +238,6 @@ fill_missing_fluxes <- function(df, meta) {
 
 }
 
-# filter_assays -----------------------------------------------------------
-
 filter_assays <- function(df) {
   mwd <- c("cystine", "glutamine", "isoleucine", "leucine", "lysine", "valine")
 
@@ -269,8 +253,6 @@ filter_assays <- function(df) {
     dplyr::select(-.data$keep) %>%
     dplyr::ungroup()
 }
-
-# assemble_evap_data ------------------------------------------------------
 
 assemble_evap_data <- function(data_list) {
   data_list[["evap"]] %>%
@@ -290,8 +272,6 @@ assemble_evap_data <- function(data_list) {
     dplyr::rename(volume = .data$pred_vol) %>%
     tidyr::separate(.data$experiment, c("cell_type", "experiment", "batch", "date"), "_")
 }
-
-# fill_missing_evap -------------------------------------------------------
 
 fill_missing_evap <- function(evap, samples) {
   evap <-
@@ -344,8 +324,6 @@ fill_missing_evap <- function(evap, samples) {
   dplyr::bind_rows(evap, evap_02, evap_bay_a)
 }
 
-# assemble_flux_measurements ----------------------------------------------
-
 assemble_flux_measurements <- function(conc_clean, evap_clean) {
   abbreviations <-
     tibble::tibble(metabolite = unique(conc_clean$metabolite)) %>%
@@ -395,13 +373,20 @@ assemble_flux_measurements <- function(conc_clean, evap_clean) {
         labels = c("None", "DMSO", "BAY")
       ),
       oxygen = factor(.data$oxygen, levels = c("21%", "0.5%", "0.2%")),
+      group = dplyr::case_when(
+        experiment %in% c("02", "05", "bay") & treatment == "None" & oxygen == "21%" ~ "21%",
+        experiment %in% c("02", "05", "bay") & treatment == "DMSO" ~ "DMSO",
+        experiment %in% c("02", "05", "bay") & treatment == "BAY" ~ "BAY",
+        experiment %in% c("02", "05", "bay") & oxygen == "0.5%" ~ "0.5%",
+        experiment %in% c("02", "05", "bay") & oxygen == "0.2%" ~ "0.2%",
+      ),
+      group = factor(group, levels = c("21%", "0.5%", "0.2%", "DMSO", "BAY")),
       metabolite = replace(.data$metabolite, .data$metabolite == "dna", "cells"),
       nmol = .data$conc * .data$volume,
       abbreviation = toupper(.data$abbreviation)
-    )
+    ) %>%
+    dplyr::relocate(group, .before = time)
 }
-
-# calculate_growth_rates --------------------------------------------------
 
 calculate_growth_rates <- function(growth_curves) {
   growth_m <- function(df) {
@@ -430,12 +415,21 @@ calculate_growth_rates <- function(growth_curves) {
     tidyr::unnest(c(.data$summary)) %>%
     dplyr::select(-c(.data$std.error, .data$statistic)) %>%
     tidyr::pivot_wider(names_from = .data$term, values_from = .data$estimate) %>%
-    dplyr::mutate(X0 = exp(.data$X0)) %>%
+    dplyr::mutate(
+      X0 = exp(.data$X0),
+      group = dplyr::case_when(
+        experiment %in% c("02", "05", "bay") & treatment == "None" & oxygen == "21%" ~ "21%",
+        experiment %in% c("02", "05", "bay") & treatment == "DMSO" ~ "DMSO",
+        experiment %in% c("02", "05", "bay") & treatment == "BAY" ~ "BAY",
+        experiment %in% c("02", "05", "bay") & oxygen == "0.5%" ~ "0.5%",
+        experiment %in% c("02", "05", "bay") & oxygen == "0.2%" ~ "0.2%",
+      ),
+      group = factor(group, levels = c("21%", "0.5%", "0.2%", "DMSO", "BAY"))
+    ) %>%
     dplyr::arrange(desc(.data$experiment), .data$oxygen, .data$treatment) %>%
-    dplyr::select(-c(.data$data, .data$model))
+    dplyr::select(-c(.data$data, .data$model)) %>%
+    dplyr::relocate(group, .before = X0)
 }
-
-# plot_masses -------------------------------------------------------------
 
 plot_masses <- function(
   df,
@@ -469,8 +463,6 @@ plot_masses <- function(
 
 }
 
-# geom_fit ----------------------------------------------------------------
-
 geom_fit <- function(fit = "line", fo = NULL, method = NULL) {
   if (fit == "reg") {
     ggplot2::geom_smooth(
@@ -485,8 +477,6 @@ geom_fit <- function(fit = "line", fo = NULL, method = NULL) {
     )
   }
 }
-
-# plot_raw_curves ---------------------------------------------------------
 
 plot_raw_curves <- function(data, title, y, xlab = "Time (h)", ylab, ...) {
   ggplot2::ggplot(data) +
@@ -516,8 +506,6 @@ plot_raw_curves <- function(data, title, y, xlab = "Time (h)", ylab, ...) {
     wmo::theme_wmo()
 }
 
-# plot_growth_curves ------------------------------------------------------
-
 plot_growth_curves <- function(flux_measurements) {
 
   flux_measurements %>%
@@ -530,8 +518,6 @@ plot_growth_curves <- function(flux_measurements) {
     )
 
 }
-
-# plot_degradation_curves -------------------------------------------------
 
 plot_degradation_curves <- function(flux_measurement) {
 
@@ -547,8 +533,6 @@ plot_degradation_curves <- function(flux_measurement) {
     )
 
 }
-
-# calculate_degradation_rates ---------------------------------------------
 
 calculate_degradation_rates <- function(df) {
   degradation_m <- function(df) {
@@ -587,8 +571,6 @@ calculate_degradation_rates <- function(df) {
     dplyr::rename(k = .data$estimate)
 }
 
-# clean_degradation_rates -------------------------------------------------
-
 clean_degradation_rates <- function(degradation_rates) {
   k <-
     degradation_rates %>%
@@ -623,8 +605,6 @@ clean_degradation_rates <- function(degradation_rates) {
     dplyr::arrange(metabolite, oxygen, treatment)
 }
 
-# plot_mass_curves --------------------------------------------------------
-
 plot_mass_curves <- function(flux_measurements) {
   flux_measurements %>%
     dplyr::filter(type == "cells" & metabolite != "cells") %>%
@@ -635,8 +615,6 @@ plot_mass_curves <- function(flux_measurements) {
       fit = "line"
     )
 }
-
-# plot_flux_curves --------------------------------------------------------
 
 plot_flux_curves <- function(mass_curves, k, growth_rates) {
   mass_curves %>%
@@ -666,8 +644,6 @@ plot_flux_curves <- function(mass_curves, k, growth_rates) {
       fo = y ~ x
     )
 }
-
-# calculate_fluxes --------------------------------------------------------
 
 calculate_fluxes <- function(flux_curves) {
   flux_m <- function(df) {
@@ -709,9 +685,20 @@ calculate_fluxes <- function(flux_curves) {
       .data$statistic
     )) %>%
     dplyr::rename(m = .data$estimate) %>%
-    dplyr::mutate(flux = m * (mu + k) / X0 * 1E6) %>%
+    dplyr::mutate(
+      flux = m * (mu + k) / X0 * 1E6,
+      group = dplyr::case_when(
+        experiment %in% c("02", "05", "bay") & treatment == "None" & oxygen == "21%" ~ "21%",
+        experiment %in% c("02", "05", "bay") & treatment == "DMSO" ~ "DMSO",
+        experiment %in% c("02", "05", "bay") & treatment == "BAY" ~ "BAY",
+        experiment %in% c("02", "05", "bay") & oxygen == "0.5%" ~ "0.5%",
+        experiment %in% c("02", "05", "bay") & oxygen == "0.2%" ~ "0.2%",
+      ),
+      group = factor(group, levels = c("21%", "0.5%", "0.2%", "DMSO", "BAY"))
+      ) %>%
     dplyr::select(-c(.data$k, .data$X0, .data$mu, .data$m)) %>%
     dplyr::relocate(.data$metabolite, .data$abbreviation) %>%
+    dplyr::relocate(.data$group, .after = .data$treatment) %>%
     dplyr::arrange(
       .data$metabolite,
       .data$oxygen,
