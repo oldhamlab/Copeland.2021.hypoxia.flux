@@ -1,7 +1,5 @@
 # matlab.R
 
-# clean_biomass -----------------------------------------------------------
-
 clean_biomass <- function(biomass_file) {
   readr::read_csv(biomass_file) %>%
     dplyr::mutate(
@@ -9,8 +7,6 @@ clean_biomass <- function(biomass_file) {
       cell_mass = diff / cell_number * 1E12
     )
 }
-
-# calculate_biomass -------------------------------------------------------
 
 calculate_biomass <- function(biomass_clean) {
   biomass_clean %>%
@@ -20,8 +16,6 @@ calculate_biomass <- function(biomass_clean) {
     dplyr::mutate(cell_mass = replace_outliers(.data$cell_mass)) %>%
     dplyr::summarise(biomass = mean(.data$cell_mass, na.rm = TRUE))
 }
-
-# calculate_biomass_equations --------------------------------------------
 
 calculate_biomass_equations <- function(biomass) {
   biomass_coefs <- function(biomass, metabolites) {
@@ -78,8 +72,6 @@ calculate_biomass_equations <- function(biomass) {
     )
 }
 
-# write_matlab_input ------------------------------------------------------
-
 write_matlab_input <- function(x, column, suffix) {
   path <- path_to_reports("modeling/matlab-input")
   column <- ensym(column)
@@ -99,8 +91,6 @@ write_matlab_input <- function(x, column, suffix) {
   )
 
 }
-
-# format_reactions --------------------------------------------------------
 
 format_reactions <- function(reactions_file) {
   model_reactions <-
@@ -124,8 +114,6 @@ format_reactions <- function(reactions_file) {
 
   model_reactions
 }
-
-# format_fluxes -----------------------------------------------------------
 
 format_fluxes <- function(growth_rates, fluxes) {
   growth <-
@@ -187,8 +175,6 @@ format_fluxes <- function(growth_rates, fluxes) {
 
 }
 
-# format_mids -------------------------------------------------------------
-
 format_mids <- function(mids) {
   model_metabolites <- c(
     "pyruvate",
@@ -248,21 +234,22 @@ format_mids <- function(mids) {
       .data$isotope
     ) %>%
     wmo::remove_nested_outliers(mid, remove = TRUE) %>%
-    # tidyr::nest() %>%
-    # dplyr::mutate(data = purrr::map(.data$data, remove_outliers, "mid", remove = TRUE)) %>%
-    # unnest(c(data)) %>%
-    dplyr::summarise(
-      mean = mean(.data$mid, na.rm = TRUE),
-      se = sd(.data$mid, na.rm = TRUE)/sqrt(dplyr::n())
-    ) %>%
-    dplyr::ungroup() %>%
     dplyr::mutate(
       metabolite = replace(.data$metabolite, .data$metabolite == "glutamine", "GLN"),
       metabolite = replace(.data$metabolite, .data$metabolite == "2OG", "AKG"),
       metabolite = stringr::str_sub(.data$metabolite, 1, 3),
       metabolite = toupper(.data$metabolite)
     ) %>%
-    dplyr::select(-.data$method) %>%
+    dplyr::select(-.data$method)
+}
+
+summarize_mids <- function(df) {
+  df %>%
+    dplyr::summarise(
+      mean = mean(.data$mid, na.rm = TRUE),
+      se = sd(.data$mid, na.rm = TRUE)/sqrt(dplyr::n())
+    ) %>%
+    dplyr::ungroup() %>%
     dplyr::arrange(
       .data$metabolite,
       .data$tracer,

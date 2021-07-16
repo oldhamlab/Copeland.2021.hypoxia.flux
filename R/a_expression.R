@@ -43,11 +43,11 @@ normalize_densities <- function(blot_raw) {
         mean(density[oxygen == min(oxygen) & treatment %in% c("None", "DMSO") & time == min(time)]),
       fold_change = replace(fold_change, experiment == "lf_bay" & protein == "hif1a", sqrt(fold_change)),
       group = dplyr::case_when(
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & treatment == "None" & oxygen == "21%" ~ "21%",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & treatment == "DMSO" ~ "DMSO",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & treatment == "BAY" ~ "BAY",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & oxygen == "0.5%" ~ "0.5%",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & oxygen == "0.2%" ~ "0.2%",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & treatment == "None" & oxygen == "21%" ~ "21%",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & treatment == "DMSO" ~ "DMSO",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & treatment == "BAY" ~ "BAY",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & oxygen == "0.5%" ~ "0.5%",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & oxygen == "0.2%" ~ "0.2%",
       ),
       group = factor(group, levels = c("21%", "0.5%", "0.2%", "DMSO", "BAY"))
     ) %>%
@@ -80,11 +80,11 @@ normalize_qpcr <- function(raw_mrna) {
       ),
       fold_change = 2 ^ -ddct,
       group = dplyr::case_when(
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & treatment == "None" & oxygen == "21%" ~ "21%",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & treatment == "DMSO" ~ "DMSO",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & treatment == "BAY" ~ "BAY",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & oxygen == "0.5%" ~ "0.5%",
-        experiment %in% c("lf_02", "lf_05", "lf_bay") & oxygen == "0.2%" ~ "0.2%",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & treatment == "None" & oxygen == "21%" ~ "21%",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & treatment == "DMSO" ~ "DMSO",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & treatment == "BAY" ~ "BAY",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & oxygen == "0.5%" ~ "0.5%",
+        experiment %in% c("lf_02", "lf_05", "lf_bay", "pasmc_05") & oxygen == "0.2%" ~ "0.2%",
       ),
       group = factor(group, levels = c("21%", "0.5%", "0.2%", "DMSO", "BAY"))
     ) %>%

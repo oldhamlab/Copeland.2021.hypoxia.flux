@@ -1,13 +1,10 @@
 # figures.R
 
-
-# plot setup --------------------------------------------------------------
-
+# plot setup
 clrs <- c(RColorBrewer::brewer.pal(4, "Set1")[1:4], "#08306b")
 names(clrs) <- c("21%", "0.5%", "DMSO", "BAY", "0.2%")
 
-# theme_plots -------------------------------------------------------------
-
+# functions
 theme_plots <- function() {
   list(
     wmo::theme_wmo(
@@ -24,8 +21,6 @@ theme_plots <- function() {
   )
 }
 
-# theme_patchwork ---------------------------------------------------------
-
 theme_patchwork <- function(design = NULL, widths = NULL, heights = NULL, tags = "A", ...) {
   list(
     patchwork::plot_layout(
@@ -40,8 +35,6 @@ theme_patchwork <- function(design = NULL, widths = NULL, heights = NULL, tags =
     )
   )
 }
-
-# write_figures -----------------------------------------------------------
 
 write_figures <- function(plot, filename) {
   path <- "manuscript/figures"
@@ -78,8 +71,6 @@ write_figures <- function(plot, filename) {
 
 }
 
-# arrange_fluxes ----------------------------------------------------------
-
 arrange_fluxes <- function(a, b, c, d, e, f, g, h, i, j) {
   layout <- "
   abc
@@ -96,16 +87,14 @@ arrange_fluxes <- function(a, b, c, d, e, f, g, h, i, j) {
     )
 }
 
-# arrange_s1 --------------------------------------------------------------
-
-arrange_s1 <- function(a, b, c, d) {
+arrange_s1 <- function(a, b, c, d, e) {
   layout <- "
-  aa#
-  bc#
-  ddd
+  abb
+  cd#
+  eee
   "
 
-  a + b + c + d +
+  a + b + c + d + e +
     theme_patchwork(
       design = layout,
       widths = unit(1.25, "in"),
@@ -113,16 +102,14 @@ arrange_s1 <- function(a, b, c, d) {
     )
 }
 
-# arrange_m3 --------------------------------------------------------------
+arrange_m2 <- function(m2ab, m2c) {
 
-arrange_m3 <- function(m3ab, m3c) {
-
-  a <- m3ab$curve
-  b <- m3ab$rate
-  c <- m3c
+  a <- m2ab$curve
+  b <- m2ab$rate
+  c <- m2c
 
   layout <- "
-  aab
+  ab#
   ccc
   ccc
 "
@@ -135,8 +122,6 @@ arrange_m3 <- function(m3ab, m3c) {
     )
 }
 
-# arrange_m4 --------------------------------------------------------------
-
 arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
 
   a <- hypoxia_graph_ratio_plot
@@ -145,8 +130,6 @@ arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
   a + b +
     theme_patchwork(widths = unit(3, "in"), heights = unit(3.5, "in"), guides = "collect")
 }
-
-# arrange_s6 --------------------------------------------------------------
 
 arrange_s6 <- function(a, b, c, d, e, f) {
   layout <- "
@@ -163,8 +146,6 @@ arrange_s6 <- function(a, b, c, d, e, f) {
       heights = unit(c(2.5), "in")
     )
 }
-
-# arrange_m6 --------------------------------------------------------------
 
 arrange_m6 <- function(a, b, c, d, e, f, g, h, i, j, k) {
   ((a | b | c) + plot_layout(guides = "collect")) /
@@ -184,8 +165,6 @@ arrange_m6 <- function(a, b, c, d, e, f, g, h, i, j, k) {
     )
 }
 
-# arrange_m7 --------------------------------------------------------------
-
 arrange_m7 <- function(a, b, c, d, e, f) {
   layout <- "
   abd
@@ -200,8 +179,6 @@ arrange_m7 <- function(a, b, c, d, e, f) {
       heights = unit(c(1.25), "in")
     )
 }
-
-# create_resources --------------------------------------------------------
 
 create_resources <- function() {
   tibble::tribble(
@@ -266,8 +243,6 @@ create_resources <- function() {
     flextable::fontsize(size = 9, part = "all") %>%
     flextable::set_table_properties(layout = "autofit")
 }
-
-# format_flux_table -------------------------------------------------------
 
 format_flux_table <- function(
   flux_differences,
