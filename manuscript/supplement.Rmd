@@ -126,8 +126,6 @@ pasmc %>%
 
 \newpage
 
-# Figures
-
 # Figure legends
 
 (ref:s1) **Supporting data for extracellular flux calculations.** (**A**) Cell viability as assessed by live/dead cell staining with acridine orange plus propidium iodide staining did not differ between 21% and 0.5% oxygen culture conditions (n = 3 technical replicates). (**B**) Standard curves were generated to interpolate cell counts from total DNA by seeding lung fibroblasts (LF) and pulmonary artery smooth muscle cells (PASMC) at the indicated densities in basal medium. Data are mean ± SEM of three biological replicates. (**C**) Total DNA measurements were compared to direct cell counts over the experimental time course. Cell counts and total DNA were obtained from the same sample wells. The slopes of the best-fit lines for 21% (*red*) and 0.5% (*blue*) samples were not different. (**D**) Predicted well volumes were estimated from the change in culture plate mass over the time course of the experiment. Evaporation rates were different depending on the treatment. Although the mean evaporation rate is depicted, experiment-specific evaporation rates were used to calculate fluxes for each experiment. (**E**) Metabolite accumulation (positive values) and degradation (negative values) rates. Data are mean ± SEM of 3-8 biological replicates. Rates significantly different from 0 (\*) based on a probability value < 0.05 using Student's one-sample *t*-test were incorporated into flux calculations. 
@@ -138,9 +136,11 @@ pasmc %>%
 
 (ref:s4) **Mass isotopomer distributions after 72 h of labeling in lung fibroblasts.** Lung fibroblasts (LFs) were labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS after 72 h. Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. Significant differences in labeling patterns between 21% and 0.5% oxygen (*), DMSO and BAY treatment (†), and 0.5% oxygen and BAY treatment (‡) for each combination of metabolite and tracer are highlighted.
 
-(ref:s5) **Mass isotopomer distributions after 72 h of labeling in pulmonary artery smooth muscle cells.** Pulmonary artery smooth muscle cells (PASMCs) were labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS after 48 h. Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. Significant differences in labeling patterns between 21% and 0.5% oxygen (*) for each combination of metabolite and tracer are highlighted.
+(ref:s5) **Mass isotopomer distributions after 72 h of labeling in pulmonary artery smooth muscle cells.** Pulmonary artery smooth muscle cells (PASMCs) were labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS after 36 h. Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. Significant differences in labeling patterns between 21% and 0.5% oxygen (*) for each combination of metabolite and tracer are highlighted.
 
-(ref:s6) **Isotopically non-stationary metabolic flux analysis.** (**A**, **B**) LFs were cultured in 21% (A) or 0.5% (B) oxygen and labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS (PYR, pyruvate; CIT, citrate; MAL, malate). Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. (**C**) Metabolic flux model of LF metabolism in 21% oxygen. (**D**) LF fluxes were normalized to cell growth rate. Graph depicts the ratio of normalized metabolic fluxes in LFs cultured in 0.5% oxygen compared to 21% oxygen control. Fluxes with non-overlapping confidence intervals are highlighted to indicate significant changes. (**E**) Metabolic flux model of PASMC metabolism in 21% oxygen. (**F**) Ratio of metabolic fluxes in 0.5% oxygen compared to 21% oxygen in PASMCs.
+(ref:s6) **Isotope incorporation in key metabolites over the experimental time course.** (**A**, **B**) LFs were cultured in 21% (A) or 0.5% (B) oxygen and labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS (PYR, pyruvate; CIT, citrate; MAL, malate). Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. 
+
+(ref:s7) (**A**) Metabolic flux model of LF metabolism in 21% oxygen.  (**B**) Metabolic flux model of PASMC metabolism in 21% oxygen. (**C**) LF fluxes were normalized to cell growth rate. Graph depicts the ratio of normalized metabolic fluxes in LFs cultured in 0.5% oxygen compared to 21% oxygen control. Fluxes with non-overlapping confidence intervals are highlighted to indicate significant changes. (**D**) Ratio of metabolic fluxes in 0.5% oxygen compared to 21% oxygen in PASMCs.
 
 Supplementary Figure 1: (ref:s1)
 
@@ -153,6 +153,8 @@ Supplementary Figure 4: (ref:s4)
 Supplementary Figure 5: (ref:s5)
 
 Supplementary Figure 6: (ref:s6)
+
+Supplementary Figure 7: (ref:s7)
 
 \newpage
 

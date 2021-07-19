@@ -1,5 +1,15 @@
 # expression.R
 
+read_data <- function(data_files) {
+  data_files[stringr::str_detect(data_files, "\\.csv$")] %>%
+    rlang::set_names(stringr::str_extract(., "(lf|pasmc)_(02|05-bay|05|bay|)")) %>%
+    purrr::map_dfr(read_csv, .id = "experiment") %>%
+    dplyr::mutate(
+      oxygen = factor(oxygen, levels = c("21%", "0.5%", "0.2%"), ordered = TRUE),
+      treatment = factor(treatment, levels = c("None", "DMSO", "BAY"), ordered = TRUE)
+    )
+}
+
 plot_blot <- function(blot_image) {
   # blot_image <- magick::image_read_pdf(blot_image)
   blot_image <- magick::image_read(blot_image)
@@ -104,4 +114,50 @@ plot_expression <- function(
     dplyr::filter(experiment %in% exp) %>%
     dplyr::filter(protein == prot) %>%
     plot_time_lines(y = fold_change, ylab = ylab, clr = "group")
+}
+
+plot_time_lines <- function(
+  df,
+  y,
+  ylab = prot,
+  clr = c("oxygen", "treatment", "group")
+) {
+
+  ggplot2::ggplot(df) +
+    ggplot2::aes(
+      x = time,
+      y = {{y}},
+      color = .data[[clr]],
+      fill = .data[[clr]]
+    ) +
+    ggplot2::stat_summary(
+      geom = "linerange",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "line",
+      fun.data = "mean_se",
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::stat_summary(
+      geom = "point",
+      fun = "mean",
+      pch = 21,
+      color = "white",
+      size = 2,
+      show.legend = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Time (h)",
+      y = ylab
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
+    ggplot2::scale_y_continuous(limits = c(0, NA)) +
+    ggplot2::scale_color_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::coord_cartesian(ylim = c(0, NA)) +
+    theme_plots()
 }

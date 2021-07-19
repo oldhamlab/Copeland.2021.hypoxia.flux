@@ -305,7 +305,114 @@ plot_pasmc_mids <- function(df) {
       ),
       metabolite = forcats::fct_recode(metabolite, "`3PG`" = "3PG")
     ) %>%
-    dplyr::filter(time == 48 & !is.na(metabolite)) %>%
+    dplyr::filter(time == 36 & !is.na(metabolite)) %>%
     plot_mids() +
     theme_patchwork(widths = unit(9.5, "in"), heights = unit(7.5, "in"), tags = NULL)
+}
+
+get_m5_citrate <- function(df) {
+  x <-
+    df %>%
+    dplyr::filter(tracer == "q5" & treatment == "None" & isotope == "M5" & metabolite == "CIT") %>%
+    dplyr::filter(cell_type == "pasmc" & time == 36)
+
+  out <-
+    x %>%
+    dplyr::group_by(oxygen) %>%
+    dplyr::summarise(mean = mean(mid), se = sd(mid)/sqrt(dplyr::n())) %>%
+    tidyr::pivot_wider(names_from = oxygen, values_from = c(mean, se)) %>%
+    unlist() * 100
+
+  pval <- t.test(mid ~ oxygen, data = x, paired = TRUE)$p.value
+
+  c(out, pval = pval) %>%
+    round(digits = 2)
+}
+
+format_time_course_mids <- function(model_mids) {
+  tracer_labels <-
+    c(expression(paste("[1,2-"^13, "C"[2], "] glucose")),
+      expression(paste("[U-"^13, "C"[6], "] glucose")),
+      expression(paste("[U-"^13, "C"[5], "] glutamine")),
+      expression(paste("[U-"^13, "C"[3], "] lactate")))
+
+  tracer_levels <-
+    c("glc2", "glc6", "q5", "lac3")
+
+  model_mids %>%
+    tidyr::unnest(c(data)) %>%
+    dplyr::filter(metabolite %in% c("PYR", "CIT", "MAL")) %>%
+    dplyr::filter(tracer != "lac3") %>%
+    dplyr::filter(isotope != "M6") %>%
+    dplyr::mutate(
+      tracer = factor(
+        tracer,
+        levels = tracer_levels,
+        labels = tracer_labels
+      ),
+      metabolite = factor(metabolite, levels = c("PYR", "CIT", "MAL"))
+    )
+}
+
+plot_mid_time_course <- function(time_course_mids, cells, o2, treat, color) {
+  time_course_mids %>%
+    dplyr::filter(cell_type == cells & oxygen == o2 & treatment == treat) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(
+      x = time,
+      y = mean,
+      color = isotope,
+      fill = isotope
+    ) +
+    ggplot2::facet_grid(metabolite ~ tracer, labeller = label_parsed) +
+    ggplot2::geom_linerange(
+      ggplot2::aes(
+        ymin = mean - se,
+        ymax = mean + se
+      ),
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_line(
+      size = 0.5,
+      show.legend = FALSE
+    ) +
+    ggplot2::geom_point(
+      pch = 21,
+      color = "white",
+      size = 2,
+      show.legend = TRUE
+    ) +
+    ggplot2::labs(
+      x = "Time (h)",
+      y = "Mole fraction",
+      color = NULL,
+      fill = NULL
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq(0, 72, 24)) +
+    ggplot2::scale_color_viridis_d(option = color, end = 0.9) +
+    ggplot2::scale_fill_viridis_d(option = color, end = 0.9) +
+    ggplot2::coord_cartesian(ylim = c(0, NA)) +
+    theme_plots() +
+    ggplot2::theme(
+      legend.key.size = ggplot2::unit(0.5, units = "lines")
+    )
+}
+
+plot_lactate_mids <- function(model_mids, cell) {
+  model_mids %>%
+    dplyr::filter(cell_type == cell) %>%
+    tidyr::unnest(c(data)) %>%
+    dplyr::mutate(
+      metabolite = factor(
+        metabolite,
+        levels = c("FBP", "3PG", "PYR", "CIT", "AKG", "MAL"),
+        labels = c("FBP", "3PG", "PYR", "CIT", "AKG", "MAL")
+      )
+    ) %>%
+    dplyr::filter(tracer == "lac3" & time == 72 & !is.na(metabolite)) %>%
+    plot_mids() +
+    ggplot2::facet_wrap(~ metabolite, scales = "free_x", nrow = 2) +
+    ggplot2::theme(legend.position = "right") +
+    theme_patchwork(widths = unit(4, "in"), heights = unit(2.5, "in"), tags = NULL)
 }

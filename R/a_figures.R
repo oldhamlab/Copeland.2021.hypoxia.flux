@@ -122,6 +122,20 @@ arrange_m2 <- function(m2ab, m2c) {
     )
 }
 
+arrange_s6 <- function(a, b) {
+  layout <- "
+    a
+    b
+  "
+
+  a + b +
+    theme_patchwork(
+      design = layout,
+      widths = unit(5, "in"),
+      heights = unit(c(2.5), "in")
+    )
+}
+
 arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
 
   a <- hypoxia_graph_ratio_plot
@@ -131,19 +145,18 @@ arrange_m4 <- function(hypoxia_graph_ratio_plot, bay_graph_ratio_plot) {
     theme_patchwork(widths = unit(3, "in"), heights = unit(3.5, "in"), guides = "collect")
 }
 
-arrange_s6 <- function(a, b, c, d, e, f) {
+arrange_s7 <- function(a, b, c, d) {
   layout <- "
     ab
     cd
-    cd
-    ef
-    ef"
+  "
 
-  a + b + c + d + e + f +
+  a + b + c + d +
     theme_patchwork(
       design = layout,
-      widths = unit(5, "in"),
-      heights = unit(c(2.5), "in")
+      widths = unit(3, "in"),
+      heights = unit(c(3.5), "in"),
+      guides = "collect"
     )
 }
 

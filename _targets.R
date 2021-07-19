@@ -253,6 +253,10 @@ list(
     path = path_to_reports("mass-isotope-distributions.Rmd"),
     output_dir = system.file("analysis/pdfs", package = "Copeland.2021.hypoxia.flux")
   ),
+  tar_target(
+    pasmc_m5,
+    get_m5_citrate(pruned_mids)
+  ),
 
   # biomass -----------------------------------------------------------------
 
@@ -875,42 +879,100 @@ list(
     write_figures(s5, "s5.pdf")
   ),
 
-  # # M4 ----------------------------------------------------------------------
-  #
-  # tar_target(
-  #   node_file,
-  #   path_to_data("nodes\\.csv"),
-  #   format = "file"
-  # ),
-  # tar_target(
-  #   nodes,
-  #   readr::read_csv(node_file)
-  # ),
-  # tar_target(
-  #   lf_hypoxia_graph,
-  #   make_graph(map_flux_differences, nodes, cell = "lf", treat = "21%", normalizer = "none")
-  # ),
-  # tar_target(
-  #   lf_hypoxia_graph_ratio_plot,
-  #   plot_ratio_network(lf_hypoxia_graph, "Hypoxia/Normoxia")
-  # ),
-  # tar_target(
-  #   bay_graph,
-  #   make_graph(map_flux_differences, nodes, cell = "lf", treat = "DMSO", normalizer = "none")
-  # ),
-  # tar_target(
-  #   bay_graph_ratio_plot,
-  #   plot_ratio_network(bay_graph, "BAY/DMSO")
-  # ),
-  # tar_target(
-  #   m4,
-  #   arrange_m4(lf_hypoxia_graph_ratio_plot, bay_graph_ratio_plot)
-  # ),
-  # tar_target(
-  #   m4_figure,
-  #   write_figures(m4, "m4.pdf")
-  # ),
-  #
+  # S6 ----------------------------------------------------------------------
+
+  tar_target(
+    time_course_mids,
+    format_time_course_mids(model_mids)
+  ),
+  tar_target(
+    s6a,
+    plot_mid_time_course(time_course_mids, "lf", "21%", "None", "plasma")
+  ),
+  tar_target(
+    s6b,
+    plot_mid_time_course(time_course_mids, "lf", "0.5%", "None", "viridis")
+  ),
+  tar_target(
+    s6,
+    arrange_s6(s6a, s6b)
+  ),
+  tar_target(
+    s6_figure,
+    write_figures(s6, "s6.pdf")
+  ),
+
+# S7 ----------------------------------------------------------------------
+
+  tar_target(
+    s7a,
+    plot_normoxia_network(lf_hypoxia_graph, "lf") + ggplot2::ggtitle("LF Normoxia")
+  ),
+  tar_target(
+    hypoxia_growth_graph,
+    make_graph(map_flux_differences, nodes, cell = "lf", treat = "0.5%", normalizer = "growth")
+  ),
+  tar_target(
+    s7d,
+    plot_ratio_network(hypoxia_growth_graph, "Hypoxia/Normoxia\nGrowth Rate Normalized", edges = FALSE)
+  ),
+  tar_target(
+    pasmc_hypoxia_graph,
+    make_graph(map_flux_differences, nodes, cell = "pasmc", treat = "21%", normalizer = "none")
+  ),
+  tar_target(
+    s7b,
+    plot_normoxia_network(pasmc_hypoxia_graph) + ggplot2::ggtitle("PASMC Normoxia")
+  ),
+  tar_target(
+    s7c,
+    plot_ratio_network(pasmc_hypoxia_graph, "PASMC\nHypoxia/Normoxia")
+  ),
+  tar_target(
+    s7,
+    arrange_s7(s7a, s7b, s7c, s7d)
+  ),
+  tar_target(
+    s7_figure,
+    write_figures(s7, "s7.pdf")
+  ),
+
+  # M3 ----------------------------------------------------------------------
+
+  tar_target(
+    node_file,
+    path_to_data("nodes\\.csv"),
+    format = "file"
+  ),
+  tar_target(
+    nodes,
+    readr::read_csv(node_file)
+  ),
+  tar_target(
+    lf_hypoxia_graph,
+    make_graph(map_flux_differences, nodes, cell = "lf", treat = "21%", normalizer = "none")
+  ),
+  tar_target(
+    lf_hypoxia_graph_ratio_plot,
+    plot_ratio_network(lf_hypoxia_graph, "Hypoxia/Normoxia")
+  ),
+  tar_target(
+    bay_graph,
+    make_graph(map_flux_differences, nodes, cell = "lf", treat = "DMSO", normalizer = "none")
+  ),
+  tar_target(
+    bay_graph_ratio_plot,
+    plot_ratio_network(bay_graph, "BAY/DMSO")
+  ),
+  tar_target(
+    m3,
+    arrange_m4(lf_hypoxia_graph_ratio_plot, bay_graph_ratio_plot)
+  ),
+  tar_target(
+    m3_figure,
+    write_figures(m3, "m3.pdf")
+  ),
+
   # # M5 ----------------------------------------------------------------------
   #
   # tar_target(
@@ -920,53 +982,6 @@ list(
   # tar_target(
   #   m5_figure,
   #   write_figures(m5, "m5.pdf")
-  # ),
-  #
-  # # S6 ----------------------------------------------------------------------
-  #
-  # tar_target(
-  #   time_course_mids,
-  #   format_time_course_mids(model_mids)
-  # ),
-  # tar_target(
-  #   s6a,
-  #   plot_mid_time_course(time_course_mids, "lf", "21%", "None", "plasma")
-  # ),
-  # tar_target(
-  #   s6b,
-  #   plot_mid_time_course(time_course_mids, "lf", "0.5%", "None", "viridis")
-  # ),
-  # tar_target(
-  #   s6c,
-  #   plot_normoxia_network(lf_hypoxia_graph, "lf")
-  # ),
-  # tar_target(
-  #   hypoxia_growth_graph,
-  #   make_graph(map_flux_differences, nodes, cell = "lf", treat = "0.5%", normalizer = "growth")
-  # ),
-  # tar_target(
-  #   s6d,
-  #   plot_ratio_network(hypoxia_growth_graph, "Hypoxia/Normoxia\nGrowth Rate Normalized")
-  # ),
-  # tar_target(
-  #   pasmc_hypoxia_graph,
-  #   make_graph(map_flux_differences, nodes, cell = "pasmc", treat = "21%", normalizer = "none")
-  # ),
-  # tar_target(
-  #   s6e,
-  #   plot_normoxia_network(pasmc_hypoxia_graph) + ggplot2::ggtitle("PASMC Normoxia")
-  # ),
-  # tar_target(
-  #   s6f,
-  #   plot_ratio_network(lf_hypoxia_graph, "PASMC Hypoxia/Normoxia")
-  # ),
-  # tar_target(
-  #   s6,
-  #   arrange_s6(s6a, s6b, s6c, s6d, s6e, s6f)
-  # ),
-  # tar_target(
-  #   s6_figure,
-  #   write_figures(s6, "s6.pdf")
   # ),
   #
   # # M6 ----------------------------------------------------------------------

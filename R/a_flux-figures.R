@@ -1,5 +1,22 @@
 # flux-figures.R
 
+annot_pairwise <- function(fluxes) {
+  fluxes %>%
+    dplyr::filter(experiment %in% c("02", "05", "bay")) %>%
+    dplyr::group_by(experiment, cell_type, metabolite, abbreviation) %>%
+    tidyr::nest() %>%
+    dplyr::mutate(
+      ttest = purrr::map_dbl(data, ~t.test(
+        flux ~ interaction(oxygen, treatment),
+        data = .x,
+        paired = TRUE
+      )$p.value),
+      pval = annot_p(ttest),
+      y_pos = Inf,
+      vjust = 1.5
+    )
+}
+
 plot_growth_curve <- function(
   df,
   cell = c("lf", "pasmc"),
