@@ -315,7 +315,8 @@ plot_ratio_network <- function(graph, caption, edges = TRUE) {
     NULL
 }
 
-plot_normoxia_network <- function(hypoxia_graph, cell) {
+plot_normoxia_network <- function(hypoxia_graph, caption) {
+  set_gr_style()
 
   hypoxia_graph %>%
     tidygraph::activate(edges) %>%
@@ -357,6 +358,7 @@ plot_normoxia_network <- function(hypoxia_graph, cell) {
       end = 0.95,
       limits = c(1, 1000),
       na.value = "grey90",
+      oob = scales::squish,
       # breaks = c(0.01, 0.1, 1, 10, 100, 1000),
       # labels = c(1, 10, 100, 1000),
       option = "plasma"
@@ -365,7 +367,7 @@ plot_normoxia_network <- function(hypoxia_graph, cell) {
       edge_color = ggraph::guide_edge_colorbar(barwidth = 0.5, barheight = 3)
     ) +
     ggplot2::labs(
-      title = "Normoxia",
+      title = caption,
       y = NULL
     ) +
     theme_plots() +

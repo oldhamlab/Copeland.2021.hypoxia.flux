@@ -304,10 +304,10 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "0.10.5.0.0",
+      "Version": "0.10.6.0.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "b1c9574190c1c84417eedaa5901138bf"
+      "Hash": "d34bcef6e2df81ab2d44c7fbe8b4d3f0"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -559,10 +559,10 @@
     },
     "cli": {
       "Package": "cli",
-      "Version": "3.0.0",
+      "Version": "3.0.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "096829b701eec2d2b4538be63de97e75"
+      "Hash": "e3ae5d68dea0c55a12ea12a9fda02e61"
     },
     "clipr": {
       "Package": "clipr",
@@ -1469,10 +1469,10 @@
     },
     "parallelly": {
       "Package": "parallelly",
-      "Version": "1.26.1",
+      "Version": "1.27.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "267fe92836a0eb43becabd3306cc75d1"
+      "Hash": "e38aabb0dde91e5622b83747b559bfc2"
     },
     "patchwork": {
       "Package": "patchwork",
@@ -1677,10 +1677,10 @@
     },
     "readr": {
       "Package": "readr",
-      "Version": "1.4.0",
+      "Version": "2.0.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "2639976851f71f330264a9c9c3d43a61"
+      "Hash": "849038f0839134ab35e719a9820005a6"
     },
     "readxl": {
       "Package": "readxl",
@@ -2029,6 +2029,13 @@
       "Repository": "CRAN",
       "Hash": "6cc663f970a529dbf776f11d5bcd1a2e"
     },
+    "tzdb": {
+      "Package": "tzdb",
+      "Version": "0.1.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "fb2b801053decce71295bb8cb04d438b"
+    },
     "usethis": {
       "Package": "usethis",
       "Version": "2.0.1",
@@ -2077,6 +2084,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "12545f2acf49d1d346d075580122d89c"
+    },
+    "vroom": {
+      "Package": "vroom",
+      "Version": "1.5.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "aac6012f34348b3ca6bf373fe7172b06"
     },
     "vsn": {
       "Package": "vsn",

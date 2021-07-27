@@ -399,10 +399,9 @@ plot_mid_time_course <- function(time_course_mids, cells, o2, treat, color) {
     )
 }
 
-plot_lactate_mids <- function(model_mids, cell) {
-  model_mids %>%
+plot_lactate_mids <- function(pruned_mids, cell) {
+  pruned_mids %>%
     dplyr::filter(cell_type == cell) %>%
-    tidyr::unnest(c(data)) %>%
     dplyr::mutate(
       metabolite = factor(
         metabolite,
@@ -413,6 +412,10 @@ plot_lactate_mids <- function(model_mids, cell) {
     dplyr::filter(tracer == "lac3" & time == 72 & !is.na(metabolite)) %>%
     plot_mids() +
     ggplot2::facet_wrap(~ metabolite, scales = "free_x", nrow = 2) +
-    ggplot2::theme(legend.position = "right") +
-    theme_patchwork(widths = unit(4, "in"), heights = unit(2.5, "in"), tags = NULL)
+    ggplot2::theme(legend.position = "bottom") +
+    theme_patchwork(
+      widths = ggplot2::unit(4, "in"),
+      heights = ggplot2::unit(2.5, "in"),
+      tags = NULL
+    )
 }

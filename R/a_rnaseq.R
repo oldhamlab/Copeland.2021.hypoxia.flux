@@ -1,7 +1,5 @@
 # rnaseq.R
 
-# count_rnaseq ------------------------------------------------------------
-
 count_rnaseq <- function() {
 
   dds <- rnaseq.lf.hypoxia.molidustat::lf_hyp_bay_rnaseq
@@ -33,8 +31,6 @@ count_rnaseq <- function() {
   DESeq2::DESeq(dds)
 }
 
-# vst_rnaseq --------------------------------------------------------------
-
 vst_rnaseq <- function(dds) {
   vsd <- DESeq2::vst(dds, blind = FALSE)
   SummarizedExperiment::assay(vsd) <-
@@ -55,8 +51,6 @@ vst_rnaseq <- function(dds) {
     )
 
 }
-
-# plot_rnaseq_pca ---------------------------------------------------------
 
 plot_rnaseq_pca <- function(pca_data) {
 
@@ -121,8 +115,6 @@ plot_rnaseq_pca <- function(pca_data) {
 
 }
 
-# identify_deg ------------------------------------------------------------
-
 identify_deg <- function(dds, expr) {
   alpha <- 0.05
   fc <- 1
@@ -159,40 +151,55 @@ identify_deg <- function(dds, expr) {
 
 }
 
-# plot_rnaseq_venn --------------------------------------------------------
-
-plot_rnaseq_venn <- function(dds) {
-
+find_rnaseq_overlap <- function(dds) {
   bay <-
-    identify_deg(dds, expr(h.bay - n.bay)) %>%
+    identify_deg(dds, expr(n.bay - n.dmso)) %>%
     dplyr::filter(padj < 0.05)
   hyp <- identify_deg(dds, expr(h.dmso - n.dmso)) %>%
     dplyr::filter(padj < 0.05)
 
   nm <- rownames(SummarizedExperiment::assay(dds))
-  bay_deg <- nm %in% bay$symbol
-  hyp_deg <- nm %in% hyp$symbol
+  bay_deg <- nm %in% bay$row
+  hyp_deg <- nm %in% hyp$row
+  tibble::tibble(nm, hyp_deg, bay_deg)
+}
 
-  tibble::tibble(nm, hyp_deg, bay_deg) %>%
-    ggplot2::ggplot() +
+find_gsea_overlap <- function(a, b, src = "HALLMARK") {
+  dplyr::full_join(a, b, by = c("source", "pathway")) %>%
+    dplyr::select(source, pathway, padj.x, padj.y) %>%
+    dplyr::filter(source %in% src) %>%
+    dplyr::mutate(
+      hyp_deg = padj.x < 0.05,
+      bay_deg = padj.y < 0.05,
+      dplyr::across(tidyselect::matches("_deg"), tidyr::replace_na, FALSE)
+    )
+}
+
+plot_rnaseq_venn <- function(df, title) {
+  ggplot2::ggplot(df) +
     ggplot2::aes(A = hyp_deg, B = bay_deg) +
     ggvenn::geom_venn(
       set_names = c("0.5%", "BAY"),
       digits = 0,
+      show_percentage = TRUE,
       fill_color = clrs[c(2, 4)],
       fill_alpha = 0.5,
       stroke_size = 0.25,
-      set_name_size = 6/ggplot2::.pt
+      set_name_size = 6/ggplot2::.pt,
+      text_size = 5/ggplot2::.pt
     ) +
-    ggplot2::coord_fixed() +
+    ggplot2::labs(title = title) +
     theme_plots() +
-    theme_void()
-
+    ggplot2::coord_fixed(clip = "off") +
+    ggplot2::theme(
+      panel.border = ggplot2::element_blank(),
+      axis.text = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank(),
+      plot.title = ggplot2::element_text(hjust = 0.5)
+    )
 }
 
-# plot_rnaseq_volcano -----------------------------------------------------
-
-plot_rnaseq_volcano <- function(results) {
+plot_rnaseq_volcano <- function(results, gois = NULL, xlab = NULL) {
 
   df <-
     tibble::as_tibble(results)
@@ -217,12 +224,13 @@ plot_rnaseq_volcano <- function(results) {
       data = left,
       ggplot2::aes(
         label = symbol,
-        color = symbol %in% c("EPAS1","HDAC9", "P4HA2", "RBM3")
+        color = symbol %in% gois
       ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
-      nudge_x = -4,
+      nudge_x = -8 - left$log2FoldChange,
+      hjust = 0,
       direction = "y",
       family = "Calibri",
       segment.color = "black",
@@ -232,12 +240,13 @@ plot_rnaseq_volcano <- function(results) {
       data = right,
       ggplot2::aes(
         label = symbol,
-        color = symbol %in% c("EPAS1","HDAC9", "P4HA2", "RBM3")
+        color = symbol %in% gois
       ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
-      nudge_x = 4.5,
+      nudge_x = 8 - right$log2FoldChange,
+      hjust = 1,
       direction = "y",
       segment.color = "black",
       family = "Calibri",
@@ -251,19 +260,17 @@ plot_rnaseq_volcano <- function(results) {
     ggplot2::scale_color_manual(values = c("black", "darkred")) +
     ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
     ggplot2::scale_x_continuous(
-      breaks = seq(-4, 4, 2),
+      breaks = seq(-6, 6, 2),
       labels = scales::math_format(2^.x),
-      expand = ggplot2::expansion(mult = 0.25)
+      expand = ggplot2::expansion(mult = 0.3)
     ) +
     ggplot2::labs(
-      x = "ΔHypoxia/ΔBAY",
+      x = xlab,
       y = "Adjusted P value"
     ) +
-    theme_plots()
-
+    theme_plots() +
+    ggplot2::coord_cartesian(xlim = c(-6, 6), clip = "off")
 }
-
-# get_unique_symbol_ids ---------------------------------------------------
 
 get_unique_symbol_ids <- function(dds) {
   tibble::as_tibble(SummarizedExperiment::rowData(dds), rownames = "entrezid") %>%
@@ -273,15 +280,11 @@ get_unique_symbol_ids <- function(dds) {
     dplyr::pull(entrezid)
 }
 
-# dds_to_symbols ----------------------------------------------------------
-
 dds_to_symbols <- function(dds, unique_symbol_ids) {
   df <- dds[rownames(dds) %in% unique_symbol_ids, ]
   rownames(df) <- SummarizedExperiment::rowData(df)$hgnc_symbol
   df
 }
-
-# plot_rnaseq_goi ---------------------------------------------------------
 
 plot_rnaseq_goi <- function(dds, goi) {
 
@@ -324,7 +327,7 @@ plot_rnaseq_goi <- function(dds, goi) {
       size = 0.25,
       show.legend = FALSE
     ) +
-    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs, limits = force) +
     ggplot2::labs(
       x = "Treatment",
       y = expression(paste("Count (x", 10^3, ")")),
@@ -340,9 +343,6 @@ plot_rnaseq_goi <- function(dds, goi) {
     ) +
     NULL
 }
-
-
-# run_gsea ----------------------------------------------------------------
 
 run_gsea <- function(results) {
 
@@ -364,15 +364,10 @@ run_gsea <- function(results) {
   ) %>%
     tibble::as_tibble() %>%
     dplyr::arrange(desc(NES)) %>%
-    tidyr::separate(pathway, c("source", "pathway"), "_", extra = "merge") %>%
-    dplyr::filter(padj < 0.05)
-
+    tidyr::separate(pathway, c("source", "pathway"), "_", extra = "merge")
 }
 
-
-# plot_gsea ---------------------------------------------------------------
-
-plot_gsea <- function(rnaseq_gsea, sources) {
+plot_gsea <- function(rnaseq_gsea, sources, lbls, vals) {
   rnaseq_gsea %>%
     dplyr::filter(padj < 0.05) %>%
     dplyr::filter(source %in% sources) %>%
@@ -397,8 +392,8 @@ plot_gsea <- function(rnaseq_gsea, sources) {
     ggplot2::scale_y_discrete(position = "right") +
     ggplot2::scale_fill_manual(
       name = NULL,
-      labels = c("Up in BAY", "Up in Hypoxia"),
-      values = unname(clrs[c(4, 2)])
+      labels = lbls,
+      values = vals
     ) +
     theme_plots() +
     ggplot2::theme(
@@ -409,8 +404,6 @@ plot_gsea <- function(rnaseq_gsea, sources) {
     ) +
     NULL
 }
-
-# run_tfea ----------------------------------------------------------------
 
 run_tfea <- function(df) {
 
@@ -437,10 +430,7 @@ run_tfea <- function(df) {
   TFEA.ChIP::contingency_matrix(de_genes, ctl_genes) %>%
     TFEA.ChIP::getCMstats() %>%
     TFEA.ChIP::rankTFs(rankMethod = "gsea")
-
 }
-
-# plot_tfea ---------------------------------------------------------------
 
 plot_tfea <- function(rnaseq_tfea) {
 
@@ -455,7 +445,9 @@ plot_tfea <- function(rnaseq_tfea) {
       y = ES,
       fill = ES < 0
     ) +
-    ggplot2::geom_col() +
+    ggplot2::geom_col(
+      show.legend = TRUE
+    ) +
     ggplot2::geom_hline(yintercept = 0, size = 0.25) +
     ggplot2::labs(
       x = NULL,
@@ -463,7 +455,7 @@ plot_tfea <- function(rnaseq_tfea) {
     ) +
     ggplot2::scale_fill_manual(
       name = NULL,
-      labels = c("Up in Hypoxia", "Up in BAY"),
+      labels = c("With Hypoxia", "With BAY"),
       values = unname(clrs[c(2, 4)])
     ) +
     theme_plots() +
@@ -479,5 +471,4 @@ plot_tfea <- function(rnaseq_tfea) {
         vjust = 1
       )
     )
-
 }

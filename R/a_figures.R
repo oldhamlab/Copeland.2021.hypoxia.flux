@@ -131,8 +131,8 @@ arrange_s6 <- function(a, b) {
   a + b +
     theme_patchwork(
       design = layout,
-      widths = unit(5, "in"),
-      heights = unit(c(2.5), "in")
+      widths = unit(4, "in"),
+      heights = unit(c(3.5), "in")
     )
 }
 
@@ -160,7 +160,7 @@ arrange_s7 <- function(a, b, c, d) {
     )
 }
 
-arrange_m6 <- function(a, b, c, d, e, f, g, h, i, j, k) {
+arrange_m5 <- function(a, b, c, d, e, f, g, h, i, j, k) {
   ((a | b | c) + plot_layout(guides = "collect")) /
     (d | e) /
     (f + plot_layout(guides = "collect")) /
@@ -178,7 +178,16 @@ arrange_m6 <- function(a, b, c, d, e, f, g, h, i, j, k) {
     )
 }
 
-arrange_m7 <- function(a, b, c, d, e, f) {
+arrange_s8 <- function(a, b, c, d, e) {
+  (a | b) /
+    (c | d | e) + plot_layout(widths = c(1, 2, 2)) +
+    theme_patchwork(
+      widths = unit(5, "in"),
+      heights = unit(c(1.1), "in")
+    )
+}
+
+arrange_m6 <- function(a, b, c, d, e, f) {
   layout <- "
   abd
   ccd
@@ -190,6 +199,25 @@ arrange_m7 <- function(a, b, c, d, e, f) {
       design = layout,
       widths = unit(1.25, "in"),
       heights = unit(c(1.25), "in")
+    )
+}
+
+arrange_s9 <- function(a, b, c, d, e, f) {
+  # layout <- "
+  # aabb
+  # cc##
+  # d#e#
+  # "
+
+  (a | b) /
+    (c | d) /
+    (e | f) +
+
+  # a + b + c + d + e +
+    theme_patchwork(
+      # design = layout,
+      widths = unit(5, "in"),
+      heights = unit(c(1.25, 2, 2.5), "in")
     )
 }
 

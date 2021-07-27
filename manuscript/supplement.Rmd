@@ -91,8 +91,6 @@ figs <- targets::tar_load(targets::matches("s\\d_figure"))
 
 # Tables
 
-<br>
-
 ```{r t1, results = "asis"}
 hyp %>% 
   flextable::set_caption(
@@ -128,7 +126,7 @@ pasmc %>%
 
 # Figure legends
 
-(ref:s1) **Supporting data for extracellular flux calculations.** (**A**) Cell viability as assessed by live/dead cell staining with acridine orange plus propidium iodide staining did not differ between 21% and 0.5% oxygen culture conditions (n = 3 technical replicates). (**B**) Standard curves were generated to interpolate cell counts from total DNA by seeding lung fibroblasts (LF) and pulmonary artery smooth muscle cells (PASMC) at the indicated densities in basal medium. Data are mean ± SEM of three biological replicates. (**C**) Total DNA measurements were compared to direct cell counts over the experimental time course. Cell counts and total DNA were obtained from the same sample wells. The slopes of the best-fit lines for 21% (*red*) and 0.5% (*blue*) samples were not different. (**D**) Predicted well volumes were estimated from the change in culture plate mass over the time course of the experiment. Evaporation rates were different depending on the treatment. Although the mean evaporation rate is depicted, experiment-specific evaporation rates were used to calculate fluxes for each experiment. (**E**) Metabolite accumulation (positive values) and degradation (negative values) rates. Data are mean ± SEM of 3-8 biological replicates. Rates significantly different from 0 (\*) based on a probability value < 0.05 using Student's one-sample *t*-test were incorporated into flux calculations. 
+(ref:s1) **Supporting data for extracellular flux calculations.** (**A**) Cell viability as assessed by live/dead cell staining with acridine orange plus propidium iodide staining did not differ between 21% and 0.5% oxygen culture conditions (n = 3 technical replicates). (**B**) Standard curves were generated to interpolate cell counts from total DNA by seeding lung fibroblasts (LF) and pulmonary artery smooth muscle cells (PASMC) at the indicated densities in basal medium. Data are mean ± SEM of three biological replicates. (**C**) Total DNA measurements were compared to direct cell counts over the experimental time course. Cell counts and total DNA were obtained from the same sample wells. The slopes of the best-fit lines for 21% (*red*) and 0.5% (*blue*) samples were not different. (**D**) Predicted well volumes were estimated from the change in culture plate mass over the time course of the experiment. Evaporation rates were different depending on the treatment. Although the mean evaporation rate is depicted, experiment-specific evaporation rates were used to calculate fluxes for each experiment. (**E**) Metabolite accumulation (positive values) and degradation (negative values) rates. Data are mean ± SEM of 3-8 biological replicates. Rates significantly different from 0 (\*) based on a probability value < 0.05 using Student's one-sample *t*-test were incorporated into flux calculations.
 
 (ref:s2) **Extracellular flux measurements in 0.2% oxygen.** Lung fibroblasts (LFs) were cultured with 21% oxygen (*red*) or 0.2% oxygen (*dark blue*) beginning 24 h prior to time 0. (**A**) Growth curves of LFs in each experimental condition (n = 4). (**B**) Growth rates from (A) were determined by robust linear modeling of log-transformed growth curves. (**C**) Representative immunoblot of LF protein lysates cultured as in (A). (**D**, **E**) Relative change in HIF-1α (D) and LDHA (E) protein levels normalized to 21% oxygen time 0 (n = 4). (**F**, **G**) Relative changes in GLUT1 (G) and LDHA (H) mRNA levels normalized to 21% oxygen time 0 (n = 4). (**H**, **I**) Extracellular fluxes of the indicated metabolites (n = 4). Data are mean ± SEM. Comparisons were made using linear mixed effects models with treatment group as a fixed effect and biological replicate as a random effect. Tukey's *post hoc* test was applied to determine differences between 21% and 0.2% oxygen (*) with p-values < 0.05 considered significant.
 
@@ -138,23 +136,33 @@ pasmc %>%
 
 (ref:s5) **Mass isotopomer distributions after 72 h of labeling in pulmonary artery smooth muscle cells.** Pulmonary artery smooth muscle cells (PASMCs) were labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS after 36 h. Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. Significant differences in labeling patterns between 21% and 0.5% oxygen (*) for each combination of metabolite and tracer are highlighted.
 
-(ref:s6) **Isotope incorporation in key metabolites over the experimental time course.** (**A**, **B**) LFs were cultured in 21% (A) or 0.5% (B) oxygen and labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS (PYR, pyruvate; CIT, citrate; MAL, malate). Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates. 
+(ref:s6) **Isotope incorporation in key metabolites over the experimental time course.** (**A**, **B**) LFs were cultured in 21% (A) or 0.5% (B) oxygen and labeled with the indicated tracers and intracellular metabolites were analyzed by LC-MS (PYR, pyruvate; CIT, citrate; MAL, malate). Mass isotopomer distributions were adjusted for natural abundance. Data are the mean ± SEM of 4 biological replicates.
 
-(ref:s7) (**A**) Metabolic flux model of LF metabolism in 21% oxygen.  (**B**) Metabolic flux model of PASMC metabolism in 21% oxygen. (**C**) LF fluxes were normalized to cell growth rate. Graph depicts the ratio of normalized metabolic fluxes in LFs cultured in 0.5% oxygen compared to 21% oxygen control. Fluxes with non-overlapping confidence intervals are highlighted to indicate significant changes. (**D**) Ratio of metabolic fluxes in 0.5% oxygen compared to 21% oxygen in PASMCs.
+(ref:s7) **Isotopically non-stationary metabolic flux analysis.** (**A**) Metabolic flux model of LF metabolism in 21% oxygen.  (**B**) Metabolic flux model of PASMC metabolism in 21% oxygen. (**C**) LF fluxes were normalized to cell growth rate. Graph depicts the ratio of normalized metabolic fluxes in LFs cultured in 0.5% oxygen compared to 21% oxygen control. Fluxes with non-overlapping confidence intervals are highlighted to indicate significant changes. (**D**) Ratio of metabolic fluxes in 0.5% oxygen compared to 21% oxygen in PASMCs.
 
-Supplementary Figure 1: (ref:s1)
+(ref:s8) **Metabolomic profiling of hypoxia and BAY treated lung fibroblasts.** (**A**, **B**) Volcano plots of differentially regulated metabolites with 0.5% oxygen in DMSO-treated cells (A) or BAY treatment in 21% oxygen-cultured cells (B). Significantly increased metabolites with 0.5% oxygen (*blue*) or with BAY treatment (*purple*) are indicated. The top 10 up- and down-regulated metabolites are labeled. (**C**) Venn diagram illustrating the number of differentially regulated metabolites following hypoxia (*blue*) or BAY treatment (*purple*). (**D**, **E**) Results of a metabolite set enrichment analysis of KEGG pathways based on the data from (A) and (B). Significantly enriched pathways with p < 0.05 are indicated.
 
-Supplementary Figure 2: (ref:s2)
+(ref:s9) **Transcriptomic profiling of hypoxia and BAY treated lung fibroblasts.** (**A**)
 
-Supplementary Figure 3: (ref:s3)
+```{r}
+figs <- 
+  list.files(
+    system.file(
+      "manuscript/figures", 
+      package = "Copeland.2021.hypoxia.flux"
+    ), 
+    pattern = "s\\d{1}\\.pdf"
+  ) %>% 
+  rlang::set_names(stringr::str_extract(., "^.*(?=\\.pdf)"))
+```
 
-Supplementary Figure 4: (ref:s4)
-
-Supplementary Figure 5: (ref:s5)
-
-Supplementary Figure 6: (ref:s6)
-
-Supplementary Figure 7: (ref:s7)
+```{r results = "asis"}
+out <- 
+  purrr::imap(
+    figs, 
+    ~ cat("Supplementary Figure ", stringr::str_extract(.y, "\\d"), ": (ref:", .y, ")\n\n", sep = "")
+  )
+```
 
 \newpage
 
@@ -219,6 +227,39 @@ knitr::include_graphics(
 knitr::include_graphics(
   system.file(
     "manuscript/figures/s6.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage 
+
+```{r s7, fig.cap = "(ref:s7)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s7.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage 
+
+```{r s8, fig.cap = "(ref:s8)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s8.pdf",
+    package = "Copeland.2021.hypoxia.flux"
+  )
+)
+```
+
+\newpage 
+
+```{r s9, fig.cap = "(ref:s9)"}
+knitr::include_graphics(
+  system.file(
+    "manuscript/figures/s9.pdf",
     package = "Copeland.2021.hypoxia.flux"
   )
 )

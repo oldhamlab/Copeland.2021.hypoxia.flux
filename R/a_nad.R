@@ -1,7 +1,5 @@
 # nad.R
 
-# clean_nad ---------------------------------------------------------------
-
 clean_nad <- function(nad_data) {
   nad_data %>%
     dplyr::bind_rows(.id = "metabolite") %>%
@@ -9,8 +7,6 @@ clean_nad <- function(nad_data) {
     clean_technical_replicates() %>%
     tidyr::separate(.data$experiment, c(NA, "date"), "_")
 }
-
-# finalize_nad ------------------------------------------------------------
 
 finalize_nad <- function(nad_interp, cells_per_dna) {
 
@@ -42,8 +38,6 @@ finalize_nad <- function(nad_interp, cells_per_dna) {
 
 }
 
-# annot_nad ---------------------------------------------------------------
-
 annot_nad <- function(nad_final) {
   nad_final %>%
     dplyr::filter(treatment != "None") %>%
@@ -66,8 +60,6 @@ annot_nad <- function(nad_final) {
       vjust = 1.5
     )
 }
-
-# plot_nad ----------------------------------------------------------------
 
 plot_nad <- function(nad_final, annot, metab, ylab) {
 
@@ -138,8 +130,8 @@ plot_nad <- function(nad_final, annot, metab, ylab) {
       color = "black",
       show.legend = FALSE
     ) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::scale_color_manual(values = clrs, limits = force) +
+    ggplot2::scale_fill_manual(values = clrs, limits = force) +
     ggplot2::labs(
       x = "Treatment",
       y = ylab,

@@ -452,16 +452,44 @@ list(
     identify_deg(dds, expr((h.dmso - n.dmso) - (n.bay - n.dmso)))
   ),
   tar_target(
+    rnaseq_hyp,
+    identify_deg(dds, expr((h.dmso - n.dmso)))
+  ),
+  tar_target(
+    rnaseq_bay,
+    identify_deg(dds, expr((n.bay - n.dmso)))
+  ),
+  tar_target(
     rnaseq_volcano,
-    plot_rnaseq_volcano(rnaseq_different_differences)
+    plot_rnaseq_volcano(rnaseq_different_differences, xlab = "ΔHypoxia/ΔBAY", gois = c("EPAS1","HDAC9", "P4HA2", "RBM3"))
+  ),
+  tar_target(
+    rnaseq_hyp_volcano,
+    plot_rnaseq_volcano(rnaseq_hyp, xlab = "Hypoxia/Normoxia")
+  ),
+  tar_target(
+    rnaseq_bay_volcano,
+    plot_rnaseq_volcano(rnaseq_bay, xlab = "BAY/DMSO")
+  ),
+  tar_target(
+    rnaseq_overlap,
+    find_rnaseq_overlap(dds)
   ),
   tar_target(
     rnaseq_venn,
-    plot_rnaseq_venn(dds)
+    plot_rnaseq_venn(rnaseq_overlap, "Transcripts")
   ),
   tar_target(
     rnaseq_gsea,
     run_gsea(rnaseq_different_differences)
+  ),
+  tar_target(
+    rnaseq_hyp_gsea,
+    run_gsea(rnaseq_hyp)
+  ),
+  tar_target(
+    rnaseq_bay_gsea,
+    run_gsea(rnaseq_bay)
   ),
   tar_target(
     rnaseq_goi,
@@ -469,7 +497,23 @@ list(
   ),
   tar_target(
     rnaseq_gsea_plot,
-    plot_gsea(rnaseq_gsea, "HALLMARK")
+    plot_gsea(rnaseq_gsea, "HALLMARK", lbls = c("With BAY", "With Hypoxia"), vals = unname(clrs[c(4, 2)]))
+  ),
+  tar_target(
+    rnaseq_hyp_gsea_plot,
+    plot_gsea(rnaseq_hyp_gsea, "HALLMARK", lbls = c("Down in Hypoxia", "Up in Hypoxia"), vals = unname(clrs[c(1, 2)]))
+  ),
+  tar_target(
+    rnaseq_bay_gsea_plot,
+    plot_gsea(rnaseq_bay_gsea, "HALLMARK", lbls = c("Down in BAY", "Up in BAY"), vals = unname(clrs[c(3, 4)]))
+  ),
+  tar_target(
+    gsea_overlap,
+    find_gsea_overlap(rnaseq_hyp_gsea, rnaseq_bay_gsea)
+  ),
+  tar_target(
+    gsea_venn,
+    plot_rnaseq_venn(gsea_overlap, "Gene Sets")
   ),
   tar_target(
     unique_symbol_ids,
@@ -525,8 +569,41 @@ list(
     metab_top_table(metab_targeted_clean, metab_targeted_limma, "deltas")
   ),
   tar_target(
+    metab_hyp,
+    metab_top_table(metab_targeted_clean, metab_targeted_limma, "hyp_on_dmso")
+  ),
+  tar_target(
+    metab_bay,
+    metab_top_table(metab_targeted_clean, metab_targeted_limma, "bay_on_norm")
+  ),
+  tar_target(
     metab_volcano,
-    plot_metab_volcano(metab_different_differences)
+    plot_metab_volcano(
+      metab_different_differences,
+      mois = c("GAP", "2-hydroxyglutarate", "aconitate", "taurine", "hydroxyproline", "GABA"),
+      colors = clrs[c(2, 4)],
+      xlab = "ΔHypoxia/ΔBAY"
+    )
+  ),
+  tar_target(
+    metab_volcano_hyp,
+    plot_metab_volcano(
+      metab_hyp,
+      colors = clrs[2:1],
+      xlab = "Hypoxia/Normoxia"
+    )
+  ),
+  tar_target(
+    metab_volcano_bay,
+    plot_metab_volcano(
+      metab_bay,
+      colors = clrs[4:3],
+      xlab = "BAY/DMSO"
+    )
+  ),
+  tar_target(
+    metab_venn,
+    plot_metab_venn(metab_hyp, metab_bay)
   ),
   tar_target(
     metab_moi,
@@ -537,12 +614,28 @@ list(
     run_msea(metab_different_differences, metab_pathways)
   ),
   tar_target(
+    metab_msea_hyp,
+    run_msea(metab_hyp, metab_pathways)
+  ),
+  tar_target(
+    metab_msea_bay,
+    run_msea(metab_bay, metab_pathways)
+  ),
+  tar_target(
     metab_pathways,
     get_metab_pathways()
   ),
   tar_target(
     msea_plot,
-    plot_msea(metab_msea)
+    plot_msea(metab_msea, lbls = c("With BAY", "With Hypoxia"), vals = unname(clrs[c(4, 2)]))
+  ),
+  tar_target(
+    msea_hyp_plot,
+    plot_msea(metab_msea_hyp, lbls = c("Down in 0.5%", "Up in 0.5%"), vals = unname(clrs[c(1, 2)]))
+  ),
+  tar_target(
+    msea_bay_plot,
+    plot_msea(metab_msea_bay, lbls = c("Down in BAY", "Up in BAY"), vals = unname(clrs[c(3, 4)]))
   ),
   tar_target(
     leading_edge,
@@ -902,11 +995,11 @@ list(
     write_figures(s6, "s6.pdf")
   ),
 
-# S7 ----------------------------------------------------------------------
+  # S7 ----------------------------------------------------------------------
 
   tar_target(
     s7a,
-    plot_normoxia_network(lf_hypoxia_graph, "lf") + ggplot2::ggtitle("LF Normoxia")
+    plot_normoxia_network(lf_hypoxia_graph, "LF\nNormoxia")
   ),
   tar_target(
     hypoxia_growth_graph,
@@ -922,7 +1015,7 @@ list(
   ),
   tar_target(
     s7b,
-    plot_normoxia_network(pasmc_hypoxia_graph) + ggplot2::ggtitle("PASMC Normoxia")
+    plot_normoxia_network(pasmc_hypoxia_graph, "PASMC\nNormoxia")
   ),
   tar_target(
     s7c,
@@ -973,75 +1066,97 @@ list(
     write_figures(m3, "m3.pdf")
   ),
 
-  # # M5 ----------------------------------------------------------------------
-  #
-  # tar_target(
-  #   m5,
-  #   plot_lactate_mids(model_mids, "lf")
-  # ),
-  # tar_target(
-  #   m5_figure,
-  #   write_figures(m5, "m5.pdf")
-  # ),
-  #
-  # # M6 ----------------------------------------------------------------------
-  #
-  # tar_target(
-  #   twoby_fluxes,
-  #   analyze_twoby_fluxes(growth_rates, fluxes)
-  # ),
-  # tar_target(
-  #   m6a,
-  #   plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "growth", "Growth Rate (/h)")
-  # ),
-  # tar_target(
-  #   m6b,
-  #   plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "glucose", "Glucose\n(fmol/cell/h)") + ggplot2::scale_y_reverse()
-  # ),
-  # tar_target(
-  #   m6c,
-  #   plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "lactate", "Lactate\n(fmol/cell/h)")
-  # ),
-  # tar_target(
-  #   m6g,
-  #   plot_nad(nad_final, nad_annot, "NAD", "NAD\n(nmol/cell)")
-  # ),
-  # tar_target(
-  #   m6h,
-  #   plot_nad(nad_final, nad_annot, "NADH", "NADH\n(nmol/cell)")
-  # ),
-  # tar_target(
-  #   m6i,
-  #   plot_nad(nad_final, nad_annot, "Ratio", "NADH/NAD ratio")
-  # ),
-  # tar_target(
-  #   m6,
-  #   arrange_m6(m6a, m6b, m6c, metab_targeted_pca, metab_volcano, metab_moi, msea_plot, leading_edge, m6g, m6h, m6i)
-  # ),
-  # tar_target(
-  #   m6_figure,
-  #   write_figures(m6, "m6.pdf")
-  # ),
-  #
-  # # M7 ----------------------------------------------------------------------
-  #
-  # tar_target(
-  #   twoby_densities_annot,
-  #   annot_twoby_densities(blot_norm)
-  # ),
-  # tar_target(
-  #   m7f,
-  #   plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)") +
-  #     ggplot2::annotation_custom(myc_image, xmin = 2.75, xmax = 2.75 + 2.5)
-  # ),
-  # tar_target(
-  #   m7,
-  #   arrange_m7(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m7f)
-  # ),
-  # tar_target(
-  #   m7_figure,
-  #   write_figures(m7, "m7.pdf")
-  # ),
+  # M4 ----------------------------------------------------------------------
+
+  tar_target(
+    m4,
+    plot_lactate_mids(pruned_mids, "lf")
+  ),
+  tar_target(
+    m4_figure,
+    write_figures(m4, "m4.pdf")
+  ),
+
+  # M5 ----------------------------------------------------------------------
+
+  tar_target(
+    twoby_fluxes,
+    analyze_twoby_fluxes(growth_rates, fluxes)
+  ),
+  tar_target(
+    m5a,
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "growth", "Growth Rate (/h)")
+  ),
+  tar_target(
+    m5b,
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "glucose", "Glucose\n(fmol/cell/h)") + ggplot2::scale_y_reverse()
+  ),
+  tar_target(
+    m5c,
+    plot_twoby_fluxes(twoby_fluxes$data, twoby_fluxes$annot, "lactate", "Lactate\n(fmol/cell/h)")
+  ),
+  tar_target(
+    m5g,
+    plot_nad(nad_final, nad_annot, "NAD", "NAD\n(nmol/cell)")
+  ),
+  tar_target(
+    m5h,
+    plot_nad(nad_final, nad_annot, "NADH", "NADH\n(nmol/cell)")
+  ),
+  tar_target(
+    m5i,
+    plot_nad(nad_final, nad_annot, "Ratio", "NADH/NAD ratio")
+  ),
+  tar_target(
+    m5,
+    arrange_m5(m5a, m5b, m5c, metab_targeted_pca, metab_volcano, metab_moi, msea_plot, leading_edge, m5g, m5h, m5i)
+  ),
+  tar_target(
+    m5_figure,
+    write_figures(m5, "m5.pdf")
+  ),
+
+  # S8 ----------------------------------------------------------------------
+
+  tar_target(
+    s8,
+    arrange_s8(metab_volcano_hyp, metab_volcano_bay, metab_venn, msea_hyp_plot, msea_bay_plot)
+  ),
+  tar_target(
+    s8_figure,
+    write_figures(s8, "s8.pdf")
+  ),
+
+  # M6 ----------------------------------------------------------------------
+
+  tar_target(
+    twoby_densities_annot,
+    annot_twoby_densities(blot_norm)
+  ),
+  tar_target(
+    m6f,
+    plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)") +
+      ggplot2::annotation_custom(myc_image, xmin = 2.75, xmax = 2.75 + 2.5)
+  ),
+  tar_target(
+    m6,
+    arrange_m6(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m6f)
+  ),
+  tar_target(
+    m6_figure,
+    write_figures(m6, "m6.pdf")
+  ),
+
+  # S9 ----------------------------------------------------------------------
+
+  tar_target(
+    s9,
+    arrange_s9(rnaseq_hyp_volcano, rnaseq_bay_volcano, rnaseq_venn, gsea_venn, rnaseq_hyp_gsea_plot, rnaseq_bay_gsea_plot)
+  ),
+  tar_target(
+    s9_figure,
+    write_figures(s9, "s9.pdf")
+  ),
 
   # resources table ---------------------------------------------------------
 
@@ -1063,20 +1178,20 @@ list(
   tar_target(
     pasmc_hypoxia_table,
     format_flux_table(map_flux_differences, "pasmc", "0.5%", " SSR 575.6 [499.1-630.6] (95% CI, 563 DOF)", " SSR 521.3 [482.2-611.6] (95% CI, 545 DOF)")
-  )
+  ),
 
   # write manuscript --------------------------------------------------------
 
-  # tar_render(
-  #   manuscript,
-  #   path = path_to_manuscript("manuscript.Rmd"),
-  #   output_dir = path_to_manuscript("")
-  # ),
-  # tar_render(
-  #   supplement,
-  #   path = path_to_manuscript("supplement.Rmd"),
-  #   output_dir = path_to_manuscript("")
-  # )
+  tar_render(
+    manuscript,
+    path = path_to_manuscript("manuscript.Rmd"),
+    output_dir = path_to_manuscript("")
+  ),
+  tar_render(
+    supplement,
+    path = path_to_manuscript("supplement.Rmd"),
+    output_dir = path_to_manuscript("")
+  )
 
 )
 

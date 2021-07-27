@@ -359,7 +359,7 @@ metab_top_table <- function(clean, fit, contrast) {
     )
 }
 
-plot_metab_volcano <- function(results) {
+plot_metab_volcano <- function(results, mois = NULL, colors = NULL, xlab = NULL) {
 
   left <-
     results %>%
@@ -373,7 +373,6 @@ plot_metab_volcano <- function(results) {
 
   ggplot2::ggplot(results) +
     ggplot2::aes(
-      # x = 2 ^ log2FoldChange,
       x = logFC,
       y = adj.P.Val
     ) +
@@ -381,7 +380,7 @@ plot_metab_volcano <- function(results) {
       data = left,
       ggplot2::aes(
         label = metabolite,
-        color = metabolite %in% c("2-hydroxyglutarate","aconitate", "glyceraldehyde 3-phosphate", "hydroxyproline", "malate", "taurine")
+        color = metabolite %in% mois
       ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
@@ -396,7 +395,7 @@ plot_metab_volcano <- function(results) {
       data = right,
       ggplot2::aes(
         label = metabolite,
-        color = metabolite %in% c("2-hydroxyglutarate","aconitate", "glyceraldehyde 3-phosphate", "hydroxyproline", "malate", "taurine")
+        color = metabolite %in% mois
       ),
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
@@ -417,13 +416,13 @@ plot_metab_volcano <- function(results) {
       data = subset(results, logFC > 0 & adj.P.Val < 0.05),
       pch = 21,
       color = "white",
-      fill = clrs[[2]]
+      fill = colors[[1]]
     ) +
     ggplot2::geom_point(
       data = subset(results, logFC < 0 & adj.P.Val < 0.05),
       pch = 21,
       color = "white",
-      fill = clrs[[4]]
+      fill = colors[[2]]
     ) +
     ggplot2::scale_color_manual(values = c("black", "darkred")) +
     ggplot2::scale_y_continuous(trans = reverselog_trans(10)) +
@@ -433,7 +432,7 @@ plot_metab_volcano <- function(results) {
       expand = ggplot2::expansion(mult = 1)
     ) +
     ggplot2::labs(
-      x = "ΔHypoxia/ΔBAY",
+      x = xlab,
       y = "Adjusted P value"
     ) +
     theme_plots()
@@ -489,7 +488,7 @@ plot_mois <- function(clean, moi) {
       size = 0.25,
       show.legend = FALSE
     ) +
-    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs, limits = force) +
     ggplot2::labs(
       x = "Treatment",
       y = "Peak area (normalized)",
@@ -531,11 +530,11 @@ get_metab_pathways <- function(databases = "kegg") {
     rlang::set_names(purrr::map(names(.), stringr::str_extract, pattern = "(?<=metabolome\\.).*"))
 }
 
-plot_msea <- function(msea) {
+plot_msea <- function(msea, ...) {
   msea %>%
     dplyr::select(-padj) %>%
     dplyr::rename(padj = pval) %>%
-    plot_gsea(sources = "KEGG") +
+    plot_gsea(sources = "KEGG", ...) +
     ggplot2::theme(
       axis.text.y.right = element_text(size = 5)
     )
@@ -792,4 +791,43 @@ adjust_rtime <- function(object, param, center_sample = integer()) {
 group_peaks <- function(object, param) {
   sampleGroups(param) <- object$group
   groupChromPeaks(object, param = param)
+}
+
+plot_metab_venn <- function(metab_hyp, metab_bay) {
+  nm <- metab_hyp$hmdb
+  hyp_hmdb <-
+    metab_hyp %>%
+    dplyr::filter(adj.P.Val < 0.05) %>%
+    dplyr::pull(hmdb)
+  bay_hmdb <-
+    metab_bay%>%
+    dplyr::filter(adj.P.Val < 0.05) %>%
+    dplyr::pull(hmdb)
+  bay_deg <- nm %in% bay_hmdb
+  hyp_deg <- nm %in% hyp_hmdb
+
+  tibble::tibble(nm, hyp_deg, bay_deg) %>%
+    ggplot2::ggplot() +
+    ggplot2::aes(A = hyp_deg, B = bay_deg) +
+    ggvenn::geom_venn(
+      set_names = c("0.5%", "BAY"),
+      digits = 0,
+      show_percentage = FALSE,
+      fill_color = clrs[c(2, 4)],
+      fill_alpha = 0.5,
+      stroke_size = 0.25,
+      set_name_size = 6/ggplot2::.pt,
+      text_size = 8/ggplot2::.pt
+    ) +
+    theme_plots() +
+    ggplot2::labs(
+      title = "Metabolites"
+    ) +
+    ggplot2::coord_fixed(clip = "off") +
+    ggplot2::theme(
+      panel.border = ggplot2::element_blank(),
+      axis.text = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank(),
+      plot.title = ggplot2::element_text(hjust = 0.5)
+    )
 }

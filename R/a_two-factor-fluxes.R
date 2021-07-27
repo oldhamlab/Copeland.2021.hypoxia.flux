@@ -49,8 +49,7 @@ plot_twoby_fluxes <- function(df, annot, metab, ylab) {
       color = NULL,
       fill = NULL
     ) +
-    ggplot2::scale_color_manual(values = clrs) +
-    ggplot2::scale_fill_manual(values = clrs) +
+    ggplot2::scale_fill_manual(values = clrs, limits = force) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.1))) +
     # ggplot2::coord_cartesian(ylim = c(-750, 1250)) +
     theme_plots() +
