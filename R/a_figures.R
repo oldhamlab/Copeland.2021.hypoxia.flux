@@ -131,8 +131,8 @@ arrange_s6 <- function(a, b) {
   a + b +
     theme_patchwork(
       design = layout,
-      widths = unit(4, "in"),
-      heights = unit(c(3.5), "in")
+      widths = unit(3.5, "in"),
+      heights = unit(c(3), "in")
     )
 }
 

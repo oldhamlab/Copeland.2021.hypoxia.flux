@@ -385,7 +385,9 @@ plot_metab_volcano <- function(results, mois = NULL, colors = NULL, xlab = NULL)
       size = 5/ggplot2::.pt,
       max.overlaps = 20,
       segment.size = 0.1,
-      nudge_x = -4,
+      # nudge_x = -4,
+      nudge_x = -5 - left$logFC,
+      hjust = 0,
       segment.color = "black",
       direction = "y",
       family = "Calibri",
@@ -401,7 +403,9 @@ plot_metab_volcano <- function(results, mois = NULL, colors = NULL, xlab = NULL)
       max.overlaps = 20,
       segment.size = 0.1,
       segment.color = "black",
-      nudge_x = 4.5,
+      # nudge_x = 4.5,
+      nudge_x = 5 - left$logFC,
+      hjust = 1,
       direction = "y",
       family = "Calibri",
       show.legend = FALSE
@@ -491,7 +495,7 @@ plot_mois <- function(clean, moi) {
     ggplot2::scale_fill_manual(values = clrs, limits = force) +
     ggplot2::labs(
       x = "Treatment",
-      y = "Peak area (normalized)",
+      y = "Peak area\n(normalized)",
       fill = NULL
     ) +
     ggplot2::ylim(c(0, NA)) +

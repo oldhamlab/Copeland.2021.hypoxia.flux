@@ -39,6 +39,7 @@ plot_labeling_rate <- function(mids) {
     ggplot2::geom_smooth(
       method = "nls",
       formula = y ~ SSasympOrig(x, asym, lrc),
+      size = 0.5,
       fullrange = TRUE,
       se = FALSE,
       show.legend = FALSE
@@ -65,7 +66,7 @@ plot_labeling_rate <- function(mids) {
     ggplot2::scale_fill_manual(values = clrs) +
     ggplot2::labs(
       x = "Time (h)",
-      y = "Pyruvate labeled",
+      y = "PYR fraction labeled",
       color = NULL,
       fill = NULL
     ) +

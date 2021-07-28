@@ -56,7 +56,8 @@ nocite: |
   @R-readxl, @R-renv, @R-rlang, @R-rmarkdown, @R-roxygen2, @R-stringr, @R-tibble, 
   @R-tidygraph, @R-tidyr, @R-tidyverse, @R-tinytex, @R-usethis, @R-viridis, @R-wmo, 
   @bookdown2016, @ggplot22016, @knitr2015, @lme42015, @lmerTest2017, @lubridate2011, 
-  @MASS2002, @pbkrtest2014, @rmarkdown2018, @tidyverse2019, tinytex2019
+  @MASS2002, @pbkrtest2014, @rmarkdown2018, @tidyverse2019, tinytex2019, @fgsea, 
+  @TFEA.ChIP, @multiGSEA, @limma, @targets, @flextable, @officer, @patchwork
 ---
 
 ```{r setup, include = FALSE}
@@ -84,7 +85,19 @@ options(tinytex.verbose = TRUE)
 hyp <- targets::tar_read(lf_hypoxia_table)
 bay <- targets::tar_read(lf_bay_table)
 pasmc <- targets::tar_read(pasmc_hypoxia_table)
-figs <- targets::tar_load(targets::matches("s\\d_figure"))
+targets::tar_load(
+  c(
+    s1_figure, 
+    s2_figure, 
+    s3_figure,
+    s4_figure, 
+    s5_figure, 
+    s6_figure, 
+    s7_figure, 
+    s8_figure, 
+    s9_figure
+  )
+)
 ```
 
 \newpage
@@ -142,7 +155,7 @@ pasmc %>%
 
 (ref:s8) **Metabolomic profiling of hypoxia and BAY treated lung fibroblasts.** (**A**, **B**) Volcano plots of differentially regulated metabolites with 0.5% oxygen in DMSO-treated cells (A) or BAY treatment in 21% oxygen-cultured cells (B). Significantly increased metabolites with 0.5% oxygen (*blue*) or with BAY treatment (*purple*) are indicated. The top 10 up- and down-regulated metabolites are labeled. (**C**) Venn diagram illustrating the number of differentially regulated metabolites following hypoxia (*blue*) or BAY treatment (*purple*). (**D**, **E**) Results of a metabolite set enrichment analysis of KEGG pathways based on the data from (A) and (B). Significantly enriched pathways with p < 0.05 are indicated.
 
-(ref:s9) **Transcriptomic profiling of hypoxia and BAY treated lung fibroblasts.** (**A**)
+(ref:s9) **Transcriptomic profiling of hypoxia and BAY treated lung fibroblasts.** (**A**, **B**) Volcano plots of differentially regulated transcripts with 0.5% oxygen in DMSO-treated cells (A) or BAY treatment in 21% oxygen-cultured cells (B). The top 10 up- and down-regulated metabolites are highlighted. (**C**) Venn diagram illustrating the number of differentially regulated genes following hypoxia (*blue*) or BAY treatment (*purple*). (**D**) Venn diagram illustrating the number of differentially enriched Hallmark gene sets with  hypoxia (*blue*) or BAY treatment (*purple*). (**E**, **F**) Normalized enrichment scores from gene set enrichment analysis of Hallmark gene sets affected by 0.5% oxygen (E) or BAY treatment (F).
 
 ```{r}
 figs <- 
@@ -268,9 +281,6 @@ knitr::include_graphics(
 \newpage 
 
 # Supplemental References
-
-::: {#refs_main}
-:::
 
 ::: {#refs_software}
 :::

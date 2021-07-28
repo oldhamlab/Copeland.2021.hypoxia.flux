@@ -631,7 +631,7 @@ list(
   ),
   tar_target(
     msea_hyp_plot,
-    plot_msea(metab_msea_hyp, lbls = c("Down in 0.5%", "Up in 0.5%"), vals = unname(clrs[c(1, 2)]))
+    plot_msea(metab_msea_hyp, lbls = c("Down in Hypoxia", "Up in Hypoxia"), vals = unname(clrs[c(1, 2)]))
   ),
   tar_target(
     msea_bay_plot,
@@ -1192,6 +1192,5 @@ list(
     path = path_to_manuscript("supplement.Rmd"),
     output_dir = path_to_manuscript("")
   )
-
 )
 
