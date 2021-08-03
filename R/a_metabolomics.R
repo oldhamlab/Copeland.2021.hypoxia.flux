@@ -221,11 +221,15 @@ pqn <- function(imputed) {
   imputed
 }
 
+log_transform <- function(pqn) {
+  SummarizedExperiment::assay(pqn) <- log(SummarizedExperiment::assay(pqn), base = 2)
+  pqn
+}
+
 plot_metab_pca <- function(clean) {
 
   input <-
     SummarizedExperiment::assay(clean) %>%
-    log() %>%
     t() %>%
     scale() %>%
     t()
@@ -404,7 +408,7 @@ plot_metab_volcano <- function(results, mois = NULL, colors = NULL, xlab = NULL)
       segment.size = 0.1,
       segment.color = "black",
       # nudge_x = 4.5,
-      nudge_x = 5 - left$logFC,
+      nudge_x = 5 - right$logFC,
       hjust = 1,
       direction = "y",
       family = "Calibri",
@@ -462,6 +466,7 @@ plot_mois <- function(clean, moi) {
     dplyr::group_by(metabolite) %>%
     dplyr::mutate(
       oxygen = factor(oxygen, levels = c("N", "H"), labels = c("21%", "0.5%")),
+      area = 2 ^ area,
       area = area / mean(area[oxygen == "21%" & treatment == "DMSO"]),
       metabolite = dplyr::case_when(
         metabolite == "2-hydroxyglutarate" ~ "2HG",

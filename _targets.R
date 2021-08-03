@@ -554,7 +554,8 @@ list(
       correct_drift() %>%
       quality_control() %>%
       impute_missing() %>%
-      pqn()
+      pqn() %>%
+      log_transform()
   ),
   tar_target(
     metab_targeted_pca,

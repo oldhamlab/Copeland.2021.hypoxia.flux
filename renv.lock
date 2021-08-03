@@ -1961,10 +1961,10 @@
     },
     "targets": {
       "Package": "targets",
-      "Version": "0.4.2",
+      "Version": "0.6.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a46df8ab3d40fd1627deeca2783df151"
+      "Hash": "0249d89393821026c36e640b08c761ce"
     },
     "testthat": {
       "Package": "testthat",
