@@ -148,7 +148,6 @@ identify_deg <- function(dds, expr) {
     dplyr::rename(symbol = hgnc_symbol) %>%
     dplyr::relocate(symbol, description, .after = "row") %>%
     dplyr::arrange(padj)
-
 }
 
 find_rnaseq_overlap <- function(dds) {
