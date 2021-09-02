@@ -36,8 +36,8 @@ theme_patchwork <- function(design = NULL, widths = NULL, heights = NULL, tags =
   )
 }
 
-write_figures <- function(plot, filename) {
-  path <- "manuscript/figures"
+write_figures <- function(plot, filename, path = "manuscript/figures") {
+  # path <- "manuscript/figures"
 
   gtab <- patchwork::patchworkGrob(plot)
 

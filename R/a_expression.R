@@ -10,16 +10,16 @@ read_data <- function(data_files) {
     )
 }
 
-plot_blot <- function(blot_image) {
+plot_blot <- function(blot_image, scale = 1.3, hjust = 0.15, vjust = 0.1) {
   # blot_image <- magick::image_read_pdf(blot_image)
   blot_image <- magick::image_read(blot_image)
 
   cowplot::ggdraw() +
     cowplot::draw_image(
       blot_image,
-      scale = 1.3,
-      hjust = 0.15,
-      vjust = 0.1
+      scale = scale,
+      hjust = hjust,
+      vjust = vjust
     ) +
     wmo::theme_wmo(
       base_family = "Calibri",
