@@ -460,6 +460,10 @@ list(
     identify_deg(dds, expr((n.bay - n.dmso)))
   ),
   tar_target(
+    rnaseq_hyp_bay,
+    identify_deg(dds, expr((h.bay - n.bay)))
+  ),
+  tar_target(
     rnaseq_volcano,
     plot_rnaseq_volcano(rnaseq_different_differences, xlab = "ΔHypoxia/ΔBAY", gois = c("EPAS1","HDAC9", "P4HA2", "RBM3"))
   ),
@@ -470,6 +474,10 @@ list(
   tar_target(
     rnaseq_bay_volcano,
     plot_rnaseq_volcano(rnaseq_bay, xlab = "BAY/DMSO")
+  ),
+  tar_target(
+    rnaseq_hyp_bay_volcano,
+    plot_rnaseq_volcano(rnaseq_hyp_bay, xlab = "Hypoxia/Normoxia")
   ),
   tar_target(
     rnaseq_overlap,
@@ -492,6 +500,10 @@ list(
     run_gsea(rnaseq_bay)
   ),
   tar_target(
+    rnaseq_hyp_bay_gsea,
+    run_gsea(rnaseq_hyp_bay)
+  ),
+  tar_target(
     rnaseq_goi,
     plot_rnaseq_goi(dds_symbols, c("EPAS1", "P4HA2", "RBM3", "HDAC9"))
   ),
@@ -506,6 +518,10 @@ list(
   tar_target(
     rnaseq_bay_gsea_plot,
     plot_gsea(rnaseq_bay_gsea, "HALLMARK", lbls = c("Down in BAY", "Up in BAY"), vals = unname(clrs[c(3, 4)]))
+  ),
+  tar_target(
+    rnaseq_hyp_bay_gsea_plot,
+    plot_gsea(rnaseq_hyp_bay_gsea, "HALLMARK", lbls = c("Down in Hypoxia", "Up in Hypoxia"), vals = unname(clrs[c(1, 2)]))
   ),
   tar_target(
     gsea_overlap,
