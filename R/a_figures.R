@@ -83,7 +83,14 @@ arrange_fluxes <- function(a, b, c, d, e, f, g, h, i, j) {
     theme_patchwork(
       design = layout,
       widths = unit(1.25, "in"),
-      heights = unit(1.25, "in")
+      heights = unit(1.25, "in"),
+      guides = "collect"
+    ) &
+    theme(
+      legend.position = "bottom",
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.box.margin = ggplot2::margin(t = -10)
     )
 }
 
@@ -213,7 +220,7 @@ arrange_s9 <- function(a, b, c, d, e, f) {
     (c | d) /
     (e | f) +
 
-  # a + b + c + d + e +
+    # a + b + c + d + e +
     theme_patchwork(
       # design = layout,
       widths = unit(5, "in"),

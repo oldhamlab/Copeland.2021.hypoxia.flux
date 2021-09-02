@@ -178,7 +178,7 @@ plot_high_fluxes <- function(
       fun = "mean",
       position = ggplot2::position_dodge(),
       width = 0.6,
-      show.legend = FALSE
+      show.legend = TRUE
     ) +
     ggplot2::geom_hline(
       yintercept = 0,
@@ -210,11 +210,18 @@ plot_high_fluxes <- function(
     ) +
     ggplot2::labs(
       x = "Metabolite",
-      y = "Flux (fmol/cell/h)"
+      y = "Flux (fmol/cell/h)",
+      fill = NULL
     ) +
     ggplot2::scale_fill_manual(values = clrs, limits = force) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.2)) +
-    theme_plots()
+    theme_plots() +
+    ggplot2::theme(
+      legend.key.width = ggplot2::unit(0.5, "lines"),
+      legend.key.height = ggplot2::unit(0.5, "lines"),
+      legend.position = "bottom",
+      legend.box.margin = ggplot2::margin(t = -10)
+    )
 }
 
 plot_low_fluxes <- function(
