@@ -19,7 +19,7 @@ annot_pairwise <- function(fluxes) {
 
 plot_growth_curve <- function(
   df,
-  cell = c("lf", "pasmc"),
+  cell = c("lf", "df", "pasmc"),
   exper = c("02", "05", "bay")
 ) {
   df %>%
@@ -214,7 +214,10 @@ plot_high_fluxes <- function(
       fill = NULL
     ) +
     ggplot2::scale_fill_manual(values = clrs, limits = force) +
-    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.2)) +
+    ggplot2::scale_y_continuous(
+      expand = ggplot2::expansion(mult = 0.2),
+      breaks = scales::extended_breaks(n = 7)
+    ) +
     theme_plots() +
     ggplot2::theme(
       legend.key.width = ggplot2::unit(0.5, "lines"),

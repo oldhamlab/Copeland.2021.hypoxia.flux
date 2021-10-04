@@ -113,7 +113,7 @@ annot_twoby_densities <- function(blot_norm) {
         .x,
         "pairwise" ~ oxygen * treatment,
         simple = "each",
-        adjust = "Tukey",
+        adjust = "mvt",
         combine = TRUE
       )[["contrasts"]]
       ),
@@ -128,7 +128,11 @@ annot_twoby_densities <- function(blot_norm) {
       treatment = factor(treatment, levels = c("DMSO", "BAY")),
       y_pos = Inf,
       vjust = 1.5,
-      lab = annot_p(adj.p.value)
+      lab = dplyr::case_when(
+        adj.p.value < 0.06 ~ "*",
+        # adj.p.value < 0.07 ~ as.character(round(adj.p.value, 2)),
+        TRUE ~ NA_character_
+      )
     )
 }
 
