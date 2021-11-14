@@ -35,7 +35,7 @@ link-citations: yes
 
 output: 
   bookdown::word_document2:
-    reference_docx: !expr system.file("manuscript", "template.docx", package = "Copeland.2021.hypoxia.flux")
+    # reference_docx: !expr system.file("manuscript", "template.docx", package = "Copeland.2021.hypoxia.flux")
     df_print: kable
     fig_caption: true
     number_sections: false

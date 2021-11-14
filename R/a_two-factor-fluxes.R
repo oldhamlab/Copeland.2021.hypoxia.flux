@@ -129,7 +129,7 @@ annot_twoby_densities <- function(blot_norm) {
       y_pos = Inf,
       vjust = 1.5,
       lab = dplyr::case_when(
-        adj.p.value < 0.06 ~ "*",
+        adj.p.value < 0.05 ~ "*",
         # adj.p.value < 0.07 ~ as.character(round(adj.p.value, 2)),
         TRUE ~ NA_character_
       )
