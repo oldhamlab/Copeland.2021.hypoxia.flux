@@ -30,10 +30,10 @@ tar_option_set(
   format = "qs"
 )
 
-values <- tibble::tibble(
-  polarity = c("positive", "negative"),
-  names = c("pos", "neg")
-)
+# values <- tibble::tibble(
+#   polarity = c("positive", "negative"),
+#   names = c("pos", "neg")
+# )
 
 # list of targets ---------------------------------------------------------
 
