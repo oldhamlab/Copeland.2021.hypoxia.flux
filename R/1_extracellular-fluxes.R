@@ -234,8 +234,29 @@ fill_missing_fluxes <- function(df, meta) {
     ) %>%
     dplyr::mutate(oxygen = forcats::fct_recode(oxygen, "0.5%" = "21%"))
 
-  dplyr::bind_rows(df_meta, empty_05_t0)
+  empty_simyc_t0 <-
+    missing_data %>%
+    dplyr::filter(experiment == "05-simyc" & time == 0) %>%
+    dplyr::select(-c(.data$run, .data$id, .data$conc)) %>%
+    dplyr::left_join(
+      df_meta,
+      by = c(
+        "cell_type",
+        "experiment",
+        "batch",
+        "date",
+        "oxygen",
+        "metabolite",
+        "type",
+        "detector",
+        "time",
+        "well"
+      )
+    ) %>%
+    dplyr::select(-treatment.y) %>%
+    dplyr::rename(treatment = .data$treatment.x)
 
+  dplyr::bind_rows(df_meta, empty_05_t0, empty_simyc_t0)
 }
 
 filter_assays <- function(df) {
@@ -270,7 +291,10 @@ assemble_evap_data <- function(data_list) {
     tidyr::unnest(c(.data$data, .data$pred_vol)) %>%
     dplyr::select(-c(.data$volume, .data$plate_mass, .data$mass)) %>%
     dplyr::rename(volume = .data$pred_vol) %>%
-    tidyr::separate(.data$experiment, c("cell_type", "experiment", "batch", "date"), "_")
+    tidyr::separate(.data$experiment, c("cell_type", "experiment", "batch", "date"), "_") %>%
+    dplyr::mutate(
+      treatment = replace(treatment, experiment == "05-simyc", "siCTL")
+    )
 }
 
 fill_missing_evap <- function(evap, samples) {
@@ -278,6 +302,17 @@ fill_missing_evap <- function(evap, samples) {
     evap %>%
     dplyr::filter(.data$treatment == "DMSO") %>%
     dplyr::mutate(treatment = "BAY") %>%
+    dplyr::bind_rows(evap)
+
+  x <-
+    evap %>%
+    dplyr::filter(.data$treatment == "siCTL")
+
+  evap <-
+    purrr::map_dfr(
+      list("siMYC", "siHIF1A", "siHIF2A"),
+      ~dplyr::mutate(x, treatment = .x)
+    ) %>%
     dplyr::bind_rows(evap)
 
   evap_dup_bay <-
@@ -369,8 +404,8 @@ assemble_flux_measurements <- function(conc_clean, evap_clean) {
     dplyr::mutate(
       treatment = factor(
         .data$treatment,
-        levels = c("none", "DMSO", "BAY"),
-        labels = c("None", "DMSO", "BAY")
+        levels = c("none", "DMSO", "BAY", "siCTL", "siMYC", "siHIF1A", "siHIF2A"),
+        labels = c("None", "DMSO", "BAY", "siCTL", "siMYC", "siHIF1A", "siHIF2A")
       ),
       oxygen = factor(.data$oxygen, levels = c("21%", "0.5%", "0.2%")),
       group = dplyr::case_when(
@@ -385,7 +420,10 @@ assemble_flux_measurements <- function(conc_clean, evap_clean) {
       nmol = .data$conc * .data$volume,
       abbreviation = toupper(.data$abbreviation)
     ) %>%
-    dplyr::relocate(group, .before = time)
+    dplyr::relocate(group, .before = time) %>%
+    dplyr::filter(
+      !(treatment %in% c("siCTL", "siMYC", "siHIF1A", "siHIF2A") & time > 48)
+    )
 }
 
 calculate_growth_rates <- function(growth_curves) {
@@ -610,7 +648,7 @@ plot_mass_curves <- function(flux_measurements) {
     dplyr::filter(type == "cells" & metabolite != "cells") %>%
     plot_masses(
       plot_raw_curves,
-      y = nmol,
+      y = log(nmol),
       ylab = "ln(Mass (nmol))",
       fit = "line"
     )
@@ -695,7 +733,7 @@ calculate_fluxes <- function(flux_curves) {
         experiment %in% c("02", "05", "bay") & oxygen == "0.2%" ~ "0.2%",
       ),
       group = factor(group, levels = c("21%", "0.5%", "0.2%", "DMSO", "BAY"))
-      ) %>%
+    ) %>%
     dplyr::select(-c(.data$k, .data$X0, .data$mu, .data$m)) %>%
     dplyr::relocate(.data$metabolite, .data$abbreviation) %>%
     dplyr::relocate(.data$group, .after = .data$treatment) %>%

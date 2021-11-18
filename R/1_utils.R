@@ -2,14 +2,6 @@
 
 # %nin% -------------------------------------------------------------------
 
-#' Negate %in%
-#'
-#' Binary operator that returns a logical vector returning `TRUE` if there is
-#' not a match for its left operand.
-#'
-#' @param x The values to be matched
-#' @param y The values to be matched against
-#'
 "%nin%" <- function(x, table) {
   match(x, table, nomatch = 0L) == 0L
 }

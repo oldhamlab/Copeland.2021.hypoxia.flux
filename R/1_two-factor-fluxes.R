@@ -50,7 +50,10 @@ plot_twoby_fluxes <- function(df, annot, metab, ylab) {
       fill = NULL
     ) +
     ggplot2::scale_fill_manual(values = clrs, limits = force) +
-    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.1))) +
+    ggplot2::scale_y_continuous(
+      expand = ggplot2::expansion(mult = c(0.05, 0.1)),
+      breaks = scales::pretty_breaks(n = 6)
+    ) +
     # ggplot2::coord_cartesian(ylim = c(-750, 1250)) +
     theme_plots() +
     ggplot2::theme(
@@ -59,7 +62,6 @@ plot_twoby_fluxes <- function(df, annot, metab, ylab) {
       legend.position = "bottom",
       legend.box.margin = ggplot2::margin(t = -10)
     )
-
 }
 
 analyze_twoby_fluxes <- function(growth_rates, fluxes) {
@@ -77,7 +79,7 @@ analyze_twoby_fluxes <- function(growth_rates, fluxes) {
     dplyr::group_by(metabolite) %>%
     tidyr::nest() %>%
     dplyr::mutate(
-      m = purrr::map(data, ~lmerTest::lmer(flux ~ oxygen * treatment + (1|date), data = .x)),
+      m = purrr::map(data, ~lmerTest::lmer(flux ~ oxygen * treatment + (1 | date), data = .x)),
       res = purrr::map(m, ~emmeans::emmeans(
         .x,
         "pairwise" ~ oxygen * treatment,
@@ -108,7 +110,7 @@ annot_twoby_densities <- function(blot_norm) {
     dplyr::group_by(protein) %>%
     tidyr::nest() %>%
     dplyr::mutate(
-      m = purrr::map(data, ~lmerTest::lmer(fold_change ~ oxygen * treatment + (1|gel), data = .x)),
+      m = purrr::map(data, ~lmerTest::lmer(fold_change ~ oxygen * treatment + (1 | gel), data = .x)),
       res = purrr::map(m, ~emmeans::emmeans(
         .x,
         "pairwise" ~ oxygen * treatment,

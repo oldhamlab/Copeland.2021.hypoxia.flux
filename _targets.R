@@ -726,6 +726,25 @@ list(
   #   )
   # ),
 
+  # MYC ---------------------------------------------------------------------
+
+  tar_target(
+    simyc_fluxes,
+    combine_fluxes(growth_rates, fluxes)
+  ),
+  tar_target(
+    simyc_fluxes_annot,
+    annot_fluxes(simyc_fluxes)
+  ),
+  tar_target(
+    simyc_fluxes_growth_plot,
+    plot_myc(simyc_fluxes, simyc_fluxes_annot, "growth", "Growth Rate (/h)")
+  ),
+  tar_target(
+    simyc_fluxes_lactate_plot,
+    plot_myc(simyc_fluxes, simyc_fluxes_annot, "lactate", "Lactate\n(fmol/cell/h)")
+  ),
+
   # M1 ----------------------------------------------------------------------
 
   tar_target(
