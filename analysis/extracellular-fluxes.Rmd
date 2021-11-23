@@ -309,7 +309,7 @@ evap %>%
   aes(
     x = time, 
     y = volume, 
-    color = interaction(experiment, oxygen, treatment, sep = " | ")
+    color = interaction(oxygen, experiment, sep = " | ")
   ) +
   geom_point(
     alpha = 0.3, 
@@ -375,7 +375,7 @@ The data can be fit to a linear equation and the slope is used to calculate $v$.
 growth_curves %>% 
   select(cell_type:data) %>% 
   unnest(c(data)) %>% 
-  group_by(cell_type, experiment, batch, date, oxygen, treatment, time) %>%
+  group_by(cell_type, experiment, batch, date, oxygen, virus, treatment, time) %>%
   summarize(conc = mean(conc, na.rm = TRUE)) %>% 
   filter(!is.na(time)) %>% 
   group_by(cell_type, experiment) %>% 
@@ -387,7 +387,7 @@ growth_curves %>%
       aes(
         x = time, 
         y = conc/1000, 
-        color = interaction(oxygen, treatment, sep = " | ")
+        color = interaction(oxygen, treatment, virus, sep = " | ")
       ) +
       stat_summary(
         geom = "pointrange", 
@@ -418,13 +418,14 @@ usethis::use_data(growth_rates, overwrite = TRUE)
 plot_growth_info <- function(df, y){
   ggplot(df) +
     aes(
-      x = interaction(oxygen, treatment), 
+      x = interaction(oxygen, treatment, virus, sep = "\n"), 
       y = .data[[y]], 
       color = interaction(oxygen, treatment)
     ) +
-    facet_wrap(
+    facet_grid(
       ~cell_type, 
-      ncol = 1
+      scales = "free_x", 
+      space = "free_x"
     ) +
     geom_point(
       aes(shape = batch), 
@@ -441,7 +442,7 @@ plot_growth_info <- function(df, y){
     labs(
       x = "Treatment", 
       y = y
-    )
+    ) 
 }
 
 plot_growth_info(growth_rates, "mu") + ylab(expression(paste("Growth rate (h"^-1, ")")))

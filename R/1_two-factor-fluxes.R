@@ -64,8 +64,8 @@ plot_twoby_fluxes <- function(df, annot, metab, ylab) {
     )
 }
 
-analyze_twoby_fluxes <- function(growth_rates, fluxes) {
-
+analyze_twoby_fluxes <- function(growth_rates, fluxes)
+{
   df <-
     growth_rates %>%
     dplyr::filter(experiment == "05-bay") %>%
@@ -101,12 +101,14 @@ analyze_twoby_fluxes <- function(growth_rates, fluxes) {
     )
 
   list(data = df, annot = annot)
-
 }
 
-annot_twoby_densities <- function(blot_norm) {
+annot_twoby_densities <- function(blot_norm)
+{
   blot_norm %>%
     dplyr::filter(experiment == "lf_05-bay") %>%
+    dplyr::group_by(protein, oxygen, treatment) %>%
+    wmo::remove_nested_outliers(fold_change, remove = TRUE) %>%
     dplyr::group_by(protein) %>%
     tidyr::nest() %>%
     dplyr::mutate(

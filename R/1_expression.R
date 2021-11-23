@@ -32,10 +32,11 @@ plot_blot <- function(blot_image, scale = 1.3, hjust = 0.15, vjust = 0.1) {
     )
 }
 
-normalize_densities <- function(blot_raw) {
+normalize_densities <- function(blot_raw)
+  {
   blot_raw %>%
     dplyr::filter(.data$time < 96) %>%
-    dplyr::filter(!(experiment == "lf_05-bay" & gel == "b")) %>%
+    dplyr::filter(!(experiment == "lf_05-bay" & gel %in% c("b", "e", "f"))) %>%
     tidyr::pivot_longer(
       blot:tidyselect::last_col(),
       names_to = "protein",

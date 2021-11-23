@@ -730,19 +730,36 @@ list(
 
   tar_target(
     simyc_fluxes,
-    combine_fluxes(growth_rates, fluxes)
+    combine_fluxes(growth_rates, fluxes, exp = "05-simyc")
   ),
   tar_target(
     simyc_fluxes_annot,
-    annot_fluxes(simyc_fluxes)
+    annot_fluxes_simyc(simyc_fluxes)
   ),
   tar_target(
     simyc_fluxes_growth_plot,
-    plot_myc(simyc_fluxes, simyc_fluxes_annot, "growth", "Growth Rate (/h)")
+    plot_myc(simyc_fluxes, simyc_fluxes_annot, "growth", "Growth Rate (/h)", x = treatment, fill = oxygen) +
+      ggplot2::geom_hline(yintercept = 0, size = 0.25)
   ),
   tar_target(
     simyc_fluxes_lactate_plot,
-    plot_myc(simyc_fluxes, simyc_fluxes_annot, "lactate", "Lactate\n(fmol/cell/h)")
+    plot_myc(simyc_fluxes, simyc_fluxes_annot, "lactate", "Lactate\n(fmol/cell/h)", x = treatment, fill = oxygen)
+  ),
+  tar_target(
+    oemyc_fluxes,
+    combine_fluxes(growth_rates, fluxes, exp = "bay-myc")
+  ),
+  tar_target(
+    oemyc_fluxes_annot,
+    annot_fluxes_oemyc(oemyc_fluxes)
+  ),
+  tar_target(
+    oemyc_fluxes_growth_plot,
+    plot_myc(oemyc_fluxes, oemyc_fluxes_annot, "growth", "Growth Rate (/h)", x = virus, fill = treatment)
+  ),
+  tar_target(
+    oemyc_fluxes_lactate_plot,
+    plot_myc(oemyc_fluxes, oemyc_fluxes_annot, "lactate", "Lactate\n(fmol/cell/h)", x = virus, fill = treatment)
   ),
 
   # M1 ----------------------------------------------------------------------
@@ -1193,6 +1210,10 @@ list(
     s9_figure,
     write_figures(s9, "s9.pdf")
   ),
+
+# M7 ----------------------------------------------------------------------
+
+
 
   # resources table ---------------------------------------------------------
 
