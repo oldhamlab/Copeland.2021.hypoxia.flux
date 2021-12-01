@@ -349,15 +349,6 @@ list(
     blot_norm,
     normalize_densities(blot_raw)
   ),
-  tar_target(
-    myc_image_file,
-    path_to_manuscript("figures/images/lf_05-bay_myc-blots.png"),
-    format = "file"
-  ),
-  tar_target(
-    myc_image,
-    magick::image_read(myc_image_file) %>% grid::rasterGrob()
-  ),
 
   # mrna --------------------------------------------------------------------
 
@@ -1187,11 +1178,6 @@ list(
     annot_twoby_densities(blot_norm)
   ),
   tar_target(
-    m6f,
-    plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)") +
-      ggplot2::annotation_custom(myc_image, xmin = 2.75, xmax = 2.75 + 2.5)
-  ),
-  tar_target(
     m6,
     arrange_m6(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot)
   ),
@@ -1211,9 +1197,47 @@ list(
     write_figures(s9, "s9.pdf")
   ),
 
-# M7 ----------------------------------------------------------------------
+  # M7 ----------------------------------------------------------------------
 
-
+  tar_target(
+    myc_image_file,
+    path_to_manuscript("figures/images/lf_05-bay_myc-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    myc_image,
+    plot_blot(myc_image_file, scale = 1, vjust = 0, hjust = 0)
+  ),
+  tar_target(
+    myc_blot_quant,
+    plot_twoby_densities(blot_norm, "myc", twoby_densities_annot, "MYC protein\n(normalized)")
+  ),
+  tar_target(
+    simyc_image_file,
+    path_to_manuscript("figures/images/lf_05-simyc_myc-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    simyc_image,
+    plot_blot(simyc_image_file, scale = 1, vjust = 0, hjust = 0)
+  ),
+  tar_target(
+    oemyc_image_file,
+    path_to_manuscript("figures/images/lf_bay-myc_myc-blots.png"),
+    format = "file"
+  ),
+  tar_target(
+    oemyc_image,
+    plot_blot(oemyc_image_file, scale = 1, vjust = 0, hjust = 0)
+  ),
+  tar_target(
+    m7,
+    arrange_m7(myc_image, myc_blot_quant, simyc_image, simyc_fluxes_growth_plot, simyc_fluxes_lactate_plot, oemyc_image, oemyc_fluxes_growth_plot, oemyc_fluxes_lactate_plot)
+  ),
+  tar_target(
+    m7_figure,
+    write_figures(m7, "m7.pdf")
+  ),
 
   # resources table ---------------------------------------------------------
 

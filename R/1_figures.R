@@ -229,6 +229,22 @@ arrange_s9 <- function(a, b, c, d, e, f) {
     )
 }
 
+arrange_m7 <- function(a, b, c, d, e, f, g, h)
+{
+  layout <- "
+  ab#
+  cde
+  fgh
+  "
+
+  a + b + c + d + e + f + g + h +
+    theme_patchwork(
+      design = layout,
+      widths = unit(1.25, "in"),
+      heights = unit(1.25, "in")
+    )
+}
+
 create_resources <- function() {
   tibble::tribble(
     ~category, ~`REAGENT or RESOURCE`, ~SOURCE, ~IDENTIFIER,
