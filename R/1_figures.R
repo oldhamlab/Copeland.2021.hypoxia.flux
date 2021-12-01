@@ -194,19 +194,20 @@ arrange_s8 <- function(a, b, c, d, e) {
     )
 }
 
-arrange_m6 <- function(a, b, c, d, e, f) {
+arrange_m6 <- function(a, b, c, d, e)
+{
   layout <- "
-  abd
-  ccd
-  eef
+  abde
+  ccde
   "
-
-  a + b + c + d + e + f +
-    theme_patchwork(
-      design = layout,
-      widths = unit(1.25, "in"),
-      heights = unit(c(1.25), "in")
-    )
+  a + b + c + d + e +
+  theme_patchwork(
+    design = layout,
+    widths = unit(c(2, 2, 1.5, 1.5), "in"),
+    heights = unit(2, "in"),
+    # guides = "collect"
+  ) &
+  theme(legend.position = "bottom")
 }
 
 arrange_s9 <- function(a, b, c, d, e, f) {

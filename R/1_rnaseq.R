@@ -404,8 +404,8 @@ plot_gsea <- function(rnaseq_gsea, sources, lbls, vals) {
     NULL
 }
 
-run_tfea <- function(df) {
-
+run_tfea <- function(df)
+{
   df <- dplyr::rename(df, Genes = row)
 
   load("~/Dropbox (Partners HealthCare)/RM2020_GH_doubleElite.rdata")
@@ -431,8 +431,8 @@ run_tfea <- function(df) {
     TFEA.ChIP::rankTFs(rankMethod = "gsea")
 }
 
-plot_tfea <- function(rnaseq_tfea) {
-
+plot_tfea <- function(rnaseq_tfea)
+{
   df <-
     rnaseq_tfea %>%
     dplyr::mutate(padj = p.adjust(pVal, method = "fdr")) %>%
@@ -440,34 +440,28 @@ plot_tfea <- function(rnaseq_tfea) {
 
   ggplot2::ggplot(df) +
     ggplot2::aes(
-      x = reorder(TF, arg.ES),
-      y = ES,
-      fill = ES < 0
+      y = reorder(TF, ES),
+      x = ES,
+      fill = ES > 0
     ) +
     ggplot2::geom_col(
       show.legend = TRUE
     ) +
-    ggplot2::geom_hline(yintercept = 0, size = 0.25) +
     ggplot2::labs(
-      x = NULL,
-      y = "Enrichment score"
+      y = NULL,
+      x = "Enrichment score"
     ) +
+    ggplot2::scale_y_discrete(position = "right") +
     ggplot2::scale_fill_manual(
       name = NULL,
-      labels = c("With Hypoxia", "With BAY"),
-      values = unname(clrs[c(2, 4)])
+      labels = c("With BAY", "With Hypoxia"),
+      values = unname(clrs[c(4, 2)])
     ) +
     theme_plots() +
     ggplot2::theme(
       legend.key.width = ggplot2::unit(0.5, "lines"),
       legend.key.height = ggplot2::unit(0.5, "lines"),
-      legend.position = c(0.15, 0.1),
-      legend.box.margin = ggplot2::margin(t = -10),
-      axis.text.x = ggplot2::element_text(
-        size = 5,
-        angle = 45,
-        hjust = 1,
-        vjust = 1
-      )
+      legend.position = c("bottom"),
+      legend.box.margin = ggplot2::margin(t = -10)
     )
 }

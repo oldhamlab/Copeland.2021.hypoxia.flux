@@ -1193,7 +1193,7 @@ list(
   ),
   tar_target(
     m6,
-    arrange_m6(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot, m6f)
+    arrange_m6(rnaseq_pca, rnaseq_volcano, rnaseq_goi, rnaseq_gsea_plot, rnaseq_tfea_plot)
   ),
   tar_target(
     m6_figure,
