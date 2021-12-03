@@ -203,8 +203,8 @@ arrange_m6 <- function(a, b, c, d, e)
   a + b + c + d + e +
   theme_patchwork(
     design = layout,
-    widths = unit(c(2, 2, 1.5, 1.5), "in"),
-    heights = unit(2, "in"),
+    widths = unit(c(1.5, 1.5, 1.5, 1.5), "in"),
+    heights = unit(c(1.5, 1.25), "in"),
     # guides = "collect"
   ) &
   theme(legend.position = "bottom")
