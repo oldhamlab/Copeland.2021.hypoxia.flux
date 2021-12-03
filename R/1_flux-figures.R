@@ -352,7 +352,7 @@ plot_cells_per_dna <- function(dna_per_cell_clean) {
       show.legend = FALSE
     ) +
     ggplot2::labs(
-      x = expression(paste("Cell count (x", 10^3, ")")),
+      x = expression(paste("Cell count (×", 10^3, ")")),
       y = "DNA (ng)"
     ) +
     theme_plots() +
