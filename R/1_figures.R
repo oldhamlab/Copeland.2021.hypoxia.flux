@@ -253,6 +253,8 @@ create_resources <- function() {
     "Antibodies", "LDHA", "Cell Signaling Technologies", "2012",
     "Antibodies", "HRP-α-Rabbit IgG", "Cell Signaling Technologies", "7074",
     "Antibodies", "HRP-α-Mouse IgG", "Cell Signaling Technologies", "7076",
+    "Bacterial and virus strains", "c-MYC adenovirus", "Vector Biolabs", "1285",
+    "Bacterial and virus strains", "YFP adenovirus", "Oldham et al., 2015", "",
     "Chemicals, peptides, and recombinant proteins", "[1,2-^13^C~1~] glucose", "Cambridge Isotope Labs", "CLM-504-PK",
     "Chemicals, peptides, and recombinant proteins", "[U-^13^C~6~] glucose", "Cambridge Isotope Labs", "CLM-1396-PK",
     "Chemicals, peptides, and recombinant proteins", "[U-^13^C~5~] glutamine", "Cambridge Isotope Labs", "CLM-1822-H-PK",
@@ -268,7 +270,9 @@ create_resources <- function() {
     "Experimental models: Cell lines", "Pulmonary artery smooth muscle cells", "Lonza", "CC-2581",
     "Oligonucleotides", "ACTB (Hs03023943_g1)", "Life Technologies", "4351370",
     "Oligonucleotides", "GLUT1 (Hs00892681_m1)", "Life Technologies", "4351370",
-    "Oligonucleotides", "LDHA (Hs00855332_g1)", "Life Technologies", "4351370"
+    "Oligonucleotides", "LDHA (Hs00855332_g1)", "Life Technologies", "4351370",
+    "Oligonucleotides", "MYC ON-TARGETplus siRNA", "Dharmacon", "L-003282-02-0005",
+    "Oligonucleotides", "ON-TARGETplus non-targeting control pool", "Dharmacon", "D-001810-10-05"
   ) %>%
     flextable::as_grouped_data(groups = c("category")) %>%
     flextable::as_flextable(hide_grouplabel = TRUE) %>%

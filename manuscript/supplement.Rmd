@@ -1,6 +1,6 @@
 ---
 title: "Supplemental Information"
-subtitle: "Hypoxia uncouples HIF gene transcription and metabolic flux in proliferating primary cells"
+subtitle: "MYC uncouples HIF target gene expression from glycolytic flux in hypoxic proliferating primary cells"
 
 author:
 - Courtney A. Copeland: 
@@ -30,18 +30,6 @@ bibliography_main: library.bib
 bibliography_software: packages.bib
 csl: cell-metabolism.csl
 link-citations: yes
-
-output: 
-  bookdown::word_document2:
-    reference_docx: !expr system.file("manuscript", "template.docx", package = "Copeland.2021.hypoxia.flux")
-    df_print: kable
-    number_sections: false
-    pandoc_args:
-      - '--lua-filter=scholarly-metadata.lua'
-      - '--lua-filter=author-info-blocks.lua'
-      - '--lua-filter=pagebreak.lua'
-      - '--lua-filter=multiple-bibliographies.lua'
-
 compact-title: true
 geometry: margin = 0.75in
 fontsize: 11pt
