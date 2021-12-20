@@ -29,7 +29,7 @@ institute:
 bibliography: 
 - library.bib
 - packages.bib
-csl: cell-metabolism.csl
+csl: nature-communications.csl
 link-citations: yes
 compact-title: true
 geometry: margin = 0.75in
@@ -79,7 +79,7 @@ targets::tar_load(
 
 \newpage 
 
-# Summary 
+# Abstract 
 
 Hypoxia requires metabolic adaptations to sustain cellular functions that underlie numerous physiologic and pathologic processes. While many studies have explored the metabolic consequences of hypoxia in cancer models, comparatively little is known about the metabolic response of primary cells to hypoxia. Here, we performed metabolic flux analyses of proliferating human lung fibroblasts and pulmonary artery smooth muscle cells in hypoxia. Unexpectedly, glycolytic flux was decreased in hypoxic cells despite activation of the hypoxia-inducible factor (HIF) transcriptional program and increased expression of glycolytic enzymes. Pharmacologic activation of HIF with the prolyl hydroxylase (PHD) inhibitor molidustat in normoxia did increase glycolytic flux, but hypoxia abrogated this effect. Multi-omic profiling of cells treated with hypoxia or molidustat, separately or together, revealed distinct molecular responses to hypoxia and pharmacologic PHD inhibition and suggested a critical role for MYC in modulating the HIF response in hypoxia. MYC knockdown in hypoxia increased lactate efflux while MYC overexpression in normoxia blunted the effects of molidustat treatment. Together, these data suggest that other factors, notably MYC, supersede the anticipated effects of HIF-dependent up-regulation of glycolytic gene expression on glycolytic flux in hypoxic proliferating primary cells.
 
@@ -208,13 +208,13 @@ The authors declare no competing interests.
 
 # Figure Legends
 
-(ref:m1) **Effects of prolyl hydroxylase inhibition on extracellular metabolite fluxes in lung fibroblasts.** Lung fibroblasts (LFs) were cultured with 21% oxygen (*red*), 0.5% oxygen (*blue*), DMSO (0.1% v/v, *green*), or molidustat (BAY, 10 μM, *purple*) beginning 24 h prior to time 0. (**A**) Growth curves of LFs in each experimental condition (n = 8). (**B**) Growth rates from (A) were determined by robust linear modeling of log-transformed growth curves. (**C**, **D**) Representative immunoblots of LF protein lysates cultured as in (A). (**E**, **F**) Relative change in HIF-1α (E) and LDHA (F) protein levels normalized to 21% oxygen or DMSO treatment time 0 (n = 4). (**G**, **H**) Relative changes in GLUT1 (G) and LDHA (H) mRNA levels normalized to 21% oxygen or DMSO treatment time 0 (n = 4). (**I**, **J**) Extracellular fluxes of the indicated metabolites (n = 8). Data are mean ± SEM. Comparisons were made using linear mixed effects models with treatment group as a fixed effect and biological replicate as a random effect. Tukey's *post hoc* test was applied to determine differences between 21% and 0.5% oxygen (*), between DMSO and BAY treatment (†), or between 0.5% oxygen and BAY treatment (‡) with adjusted p-values < 0.05 considered significant.
+(ref:m1) **Effects of prolyl hydroxylase inhibition on extracellular metabolite fluxes in lung fibroblasts.** Lung fibroblasts (LFs) were cultured with 21% oxygen (*red*), 0.5% oxygen (*blue*), DMSO (0.1% v/v, *green*), or molidustat (BAY, 10 μM, *purple*) beginning 24 h prior to time 0. (**A**) Growth curves of LFs in each experimental condition (n = 8). (**B**) Growth rates from (A) were determined by robust linear modeling of log-transformed growth curves. (**C**, **D**) Representative immunoblots of LF protein lysates cultured as in (A). (**E**, **F**) Relative change in HIF-1α (E) and LDHA (F) protein levels normalized to 21% oxygen or DMSO treatment time 0 (n = 4). (**G**, **H**) Relative changes in GLUT1 (G) and LDHA (H) mRNA levels normalized to 21% oxygen or DMSO treatment time 0 (n = 4). (**I**, **J**) Extracellular fluxes of the indicated metabolites (n = 8). Data are mean ± SEM. Comparisons were made using linear mixed effects models with treatment group as a fixed effect and biological replicate as a random effect. Tukey's *post hoc* test was applied to determine differences between 21% and 0.5% oxygen (\*), between DMSO and BAY treatment (†), or between 0.5% oxygen and BAY treatment (‡) with adjusted p-values < 0.05 considered significant.
 
-(ref:m2) **Stable isotope tracing of lung fibroblasts.** (**A**) Fraction of pyruvate labeling following treatment of lung fibroblasts (LFs) with [U-^13^C~6~] glucose. (**B**) Rate values determined from asymptotic regression fit of the data from (A). (**C**) Isotopic labeling of key intracellular metabolites after 72 h of treatment with the indicated tracers. Experimentally determined mass isotope distributions were corrected for natural isotope abundance. Data are the mean ± SEM of 4 biological replicates. Significant differences in labeling patterns between 21% and 0.5% oxygen (*), DMSO and BAY treatment (†), and 0.5% oxygen and BAY treatment (‡) for each combination of metabolite and tracer are highlighted. FBP, fructose bisphosphate; 3PG, 3-phosphoglycerate; AKG, α-ketoglutarate.
+(ref:m2) **Stable isotope tracing of lung fibroblasts.** (**A**) Fraction of pyruvate labeling following treatment of lung fibroblasts (LFs) with [U-^13^C~6~] glucose. (**B**) Rate values determined from asymptotic regression fit of the data from (A). (**C**) Isotopic labeling of key intracellular metabolites after 72 h of treatment with the indicated tracers. Experimentally determined mass isotope distributions were corrected for natural isotope abundance. Data are the mean ± SEM of 4 biological replicates. Significant differences in labeling patterns between 21% and 0.5% oxygen (\*), DMSO and BAY treatment (†), and 0.5% oxygen and BAY treatment (‡) for each combination of metabolite and tracer are highlighted. FBP, fructose bisphosphate; 3PG, 3-phosphoglycerate; AKG, α-ketoglutarate.
 
 (ref:m3) **Metabolic flux maps of lung fibroblasts.** (**A**) Ratio of metabolic fluxes in 0.5% oxygen compared to 21% oxygen. (**B**) Ratio of metabolic fluxes in cells treated with molidustat (BAY) compared to DMSO vehicle control. Fluxes with non-overlapping confidence intervals are highlighted with colored arrows to indicate significant changes. Arrow thickness corresponds to absolute flux in hypoxia- or BAY-treated cells.
 
-(ref:m4) **PHD inhibition increases lactate uptake and oxidation.** Mass isotopomer distributions of key metabolites following labeling with [U-^13^C~3~] lactate (2 mM) for 72 h indicates increased lactate uptake and oxidation in hypoxia or with molidustat (BAY) treatment. Data are mean ± SEM of n = 4 biological replicates. Comparisons were made using linear mixed effects models with treatment group as a fixed effect and biological replicate as a random effect. Tukey's *post hoc* test was applied to determine differences between 21% and 0.5% oxygen (*), between DMSO and BAY treatment (†), or between 0.5% oxygen and BAY treatment (‡) with adjusted p-values < 0.05 considered significant.
+(ref:m4) **PHD inhibition increases lactate uptake and oxidation.** Mass isotopomer distributions of key metabolites following labeling with [U-^13^C~3~] lactate (2 mM) for 72 h indicates increased lactate uptake and oxidation in hypoxia or with molidustat (BAY) treatment. Data are mean ± SEM of n = 4 biological replicates. Comparisons were made using linear mixed effects models with treatment group as a fixed effect and biological replicate as a random effect. Tukey's *post hoc* test was applied to determine differences between 21% and 0.5% oxygen (\*), between DMSO and BAY treatment (†), or between 0.5% oxygen and BAY treatment (‡) with adjusted p-values < 0.05 considered significant.
 
 (ref:m5) **Metabolomic analysis of molidustat treatment in normoxia and hypoxia.** (**A**-**C**) Hypoxia inhibits the effects of HIF-1α stabilization on glycolysis. Lung fibroblasts (LFs) were cultured in standard growth medium and treated with molidustat (BAY, 10 μM) or vehicle (DMSO, 0.1%) in 21% or 0.5% oxygen conditions (n = 4). (A) Growth rates were determined by linear fitting of log-transformed growth curves. (**B**-**C**) Extracellular fluxes of glucose (note reversed *y*-axis) (B) and lactate (C). (**D**) Principal components analysis of intracellular metabolites following 72 h of treatment described above suggests a dominant effect of hypoxia over PHD inhibition on the metabolome (n = 4). (**E**) Volcano plot of the differential effects of hypoxia and molidustat (BAY) treatment on intracellular metabolites. *Blue* circles indicate the fold change with hypoxia was greater than the fold change with BAY treatment while *purple* circles indicate the opposite. (**F**) Representative metabolites highlighted in (E) reveal different patterns of metabolic effects. (**G**) Metabolite set enrichment analysis of metabolites from (E). KEGG pathways with p-values < 0.05 are shown. (**H**) Leading edge analysis of the most enriched KEGG metabolite set from (G). Negative values indicate relative enrichment associated with BAY treatment compared to hypoxia treatment (as in (E)). Abbreviations: PYR, pyruvate; SUC, succinate; PEP, phosphoenolpyruvate; CIT, citrate; AKG, α-ketoglutarate; MAL, malate; ACO, aconitate; FUM, fumarate. (**I**-**K**) Intracellular NAD^+^, NADH, and their ratio were determined by enzymatic assay (n = 5). Black * indicate a significant effect of hypoxia, colored * indicate a significant effect of treatment within a given oxygen tension as indicated by the color. Comparisons for fluxes (A-C) and NAD(H) measurements (I-K) were performed using a mixed-effects linear model with replicate as a random effect. Adjusted p-values for the indicated comparisons were determined using Tukey's *post hoc* test.
 
@@ -323,7 +323,7 @@ knitr::include_graphics(
 
 \newpage
 
-# STAR Methods
+# Methods
 
 ## Resource Availability
 
@@ -341,7 +341,7 @@ The original data and analysis code are available as a reproducible research com
 
 ## Experimental Model Details
 
-### Lung fibrolbasts
+### Lung fibroblasts
 
 Primary normal human lung fibroblasts (LFs) were purchased from Lonza (CC-2512) and cultured in FGM-2 (Lonza CC-3132) in a standard tissue culture incubator in 5% CO~2~ at 37 °C. Cells from two donors were used in these studies: #33652 (56 y.o., male) and #29132 (19 y.o., female). Cell authentication was performed by the vendor.
 
