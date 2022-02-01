@@ -29,7 +29,7 @@ institute:
 
 bibliography_main: library.bib
 bibliography_software: packages.bib
-csl: nature-communications.csl
+csl: cell-metabolism.csl
 link-citations: yes
 compact-title: true
 geometry: margin = 0.75in

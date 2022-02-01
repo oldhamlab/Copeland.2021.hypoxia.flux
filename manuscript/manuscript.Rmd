@@ -29,7 +29,7 @@ institute:
 bibliography: 
 - library.bib
 - packages.bib
-csl: nature-communications.csl
+csl: cell-metabolism.csl
 link-citations: yes
 compact-title: true
 geometry: margin = 0.75in
@@ -161,7 +161,7 @@ In this work, we used ^13^C metabolic flux analysis to identify hypoxia-mediated
 
 <!-- MYC role in metabolism -->
 
-Our data indicate that hypoxia-induced MYC expression is one such regulatory mechanism. MYC is a transcription factor that regulates the expression of numerous genes involved in many biological processes, including metabolism, proliferation, apoptosis, and differentiation [@dang2006; @li2020d; @stine2015]. As deregulated MYC activity has been associated with the majority of human cancers [@vita2006], much of our understanding of MYC regulation comes from studies using cancer cell models [@li2020d; @stine2015; @dang2012a; @madden2021], while the role of MYC in the biology of untransformed cells is less well understood. The literature describes a complex and reciprocal relationship between HIF and MYC that depends on both environmental (*e.g.*, hypoxia) and cellular context [@li2020d]. Generally, HIF-1 has been observed to inhibit MYC through multiple mechanisms [koshiji2004; koshiji2005; @gordan2007; @zhang2007], and this previous work is consistent with our observations that HIF stabilization following BAY treatment decreased MYC protein and target gene expression. Conversely, MYC has been implicated in increased HIF activity through transcriptional and post-transcriptional mechanisms [@zhang2009a; @chen2013; @doe2012], primarily in the context of malignant transformation. The observation that MYC may antagonize the transcriptional effects of HIF to sustain primarily cell proliferation and metabolism in hypoxia suggests a substantially different regulatory relationship than has been previously described. 
+Our data indicate that hypoxia-induced MYC expression is one such regulatory mechanism. MYC is a transcription factor that regulates the expression of numerous genes involved in many biological processes, including metabolism, proliferation, apoptosis, and differentiation [@dang2006; @li2020d; @stine2015]. As deregulated MYC activity has been associated with the majority of human cancers [@vita2006], much of our understanding of MYC regulation comes from studies using cancer cell models [@li2020d; @stine2015; @dang2012a; @madden2021], while the role of MYC in the biology of untransformed cells is less well understood. The literature describes a complex and reciprocal relationship between HIF and MYC that depends on both environmental (*e.g.*, hypoxia) and cellular context [@li2020d]. Generally, HIF-1 has been observed to inhibit MYC through multiple mechanisms [@koshiji2004; @koshiji2005; @gordan2007; @zhang2007], and this previous work is consistent with our observations that HIF stabilization following BAY treatment decreased MYC protein and target gene expression. Conversely, MYC has been implicated in increased HIF activity through transcriptional and post-transcriptional mechanisms [@zhang2009a; @chen2013; @doe2012], primarily in the context of malignant transformation. The observation that MYC may antagonize the transcriptional effects of HIF to sustain primarily cell proliferation and metabolism in hypoxia suggests a substantially different regulatory relationship than has been previously described. 
 
 Understanding how MYC transcriptional activity affects hypoxic primary cell metabolism is imperative to our understanding of cellular adaptation to hypoxia. MYC stimulates the expression of nuclear-encoded mitochondrial genes and promotes mitochondrial biogenesis, both directly and through activation of mitochondrial transcriptional factor A (TFAM) [@li2005a]. Indeed, we found that the oxidative phosphorylation gene set was relatively enriched with hypoxia treatment compared to BAY treatment (**Figure \@ref(fig:m6)D**). In this way, hypoxic MYC activation may sustain energy production by oxidative phosphorylation, thereby decreasing the energetic demands driving increased glycolytic flux. Beyond oxidative phosphorylation, MYC targets genes involved in many other intermediary metabolic pathways, including amino acids, nucleotides, and lipids [@stine2015], that may also impact the central pathways of carbon metabolism studied in this work. 
 
@@ -323,7 +323,7 @@ knitr::include_graphics(
 
 \newpage
 
-# Methods
+# STAR Methods
 
 ## Resource Availability
 
